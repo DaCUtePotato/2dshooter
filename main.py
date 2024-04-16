@@ -28,8 +28,6 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 
-enemy_x = 0
-
 # Player attributes
 player_x = width // 2
 player_y = height // 2
@@ -65,7 +63,6 @@ ENEMY_SPEED = 0.5  # Adjust this value as needed
 paused = False
 
 
-
 # level up function
 def level_up():
     global player_level, exp, current_max_exp, paused  # Declare global variables
@@ -95,25 +92,40 @@ def draw_exp_bar():
 
 # Function to spawn enemies
 def spawn_enemy():
-    global enemy_x
     spawn_side = random.randint(0, 3)
-
     if spawn_side == 0:
-        enemy_x = random.randint(0, width - 20)
-        enemy_y = -20
+        enemy_x = random.randint(0, width)
+        enemy_y = height + 20
     elif spawn_side == 1:
-        enemy_y = random.randint(0, height - 20)
+        enemy_x = random.randint(0, width)
+        enemy_y = -height - 20
     elif spawn_side == 2:
-        enemy_x = random.randint(0, width - 20)
-        enemy_y = height
+        enemy_x = -width - 20
+        enemy_y = random.randint(0, height)
     else:
-        enemy_x = -20
-        enemy_y = random.randint(0, height - 20)
+        enemy_x = width + 20
+        enemy_y = random.randint(0, height)
 
     basic_enemy = Enemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
-    crashingenemy = crashingEnemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
-
     enemies.append(basic_enemy)
+
+
+# Function to spawn enemies
+def spawn_crashing_enemy():
+    spawn_side = random.randint(0, 3)
+    if spawn_side == 0:
+        enemy_x = random.randint(0, width)
+        enemy_y = height + 20
+    elif spawn_side == 1:
+        enemy_x = random.randint(0, width)
+        enemy_y = -height - 20
+    elif spawn_side == 2:
+        enemy_x = -width - 20
+        enemy_y = random.randint(0, height)
+    else:
+        enemy_x = width + 20
+        enemy_y = random.randint(0, height)
+    crashingenemy = crashingEnemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
     crashing_enemies.append(crashingenemy)
 
 
@@ -138,7 +150,6 @@ while True:
             sys.exit()
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            # Code for shooting bullets...
             mouseX, mouseY = pygame.mouse.get_pos()
             angle = math.atan2(mouseY - player_y, mouseX - player_x)
             bullets.append([player_x, player_y, bullet_speed * math.cos(angle), bullet_speed * math.sin(angle)])
@@ -149,6 +160,7 @@ while True:
 
     if not paused:  # Only update game state if not paused
         # Update player input and game state
+        global crashing_enemy
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
             player_x -= player_speed
@@ -233,17 +245,15 @@ while True:
             # Check for collisions with bullets
             for bullet in bullets:
                 bullet_rect = pygame.Rect(bullet[0] - 5, bullet[1] - 5, 10, 10)
-                enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
+                enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width,
+                                         enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
                     enemy.hp -= 10
                     bullets.remove(bullet)
 
                     if enemy.hp <= 0:
-                        enemies.remove(enemy)
-                        active_exp_orbs.append(
-                            {'size': enemy_exp * 3, 'x': crashing_enemy.x, 'y': crashing_enemy.y, 'value': enemy_exp})
-                        enemy_exp = random.randint(1, 5)
+                        sys.exit()
 
         if player_hp <= 0:
             sys.exit()
