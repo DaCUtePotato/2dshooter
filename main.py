@@ -14,8 +14,8 @@ fullscreen = False  # Change this variable to switch between fullscreen and wind
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 else:
-    screen_width = 1000  # Set your desired window width
-    screen_height = 900  # Set your desired window height
+    screen_width = 690  # Set your desired window width
+    screen_height = 690  # Set your desired window height
     screen = pygame.display.set_mode((screen_width, screen_height))
 
 width, height = pygame.display.get_surface().get_size()
@@ -26,6 +26,15 @@ original_tile_size = 476  # Original size of the tile image
 tile_size = 64  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
 
+# Load sprite sheet for the character walking to the right
+sprite_sheet_path = 'sprites/Niko_right.png'
+sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
+
+# Frame setup
+frame_width, frame_height = 24, 30
+frames_right = [pygame.transform.scale(sprite_sheet.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+current_frame = 0
+frame_count = 0
 
 # Colors
 BLACK = (0, 0, 0)
@@ -180,6 +189,9 @@ while True:
             player_x -= player_speed
         if keys[pygame.K_d]:
             player_x += player_speed
+            frame_count += 1
+            if frame_count % 4 == 0:  # Adjust frame rate of animation here
+                current_frame = (current_frame + 1) % len(frames_right)
         if keys[pygame.K_w]:
             player_y -= player_speed
         if keys[pygame.K_s]:
@@ -299,7 +311,6 @@ while True:
     draw_tiles()
 
     # Draw player, enemies, bullets, health bar, and experience bar...
-    pygame.draw.rect(screen, WHITE, (player_x, player_y, 20, 20))  # Player
     for exp_orb in active_exp_orbs:
         pygame.draw.circle(screen, GREEN, (exp_orb['x'], exp_orb['y']), exp_orb['size'] + 1)  # Exp orbs
 
@@ -314,7 +325,7 @@ while True:
 
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
-
+    screen.blit(frames_right[current_frame], (player_x, player_y))  # Draw the current frame of player sprite
     if invince_frames < i_frame_temp:
         invince_frames += 1
     if exp >= current_max_exp:
