@@ -9,3 +9,4 @@ class crashingEnemy:
         self.speed = speed
 
 crashing_enemies = []
+

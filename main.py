@@ -40,6 +40,7 @@ i_frame_temp = invince_frames
 
 # Experience system
 exp = 0
+enemy_exp = 0
 active_exp_orbs = []
 current_max_exp = 30
 max_level = 1000  # for ending
@@ -56,7 +57,7 @@ recoil_strength = 0  # Adjust this value to control the strength of the recoil
 recoil_duration = 0  # Adjust this value to control how long the recoil effect lasts
 recoil_counter = 0
 
-enemy_exp = random.randint(1, 5)
+base_enemy_exp = random.randint(1, 5)
 
 ENEMY_SPEED = 0.5  # Adjust this value as needed
 
@@ -158,6 +159,9 @@ while True:
             player_x -= recoil_strength * math.cos(angle)
             player_y -= recoil_strength * math.sin(angle)
 
+    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+        paused = True
+
     if not paused:  # Only update game state if not paused
         # Update player input and game state
         global crashing_enemy
@@ -170,8 +174,6 @@ while True:
             player_y -= player_speed
         if keys[pygame.K_s]:
             player_y += player_speed
-        if keys[pygame.K_ESCAPE]:
-            paused = True
 
         # Update bullet positions and remove bullets that go off-screen
         for bullet in bullets:
@@ -219,7 +221,6 @@ while True:
                     if crashing_enemy.hp <= 0:
                         sys.exit()
 
-        # Update enemy positions and check for collisions with the player
         for enemy in enemies:
             distance_y = player_y - enemy.y  # Calculate the vertical distance between player and enemy
             distance_x = player_x - enemy.x  # Calculate the horizontal distance between player and enemy
@@ -245,15 +246,16 @@ while True:
             # Check for collisions with bullets
             for bullet in bullets:
                 bullet_rect = pygame.Rect(bullet[0] - 5, bullet[1] - 5, 10, 10)
-                enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width,
-                                         enemy.height)
+                enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
                     enemy.hp -= 10
                     bullets.remove(bullet)
 
                     if enemy.hp <= 0:
-                        sys.exit()
+                        enemies.remove(enemy)
+                        active_exp_orbs.append({'size': enemy_exp * 3, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
+                        enemy_exp = random.randint(1, 5)
 
         if player_hp <= 0:
             sys.exit()
@@ -276,13 +278,9 @@ while True:
                 active_exp_orbs.remove(exp_orb)
 
     # Add code to handle pausing the game
-    while paused:
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_KP_ENTER:  # Check if the Escape key is pressed again to resume
-                    paused = False  # Set the pause state to False to resume the game
-                if event.key == pygame.K_ESCAPE:
-                    paused = False
+    if paused:
+        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+            paused = False
 
         pygame.time.Clock().tick(60)  # Limit frame rate to reduce CPU usage
 
@@ -292,7 +290,7 @@ while True:
     # Draw player, enemies, bullets, health bar, and experience bar...
     pygame.draw.rect(screen, WHITE, (player_x, player_y, 20, 20))  # Player
     for exp_orb in active_exp_orbs:
-        pygame.draw.circle(screen, GREEN, (exp_orb['x'], exp_orb['y']), exp_orb['size'])  # Exp orbs
+        pygame.draw.circle(screen, GREEN, (exp_orb['x'], exp_orb['y']), exp_orb['size'] + 1)  # Exp orbs
 
     for enemy in enemies:
         pygame.draw.rect(screen, RED, (enemy.x, enemy.y, enemy.width, enemy.height))  # Enemies
