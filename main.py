@@ -27,14 +27,27 @@ tile_size = 64  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
 
 # Load sprite sheet for the character walking to the right
-sprite_sheet_path = 'sprites/Niko_right.png'
-sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
+sprite_sheet_path_right = 'sprites/Niko_right.png'
+sprite_sheet_path_up = 'sprites/Niko_up.png'
+sprite_sheet_path_down = 'sprites/Niko_down.png'
+sprite_sheet_path_left = 'sprites/Niko_left.png'
+sprite_sheet_right = pygame.image.load(sprite_sheet_path_right).convert_alpha()
+sprite_sheet_up = pygame.image.load(sprite_sheet_path_up).convert_alpha()
+sprite_sheet_down = pygame.image.load(sprite_sheet_path_down).convert_alpha()
+sprite_sheet_left = pygame.image.load(sprite_sheet_path_left).convert_alpha()
 
 # Frame setup
 frame_width, frame_height = 24, 30
-frames_right = [pygame.transform.scale(sprite_sheet.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
 current_frame = 0
 frame_count = 0
+render_right = False
+render_up = False
+render_left = False
+render_down = False
 
 # Colors
 BLACK = (0, 0, 0)
@@ -47,8 +60,8 @@ RED = (255, 0, 0)
 player_x = width // 2
 player_y = height // 2
 player_speed = 5
-player_height = 20
-player_width = 20
+player_height = frame_width
+player_width = frame_height
 player_hp = 100
 invince_frames = 10
 i_frame_temp = invince_frames
@@ -187,15 +200,32 @@ while True:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
             player_x -= player_speed
+            frame_count += 1
+            if frame_count % 2 == 0:  # Adjust frame rate of animation here
+                current_frame = (current_frame + 1) % len(frames_left)
+            render_left = True
+            render_right, render_up, render_down = False, False, False
         if keys[pygame.K_d]:
             player_x += player_speed
             frame_count += 1
-            if frame_count % 4 == 0:  # Adjust frame rate of animation here
+            if frame_count % 2 == 0:  # Adjust frame rate of animation here
                 current_frame = (current_frame + 1) % len(frames_right)
+            render_right = True
+            render_left, render_up, render_down = False, False, False
         if keys[pygame.K_w]:
             player_y -= player_speed
+            frame_count += 1
+            if frame_count % 2 == 0:
+                current_frame = (current_frame + 1) % len(frames_up)
+            render_up = True
+            render_left, render_right, render_down = False, False, False
         if keys[pygame.K_s]:
             player_y += player_speed
+            frame_count += 1
+            if frame_count % 2 == 0:  # Adjust frame rate of animation here
+                current_frame = (current_frame + 1) % len(frames_down)
+            render_down = True
+            render_left, render_right, render_up = False, False, False
 
         # Update bullet positions and remove bullets that go off-screen
         for bullet in bullets:
@@ -325,7 +355,15 @@ while True:
 
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
-    screen.blit(frames_right[current_frame], (player_x, player_y))  # Draw the current frame of player sprite
+    screen.blit(frames_down[current_frame], (player_x, player_y))
+    if render_right:
+        screen.blit(frames_right[current_frame], (player_x, player_y))  # Draw the current frame of player sprite
+    if render_up:
+        screen.blit(frames_up[current_frame], (player_x, player_y))
+    if render_left:
+        screen.blit(frames_left[current_frame], (player_x, player_y))
+    if render_down:
+        screen.blit(frames_down[current_frame], (player_x, player_y))
     if invince_frames < i_frame_temp:
         invince_frames += 1
     if exp >= current_max_exp:
