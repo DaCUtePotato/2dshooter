@@ -14,12 +14,18 @@ fullscreen = False  # Change this variable to switch between fullscreen and wind
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 else:
-    screen_width = 800  # Set your desired window width
-    screen_height = 600  # Set your desired window height
+    screen_width = 1000  # Set your desired window width
+    screen_height = 900  # Set your desired window height
     screen = pygame.display.set_mode((screen_width, screen_height))
 
 width, height = pygame.display.get_surface().get_size()
 pygame.display.set_caption("2D Shooter")
+
+tile_image = pygame.image.load('sprites/tile.png')
+original_tile_size = 476  # Original size of the tile image
+tile_size = 64  # Desired display size of each tile
+scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
+
 
 # Colors
 BLACK = (0, 0, 0)
@@ -63,6 +69,10 @@ ENEMY_SPEED = 0.5  # Adjust this value as needed
 
 paused = False
 
+def draw_tiles():
+    for y in range(0, height, tile_size):
+        for x in range(0, width, tile_size):
+            screen.blit(scaled_tile_image, (x, y))
 
 # level up function
 def level_up():
@@ -286,6 +296,7 @@ while True:
 
     # Draw elements
     screen.fill(BLACK)  # Clear the screen
+    draw_tiles()
 
     # Draw player, enemies, bullets, health bar, and experience bar...
     pygame.draw.rect(screen, WHITE, (player_x, player_y, 20, 20))  # Player
