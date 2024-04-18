@@ -4,6 +4,7 @@ import sys
 import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
+from pygame.locals import *
 
 # Initialize Pygame
 pygame.init()
@@ -14,12 +15,14 @@ fullscreen = False  # Change this variable to switch between fullscreen and wind
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 else:
-    screen_width = 690  # Set your desired window width
-    screen_height = 690  # Set your desired window height
+    screen_width = 690  # Fanny number
+    screen_height = 690  # Fanny number
     screen = pygame.display.set_mode((screen_width, screen_height))
 
 width, height = pygame.display.get_surface().get_size()
 pygame.display.set_caption("2D Shooter")
+FPS = 60
+speed = 1
 
 tile_image = pygame.image.load('sprites/tile.png')
 original_tile_size = 476  # Original size of the tile image
@@ -62,6 +65,7 @@ player_width = frame_height
 player_hp = 100
 invince_frames = 10
 i_frame_temp = invince_frames
+kills = 0
 
 # Experience system
 exp = 0
@@ -92,6 +96,14 @@ def draw_tiles():
     for y in range(0, height, tile_size):
         for x in range(0, width, tile_size):
             screen.blit(scaled_tile_image, (x, y))
+
+def draw_kill_counter(kills):
+    font = pygame.font.Font(None, 24)
+    kills_text = font.render(f"Kills: {kills}", True, RED)
+    text_width, text_height = font.size(f"Kills: {kills}")
+    text_x = (width - text_width) // 3
+    text_y = 20
+    screen.blit(kills_text, (text_x, text_y))
 
 # level up function
 def level_up():
@@ -187,10 +199,6 @@ while True:
             # Apply recoil when shooting
             player_x -= recoil_strength * math.cos(angle)
             player_y -= recoil_strength * math.sin(angle)
-
-    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
-        paused = True
-
     if not paused:  # Only update game state if not paused
         # Update player input and game state
         global crashing_enemy
@@ -219,17 +227,26 @@ while True:
             if frame_count % 2 == 0:  # Adjust frame rate of animation here
                 current_frame = (current_frame + 1) % len(frames_down)
             rendering = "down"
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_KP_ENTER:
+                    speed = 5
+            if event.type == KEYUP:
+                if event.key == K_KP_ENTER:
+                    speed = 1
 
-        # Update bullet positions and remove bullets that go off-screen
-        for bullet in bullets:
-            bullet[0] += bullet[2]
-            bullet[1] += bullet[3]
+            # Update bullet positions and remove bullets that go off-screen
+            for bullet in bullets:
+                bullet[0] += bullet[2]
+                bullet[1] += bullet[3]
 
         bullets = [bullet for bullet in bullets if 0 <= bullet[0] <= width and 0 <= bullet[1] <= height]
 
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy()
+        elif random.randint(0, 1000) == 69:
+            spawn_crashing_enemy()
 
         # Update enemy positions and check for collisions with the player
         for crashing_enemy in crashing_enemies:
@@ -301,6 +318,7 @@ while True:
                         enemies.remove(enemy)
                         active_exp_orbs.append({'size': enemy_exp * 3, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
+                        kills += 1
 
         if player_hp <= 0:
             sys.exit()
@@ -348,6 +366,7 @@ while True:
 
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
+    draw_kill_counter(kills)
     screen.blit(frames_down[current_frame], (player_x, player_y))
     if rendering == "right":
         screen.blit(frames_right[current_frame], (player_x, player_y))  # Draw the current frame of player sprite
@@ -364,4 +383,4 @@ while True:
 
     # Update the display
     pygame.display.flip()
-    pygame.time.Clock().tick(60)
+    pygame.time.Clock().tick(FPS)
