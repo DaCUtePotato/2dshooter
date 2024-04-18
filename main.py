@@ -44,10 +44,7 @@ frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(f
 frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
 current_frame = 0
 frame_count = 0
-render_right = False
-render_up = False
-render_left = False
-render_down = False
+rendering = "down"
 
 # Colors
 BLACK = (0, 0, 0)
@@ -203,29 +200,25 @@ while True:
             frame_count += 1
             if frame_count % 2 == 0:  # Adjust frame rate of animation here
                 current_frame = (current_frame + 1) % len(frames_left)
-            render_left = True
-            render_right, render_up, render_down = False, False, False
+            rendering = "left"
         if keys[pygame.K_d]:
             player_x += player_speed
             frame_count += 1
             if frame_count % 2 == 0:  # Adjust frame rate of animation here
                 current_frame = (current_frame + 1) % len(frames_right)
-            render_right = True
-            render_left, render_up, render_down = False, False, False
+            rendering = "right"
         if keys[pygame.K_w]:
             player_y -= player_speed
             frame_count += 1
             if frame_count % 2 == 0:
                 current_frame = (current_frame + 1) % len(frames_up)
-            render_up = True
-            render_left, render_right, render_down = False, False, False
+            rendering = "up"
         if keys[pygame.K_s]:
             player_y += player_speed
             frame_count += 1
             if frame_count % 2 == 0:  # Adjust frame rate of animation here
                 current_frame = (current_frame + 1) % len(frames_down)
-            render_down = True
-            render_left, render_right, render_up = False, False, False
+            rendering = "down"
 
         # Update bullet positions and remove bullets that go off-screen
         for bullet in bullets:
@@ -356,13 +349,13 @@ while True:
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
     screen.blit(frames_down[current_frame], (player_x, player_y))
-    if render_right:
+    if rendering == "right":
         screen.blit(frames_right[current_frame], (player_x, player_y))  # Draw the current frame of player sprite
-    if render_up:
+    if rendering == "up":
         screen.blit(frames_up[current_frame], (player_x, player_y))
-    if render_left:
+    if rendering == "left":
         screen.blit(frames_left[current_frame], (player_x, player_y))
-    if render_down:
+    if rendering == "down":
         screen.blit(frames_down[current_frame], (player_x, player_y))
     if invince_frames < i_frame_temp:
         invince_frames += 1
