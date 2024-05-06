@@ -4,7 +4,7 @@ import sys
 import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
-from pygame.locals import *
+
 
 # Initialize Pygame
 pygame.init()
@@ -22,7 +22,6 @@ else:
 width, height = pygame.display.get_surface().get_size()
 pygame.display.set_caption("2D Shooter")
 FPS = 60
-speed = 1
 
 tile_image = pygame.image.load('sprites/tile.png')
 original_tile_size = 476  # Original size of the tile image
@@ -92,10 +91,24 @@ ENEMY_SPEED = 0.5  # Adjust this value as needed
 
 paused = False
 
+# Gun variables
+base_gun_cooldown = 2
+base_sword_cooldown = 1
+
 def draw_tiles():
     for y in range(0, height, tile_size):
         for x in range(0, width, tile_size):
             screen.blit(scaled_tile_image, (x, y))
+
+
+def shoot_base_gun(player_x, player_y, bullets, bullet_speed, recoil_strength):
+    mouseX, mouseY = pygame.mouse.get_pos()
+    angle = math.atan2(mouseY - player_y, mouseX - player_x)
+    bullets.append([player_x, player_y, bullet_speed * math.cos(angle), bullet_speed * math.sin(angle)])
+    # Apply recoil when shooting
+    player_x -= recoil_strength * math.cos(angle)
+    player_y -= recoil_strength * math.sin(angle)
+
 
 def draw_kill_counter(kills):
     font = pygame.font.Font(None, 24)
@@ -191,14 +204,9 @@ while True:
             pygame.quit()
             sys.exit()
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            mouseX, mouseY = pygame.mouse.get_pos()
-            angle = math.atan2(mouseY - player_y, mouseX - player_x)
-            bullets.append([player_x, player_y, bullet_speed * math.cos(angle), bullet_speed * math.sin(angle)])
+        if pygame.mouse.get_pressed()[0]:
+            shoot_base_gun(player_x, player_y, bullets, bullet_speed, recoil_strength)
 
-            # Apply recoil when shooting
-            player_x -= recoil_strength * math.cos(angle)
-            player_y -= recoil_strength * math.sin(angle)
     if not paused:  # Only update game state if not paused
         # Update player input and game state
         global crashing_enemy
@@ -227,18 +235,11 @@ while True:
             if frame_count % 2 == 0:  # Adjust frame rate of animation here
                 current_frame = (current_frame + 1) % len(frames_down)
             rendering = "down"
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                if event.key == K_KP_ENTER:
-                    speed = 5
-            if event.type == KEYUP:
-                if event.key == K_KP_ENTER:
-                    speed = 1
 
-            # Update bullet positions and remove bullets that go off-screen
-            for bullet in bullets:
-                bullet[0] += bullet[2]
-                bullet[1] += bullet[3]
+        # Update bullet positions and remove bullets that go off-screen
+        for bullet in bullets:
+            bullet[0] += bullet[2]
+            bullet[1] += bullet[3]
 
         bullets = [bullet for bullet in bullets if 0 <= bullet[0] <= width and 0 <= bullet[1] <= height]
 

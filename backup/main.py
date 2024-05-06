@@ -5,6 +5,7 @@ import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
 
+
 # Initialize Pygame
 pygame.init()
 
@@ -14,18 +15,38 @@ fullscreen = False  # Change this variable to switch between fullscreen and wind
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 else:
-    screen_width = 1000  # Set your desired window width
-    screen_height = 900  # Set your desired window height
+    screen_width = 690  # Fanny number
+    screen_height = 690  # Fanny number
     screen = pygame.display.set_mode((screen_width, screen_height))
 
 width, height = pygame.display.get_surface().get_size()
 pygame.display.set_caption("2D Shooter")
+FPS = 60
 
 tile_image = pygame.image.load('sprites/tile.png')
 original_tile_size = 476  # Original size of the tile image
 tile_size = 64  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
 
+# Load sprite sheet for the character walking to the right
+sprite_sheet_path_right = 'sprites/Niko_right.png'
+sprite_sheet_path_up = 'sprites/Niko_up.png'
+sprite_sheet_path_down = 'sprites/Niko_down.png'
+sprite_sheet_path_left = 'sprites/Niko_left.png'
+sprite_sheet_right = pygame.image.load(sprite_sheet_path_right).convert_alpha()
+sprite_sheet_up = pygame.image.load(sprite_sheet_path_up).convert_alpha()
+sprite_sheet_down = pygame.image.load(sprite_sheet_path_down).convert_alpha()
+sprite_sheet_left = pygame.image.load(sprite_sheet_path_left).convert_alpha()
+
+# Frame setup
+frame_width, frame_height = 24, 30
+frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+current_frame = 0
+frame_count = 0
+rendering = "down"
 
 # Colors
 BLACK = (0, 0, 0)
@@ -38,11 +59,12 @@ RED = (255, 0, 0)
 player_x = width // 2
 player_y = height // 2
 player_speed = 5
-player_height = 20
-player_width = 20
+player_height = frame_width
+player_width = frame_height
 player_hp = 100
 invince_frames = 10
 i_frame_temp = invince_frames
+kills = 0
 
 # Experience system
 exp = 0
@@ -69,10 +91,22 @@ ENEMY_SPEED = 0.5  # Adjust this value as needed
 
 paused = False
 
+# Gun variables
+base_gun_cooldown = 2
+base_sword_cooldown = 1
+
 def draw_tiles():
     for y in range(0, height, tile_size):
         for x in range(0, width, tile_size):
             screen.blit(scaled_tile_image, (x, y))
+
+def draw_kill_counter(kills):
+    font = pygame.font.Font(None, 24)
+    kills_text = font.render(f"Kills: {kills}", True, RED)
+    text_width, text_height = font.size(f"Kills: {kills}")
+    text_x = (width - text_width) // 3
+    text_y = 20
+    screen.blit(kills_text, (text_x, text_y))
 
 # level up function
 def level_up():
@@ -178,12 +212,28 @@ while True:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
             player_x -= player_speed
+            frame_count += 1
+            if frame_count % 2 == 0:  # Adjust frame rate of animation here
+                current_frame = (current_frame + 1) % len(frames_left)
+            rendering = "left"
         if keys[pygame.K_d]:
             player_x += player_speed
+            frame_count += 1
+            if frame_count % 2 == 0:  # Adjust frame rate of animation here
+                current_frame = (current_frame + 1) % len(frames_right)
+            rendering = "right"
         if keys[pygame.K_w]:
             player_y -= player_speed
+            frame_count += 1
+            if frame_count % 2 == 0:
+                current_frame = (current_frame + 1) % len(frames_up)
+            rendering = "up"
         if keys[pygame.K_s]:
             player_y += player_speed
+            frame_count += 1
+            if frame_count % 2 == 0:  # Adjust frame rate of animation here
+                current_frame = (current_frame + 1) % len(frames_down)
+            rendering = "down"
 
         # Update bullet positions and remove bullets that go off-screen
         for bullet in bullets:
@@ -195,6 +245,8 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy()
+        elif random.randint(0, 1000) == 69:
+            spawn_crashing_enemy()
 
         # Update enemy positions and check for collisions with the player
         for crashing_enemy in crashing_enemies:
@@ -266,6 +318,7 @@ while True:
                         enemies.remove(enemy)
                         active_exp_orbs.append({'size': enemy_exp * 3, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
+                        kills += 1
 
         if player_hp <= 0:
             sys.exit()
@@ -299,7 +352,6 @@ while True:
     draw_tiles()
 
     # Draw player, enemies, bullets, health bar, and experience bar...
-    pygame.draw.rect(screen, WHITE, (player_x, player_y, 20, 20))  # Player
     for exp_orb in active_exp_orbs:
         pygame.draw.circle(screen, GREEN, (exp_orb['x'], exp_orb['y']), exp_orb['size'] + 1)  # Exp orbs
 
@@ -314,7 +366,16 @@ while True:
 
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
-
+    draw_kill_counter(kills)
+    screen.blit(frames_down[current_frame], (player_x, player_y))
+    if rendering == "right":
+        screen.blit(frames_right[current_frame], (player_x, player_y))  # Draw the current frame of player sprite
+    if rendering == "up":
+        screen.blit(frames_up[current_frame], (player_x, player_y))
+    if rendering == "left":
+        screen.blit(frames_left[current_frame], (player_x, player_y))
+    if rendering == "down":
+        screen.blit(frames_down[current_frame], (player_x, player_y))
     if invince_frames < i_frame_temp:
         invince_frames += 1
     if exp >= current_max_exp:
@@ -322,4 +383,4 @@ while True:
 
     # Update the display
     pygame.display.flip()
-    pygame.time.Clock().tick(60)
+    pygame.time.Clock().tick(FPS)
