@@ -368,7 +368,6 @@ while True:
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
     draw_kill_counter(kills)
-    screen.blit(frames_down[current_frame], (player_x, player_y))
     if rendering == "right":
         screen.blit(frames_right[current_frame], (player_x, player_y))  # Draw the current frame of player sprite
     if rendering == "up":
