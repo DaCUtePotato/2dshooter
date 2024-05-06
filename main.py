@@ -25,7 +25,7 @@ FPS = 60
 
 tile_image = pygame.image.load('sprites/tile.png')
 original_tile_size = 476  # Original size of the tile image
-tile_size = 64  # Desired display size of each tile
+tile_size = 128  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
 
 # Load sprite sheet for the character walking to the right
