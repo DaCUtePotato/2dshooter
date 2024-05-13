@@ -83,8 +83,12 @@ bullets = []
 bullet_speed = 10
 bullet_frames = []
 for i in range(1, 6):  # Assume there are five fireball images named fireball1.png to fireball5.png
-    bullet_frame = pygame.image.load(f"sprites/fireball{i}.png").convert_alpha()
-    bullet_frames.append(bullet_frame)
+    original_frame = pygame.image.load(f"sprites/fireball{i}.png").convert_alpha()
+    scaled_width = original_frame.get_width() * 2
+    scaled_height = original_frame.get_height() * 2
+    scaled_frame = pygame.transform.scale(original_frame, (scaled_width, scaled_height))
+    bullet_frames.append(scaled_frame)
+
 
 # Recoil attributes
 recoil_strength = 0  # Adjust this value to control the strength of the recoil
@@ -419,4 +423,3 @@ while True:
     # Update the display
     pygame.display.flip()
     pygame.time.Clock().tick(FPS)
-s
