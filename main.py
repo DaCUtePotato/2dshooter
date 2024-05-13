@@ -11,6 +11,7 @@ pygame.init()
 
 # Set up the game window
 fullscreen = False  # Change this variable to switch between fullscreen and windowed mode
+menu_font = pygame.font.Font(None, 36)
 
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -88,8 +89,11 @@ recoil_duration = 0  # Adjust this value to control how long the recoil effect l
 recoil_counter = 0
 
 base_enemy_exp = random.randint(1, 5)
-
 ENEMY_SPEED = 0.5  # Adjust this value as needed
+
+# Load bullet and enemy images
+bullet_image = pygame.image.load("sprites/bullet.png")
+enemy_image = pygame.image.load("sprites/Ampter.png")
 
 paused = False
 
@@ -206,12 +210,16 @@ while True:
             pygame.quit()
             sys.exit()
 
-        if pygame.mouse.get_pressed()[0]:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                paused = not paused  # Toggle pause state
+
+        if pygame.mouse.get_pressed()[0] and paused is False:
             shoot_base_gun(player_x, player_y, bullets, bullet_speed, recoil_strength)
 
     if not paused:  # Only update game state if not paused
         # Update player input and game state
-        global crashing_enemy
+        player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
             player_x -= player_speed
@@ -267,9 +275,7 @@ while True:
             crashing_enemy.x += move_x
             crashing_enemy.y += move_y
 
-            # Check for collisions with the player
-            if (player_x < crashing_enemy.x + crashing_enemy.width and player_x + player_width > crashing_enemy.x and
-                    player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):
+            if player_rect.colliderect(crashing_enemy.rect):  # Use rect attribute of enemies
                 if invince_frames == i_frame_temp:
                     player_hp -= 5
                     invince_frames = 0
@@ -277,7 +283,8 @@ while True:
             # Check for collisions with bullets
             for bullet in bullets:
                 bullet_rect = pygame.Rect(bullet[0] - 5, bullet[1] - 5, 10, 10)
-                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width, crashing_enemy.height)
+                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
+                                         crashing_enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
                     crashing_enemy.hp -= 10
@@ -343,13 +350,6 @@ while True:
                 # Remove the exp orb from the active list
                 active_exp_orbs.remove(exp_orb)
 
-    # Add code to handle pausing the game
-    if paused:
-        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
-            paused = False
-
-        pygame.time.Clock().tick(60)  # Limit frame rate to reduce CPU usage
-
     # Draw elements
     screen.fill(BLACK)  # Clear the screen
     draw_tiles()
@@ -359,13 +359,22 @@ while True:
         pygame.draw.circle(screen, GREEN, (exp_orb['x'], exp_orb['y']), exp_orb['size'] + 1)  # Exp orbs
 
     for enemy in enemies:
-        pygame.draw.rect(screen, RED, (enemy.x, enemy.y, enemy.width, enemy.height))  # Enemies
+        pygame.draw.rect(screen, RED, (enemy.x, enemy.y, enemy.width, enemy.height))
 
     for crashing_enemy in crashing_enemies:
-        pygame.draw.rect(screen, BLUE, (crashing_enemy.x, crashing_enemy.y, crashing_enemy.width, crashing_enemy.height))
+        screen.blit(enemy_image, (crashing_enemy.x, crashing_enemy.y))
 
     for bullet in bullets:
-        pygame.draw.circle(screen, GREEN, (int(bullet[0]), int(bullet[1])), 5)  # Bullets
+        # Calculate angle of rotation based on bullet's velocity
+        angle = math.atan2(-bullet[3], bullet[2])  # Use negative y-velocity to account for inverted y-axis
+
+        # Rotate the bullet image
+        rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
+
+        # Draw the rotated bullet image at the bullet's position
+        screen.blit(rotated_bullet_image, (
+        bullet[0] - rotated_bullet_image.get_width() / 2, bullet[1] - rotated_bullet_image.get_height() / 2))
+
 
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
@@ -382,6 +391,14 @@ while True:
         invince_frames += 1
     if exp >= current_max_exp:
         level_up()
+
+    # If game is paused, show pause menu
+    if paused:
+        pause_text = menu_font.render("PAUSED", True, WHITE)
+        text_width, text_height = menu_font.size("PAUSED")
+        text_x = (width - text_width) // 2
+        text_y = (height - text_height) // 2
+        screen.blit(pause_text, (text_x, text_y))
 
     # Update the display
     pygame.display.flip()

@@ -11,6 +11,7 @@ pygame.init()
 
 # Set up the game window
 fullscreen = False  # Change this variable to switch between fullscreen and windowed mode
+menu_font = pygame.font.Font(None, 36)
 
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -25,7 +26,7 @@ FPS = 60
 
 tile_image = pygame.image.load('sprites/tile.png')
 original_tile_size = 476  # Original size of the tile image
-tile_size = 64  # Desired display size of each tile
+tile_size = 128  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
 
 # Load sprite sheet for the character walking to the right
@@ -40,10 +41,12 @@ sprite_sheet_left = pygame.image.load(sprite_sheet_path_left).convert_alpha()
 
 # Frame setup
 frame_width, frame_height = 24, 30
-frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
-frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
-frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
-frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (48, 60)) for i in range(3)]
+scaling_factor = 2.77
+niko_scaling_width, niko_scaling_height = frame_width*scaling_factor, frame_height*scaling_factor
+frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 current_frame = 0
 frame_count = 0
 rendering = "down"
@@ -86,7 +89,6 @@ recoil_duration = 0  # Adjust this value to control how long the recoil effect l
 recoil_counter = 0
 
 base_enemy_exp = random.randint(1, 5)
-
 ENEMY_SPEED = 0.5  # Adjust this value as needed
 
 paused = False
@@ -99,6 +101,16 @@ def draw_tiles():
     for y in range(0, height, tile_size):
         for x in range(0, width, tile_size):
             screen.blit(scaled_tile_image, (x, y))
+
+
+def shoot_base_gun(player_x, player_y, bullets, bullet_speed, recoil_strength):
+    mouseX, mouseY = pygame.mouse.get_pos()
+    angle = math.atan2(mouseY - player_y, mouseX - player_x)
+    bullets.append([player_x, player_y, bullet_speed * math.cos(angle), bullet_speed * math.sin(angle)])
+    # Apply recoil when shooting
+    player_x -= recoil_strength * math.cos(angle)
+    player_y -= recoil_strength * math.sin(angle)
+
 
 def draw_kill_counter(kills):
     font = pygame.font.Font(None, 24)
@@ -194,21 +206,15 @@ while True:
             pygame.quit()
             sys.exit()
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            mouseX, mouseY = pygame.mouse.get_pos()
-            angle = math.atan2(mouseY - player_y, mouseX - player_x)
-            bullets.append([player_x, player_y, bullet_speed * math.cos(angle), bullet_speed * math.sin(angle)])
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                paused = not paused  # Toggle pause state
 
-            # Apply recoil when shooting
-            player_x -= recoil_strength * math.cos(angle)
-            player_y -= recoil_strength * math.sin(angle)
-
-    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
-        paused = True
+        if pygame.mouse.get_pressed()[0] and paused is False:
+            shoot_base_gun(player_x, player_y, bullets, bullet_speed, recoil_strength)
 
     if not paused:  # Only update game state if not paused
         # Update player input and game state
-        global crashing_enemy
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
             player_x -= player_speed
@@ -274,7 +280,8 @@ while True:
             # Check for collisions with bullets
             for bullet in bullets:
                 bullet_rect = pygame.Rect(bullet[0] - 5, bullet[1] - 5, 10, 10)
-                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width, crashing_enemy.height)
+                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
+                                         crashing_enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
                     crashing_enemy.hp -= 10
@@ -340,13 +347,6 @@ while True:
                 # Remove the exp orb from the active list
                 active_exp_orbs.remove(exp_orb)
 
-    # Add code to handle pausing the game
-    if paused:
-        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
-            paused = False
-
-        pygame.time.Clock().tick(60)  # Limit frame rate to reduce CPU usage
-
     # Draw elements
     screen.fill(BLACK)  # Clear the screen
     draw_tiles()
@@ -367,7 +367,6 @@ while True:
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
     draw_kill_counter(kills)
-    screen.blit(frames_down[current_frame], (player_x, player_y))
     if rendering == "right":
         screen.blit(frames_right[current_frame], (player_x, player_y))  # Draw the current frame of player sprite
     if rendering == "up":
@@ -380,6 +379,14 @@ while True:
         invince_frames += 1
     if exp >= current_max_exp:
         level_up()
+
+    # If game is paused, show pause menu
+    if paused:
+        pause_text = menu_font.render("PAUSED", True, WHITE)
+        text_width, text_height = menu_font.size("PAUSED")
+        text_x = (width - text_width) // 2
+        text_y = (height - text_height) // 2
+        screen.blit(pause_text, (text_x, text_y))
 
     # Update the display
     pygame.display.flip()
