@@ -94,6 +94,7 @@ ENEMY_SPEED = 0.5  # Adjust this value as needed
 # Load bullet and enemy images
 bullet_image = pygame.image.load("sprites/bullet.png")
 enemy_image = pygame.image.load("sprites/Ampter.png")
+exp_image = pygame.image.load("sprites/exp.png")
 
 paused = False
 
@@ -356,7 +357,11 @@ while True:
 
     # Draw player, enemies, bullets, health bar, and experience bar...
     for exp_orb in active_exp_orbs:
-        pygame.draw.circle(screen, GREEN, (exp_orb['x'], exp_orb['y']), exp_orb['size'] + 1)  # Exp orbs
+        # Calculate the top-left corner of the image so it's centered on the orb's position
+        image_x = exp_orb['x'] - exp_image.get_width() // 2
+        image_y = exp_orb['y'] - exp_image.get_height() // 2
+        screen.blit(exp_image, (image_x, image_y))
+    # Exp orbs
 
     for enemy in enemies:
         pygame.draw.rect(screen, RED, (enemy.x, enemy.y, enemy.width, enemy.height))
