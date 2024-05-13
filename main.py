@@ -5,7 +5,6 @@ import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
 
-
 # Initialize Pygame
 pygame.init()
 
@@ -16,8 +15,8 @@ menu_font = pygame.font.Font(None, 36)
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 else:
-    screen_width = 690  # Fanny number
-    screen_height = 690  # Fanny number
+    screen_width = 690  # Screen width
+    screen_height = 690  # Screen height
     screen = pygame.display.set_mode((screen_width, screen_height))
 
 width, height = pygame.display.get_surface().get_size()
@@ -29,7 +28,7 @@ original_tile_size = 476  # Original size of the tile image
 tile_size = 128  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
 
-# Load sprite sheet for the character walking to the right
+# Load sprite sheet for the character walking
 sprite_sheet_path_right = 'sprites/Niko_right.png'
 sprite_sheet_path_up = 'sprites/Niko_up.png'
 sprite_sheet_path_down = 'sprites/Niko_down.png'
@@ -82,6 +81,10 @@ levelling = False
 # Bullet attributes
 bullets = []
 bullet_speed = 10
+bullet_frames = []
+for i in range(1, 6):  # Assume there are five fireball images named fireball1.png to fireball5.png
+    bullet_frame = pygame.image.load(f"sprites/fireball{i}.png").convert_alpha()
+    bullet_frames.append(bullet_frame)
 
 # Recoil attributes
 recoil_strength = 0  # Adjust this value to control the strength of the recoil
@@ -91,9 +94,7 @@ recoil_counter = 0
 base_enemy_exp = random.randint(1, 5)
 ENEMY_SPEED = 0.5  # Adjust this value as needed
 
-# Load bullet and enemy images
-bullet_image = pygame.image.load("sprites/bullet.png")
-enemy_image = pygame.image.load("sprites/Ampter.png")
+# Load enemy images
 exp_image = pygame.image.load("sprites/exp.png")
 
 paused = False
@@ -107,15 +108,25 @@ def draw_tiles():
         for x in range(0, width, tile_size):
             screen.blit(scaled_tile_image, (x, y))
 
+def animate_bullet(bullet):
+    bullet['frame'] += 1
+    if bullet['frame'] >= len(bullet_frames):
+        bullet['frame'] = 0
+    return bullet_frames[bullet['frame']]
 
 def shoot_base_gun(player_x, player_y, bullets, bullet_speed, recoil_strength):
     mouseX, mouseY = pygame.mouse.get_pos()
     angle = math.atan2(mouseY - player_y, mouseX - player_x)
-    bullets.append([player_x, player_y, bullet_speed * math.cos(angle), bullet_speed * math.sin(angle)])
+    bullets.append({
+        'x': player_x,
+        'y': player_y,
+        'dx': bullet_speed * math.cos(angle),
+        'dy': bullet_speed * math.sin(angle),
+        'frame': 0  # Start animation frame
+    })
     # Apply recoil when shooting
     player_x -= recoil_strength * math.cos(angle)
     player_y -= recoil_strength * math.sin(angle)
-
 
 def draw_kill_counter(kills):
     font = pygame.font.Font(None, 24)
@@ -133,7 +144,6 @@ def level_up():
     current_max_exp = int(current_max_exp * 1.2)  # Increase current max exp exponentially for the next level
     paused = True
 
-
 # Function to draw experience bar
 def draw_exp_bar():
     max_exp = current_max_exp
@@ -150,7 +160,6 @@ def draw_exp_bar():
     text_x = (width - text_width) // 2
     text_y = exp_bar_height + 20
     screen.blit(exp_text, (text_x, text_y))
-
 
 # Function to spawn enemies
 def spawn_enemy():
@@ -171,7 +180,6 @@ def spawn_enemy():
     basic_enemy = Enemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
     enemies.append(basic_enemy)
 
-
 # Function to spawn enemies
 def spawn_crashing_enemy():
     spawn_side = random.randint(0, 3)
@@ -190,7 +198,6 @@ def spawn_crashing_enemy():
     crashingenemy = crashingEnemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
     crashing_enemies.append(crashingenemy)
 
-
 # Function to draw player's health bar
 def draw_hp_bar():
     hp_bar_width = player_hp * 2
@@ -202,7 +209,6 @@ def draw_hp_bar():
     font = pygame.font.Font(None, 36)
     hp_text = font.render(f"{player_hp}/100 HP", True, WHITE)
     screen.blit(hp_text, (220, height - 30))
-
 
 # Game loop
 while True:
@@ -247,12 +253,17 @@ while True:
                 current_frame = (current_frame + 1) % len(frames_down)
             rendering = "down"
 
-        # Update bullet positions and remove bullets that go off-screen
+        # Update bullet positions and animate
         for bullet in bullets:
-            bullet[0] += bullet[2]
-            bullet[1] += bullet[3]
+            bullet['x'] += bullet['dx']
+            bullet['y'] += bullet['dy']
+            bullet_image = animate_bullet(bullet)  # Animate bullet
+            angle = math.atan2(-bullet['dy'], bullet['dx'])  # Calculate angle for rotation
+            rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
+            screen.blit(rotated_bullet_image, (bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
 
-        bullets = [bullet for bullet in bullets if 0 <= bullet[0] <= width and 0 <= bullet[1] <= height]
+        # Filter bullets that go off-screen
+        bullets = [bullet for bullet in bullets if 0 <= bullet['x'] <= width and 0 <= bullet['y'] <= height]
 
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
@@ -283,7 +294,7 @@ while True:
 
             # Check for collisions with bullets
             for bullet in bullets:
-                bullet_rect = pygame.Rect(bullet[0] - 5, bullet[1] - 5, 10, 10)
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
                 enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
                                          crashing_enemy.height)
 
@@ -318,7 +329,7 @@ while True:
 
             # Check for collisions with bullets
             for bullet in bullets:
-                bullet_rect = pygame.Rect(bullet[0] - 5, bullet[1] - 5, 10, 10)
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
                 enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
@@ -371,14 +382,14 @@ while True:
 
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity
-        angle = math.atan2(-bullet[3], bullet[2])  # Use negative y-velocity to account for inverted y-axis
+        angle = math.atan2(-bullet['dy'], bullet['dx'])  # Use negative y-velocity to account for inverted y-axis
 
         # Rotate the bullet image
         rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
 
         # Draw the rotated bullet image at the bullet's position
         screen.blit(rotated_bullet_image, (
-        bullet[0] - rotated_bullet_image.get_width() / 2, bullet[1] - rotated_bullet_image.get_height() / 2))
+        bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
 
 
     draw_hp_bar()  # Draw the player's HP bar
@@ -408,3 +419,4 @@ while True:
     # Update the display
     pygame.display.flip()
     pygame.time.Clock().tick(FPS)
+s
