@@ -156,18 +156,17 @@ def draw_exp_bar():
     screen.blit(exp_text, (text_x, text_y))
 
 # Function to spawn enemies
-# Function to spawn enemies
 def spawn_enemy(player_x, player_y):
-    enemy_x = random.randint(-width, width) + player_x
-    enemy_y = random.randint(-height, height) + player_y
+    enemy_x = random.randint(-width // 2, width // 2) + player_x
+    enemy_y = random.randint(-height // 2, height // 2) + player_y
 
     basic_enemy = Enemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
     enemies.append(basic_enemy)
 
 # Function to spawn crashing enemies
 def spawn_crashing_enemy(player_x, player_y):
-    enemy_x = random.randint(-width, width) + player_x
-    enemy_y = random.randint(-height, height) + player_y
+    enemy_x = random.randint(-width // 2, width // 2) + player_x
+    enemy_y = random.randint(-height // 2, height // 2) + player_y
 
     crashingenemy = crashingEnemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
     crashing_enemies.append(crashingenemy)
@@ -202,30 +201,36 @@ while True:
         # Update player input and game state
         player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)
         keys = pygame.key.get_pressed()
+
+        # Calculate movement vector
+        move_x, move_y = 0, 0
         if keys[pygame.K_a]:
-            player_x -= player_speed
-            frame_count += 1
-            if frame_count % 2 == 0:  # Adjust frame rate of animation here
-                current_frame = (current_frame + 1) % len(frames_left)
+            move_x -= player_speed
             rendering = "left"
         if keys[pygame.K_d]:
-            player_x += player_speed
-            frame_count += 1
-            if frame_count % 2 == 0:  # Adjust frame rate of animation here
-                current_frame = (current_frame + 1) % len(frames_right)
+            move_x += player_speed
             rendering = "right"
         if keys[pygame.K_w]:
-            player_y -= player_speed
-            frame_count += 1
-            if frame_count % 2 == 0:
-                current_frame = (current_frame + 1) % len(frames_up)
+            move_y -= player_speed
             rendering = "up"
         if keys[pygame.K_s]:
-            player_y += player_speed
+            move_y += player_speed
+            rendering = "down"
+
+        # Normalize the movement vector to prevent faster diagonal movement
+        if move_x != 0 and move_y != 0:
+            move_x *= math.sqrt(0.5)
+            move_y *= math.sqrt(0.5)
+
+        # Update player position
+        player_x += move_x
+        player_y += move_y
+
+        # Update frame count and current frame if the player is moving
+        if move_x != 0 or move_y != 0:
             frame_count += 1
             if frame_count % 2 == 0:  # Adjust frame rate of animation here
-                current_frame = (current_frame + 1) % len(frames_down)
-            rendering = "down"
+                current_frame = (current_frame + 1) % 3  # Assuming each direction has 3 frames
 
         # Update bullet positions and animate
         for bullet in bullets:
@@ -269,8 +274,7 @@ while True:
             # Check for collisions with bullets
             for bullet in bullets:
                 bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
-                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
-                                         crashing_enemy.height)
+                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width, crashing_enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
                     crashing_enemy.hp -= 10
