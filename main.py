@@ -66,6 +66,8 @@ player_hp = 100
 invince_frames = 10
 i_frame_temp = invince_frames
 kills = 0
+player_hitbox = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)
+
 
 # Experience system
 exp = 0
@@ -90,6 +92,7 @@ for i in range(1, 6):  # Assume there are five fireball images named fireball1.p
 
 base_enemy_exp = random.randint(1, 5)
 ENEMY_SPEED = 0.5  # Adjust this value as needed
+enemy_image = "Sprites/Ampter"
 
 # Load experience orb image
 exp_image = pygame.image.load("sprites/exp.png")
@@ -247,7 +250,7 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy(player_x, player_y)
-        elif random.randint(0, 1000) == 69:
+        elif random.randint(0, 1000) == 69: # 1 in 1000 chance
             spawn_crashing_enemy(player_x, player_y)
 
         # Update enemy positions and check for collisions with the player
@@ -266,7 +269,8 @@ while True:
             crashing_enemy.x += move_x
             crashing_enemy.y += move_y
 
-            if player_rect.colliderect(crashing_enemy.rect):  # Use rect attribute of enemies
+            if (player_x < crashing_enemy.x + crashing_enemy.width and player_x + player_width > crashing_enemy.x and
+                    player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):
                 if invince_frames == i_frame_temp:
                     player_hp -= 5
                     invince_frames = 0
@@ -274,7 +278,8 @@ while True:
             # Check for collisions with bullets
             for bullet in bullets:
                 bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
-                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width, crashing_enemy.height)
+                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
+                                         crashing_enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
                     crashing_enemy.hp -= 10
