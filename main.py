@@ -286,8 +286,10 @@ while True:
                     bullets.remove(bullet)
 
                     if crashing_enemy.hp <= 0:
-                        sys.exit()
+                        crashing_enemies.remove(crashing_enemy)
+                        sys.exit("The corruption is spreading...")
 
+        enemies_to_remove = []
         for enemy in enemies:
             distance_y = player_y - enemy.y  # Calculate the vertical distance between player and enemy
             distance_x = player_x - enemy.x  # Calculate the horizontal distance between player and enemy
@@ -320,10 +322,14 @@ while True:
                     bullets.remove(bullet)
 
                     if enemy.hp <= 0:
-                        enemies.remove(enemy)
+                        enemies_to_remove.append(enemy)
                         active_exp_orbs.append({'size': enemy_exp * 3, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         kills += 1
+                        break
+
+        for enemy in enemies_to_remove:
+            enemies.remove(enemy)
 
         if player_hp <= 0:
             sys.exit()
@@ -396,9 +402,9 @@ while True:
     # If game is paused, show pause menu
     if paused:
         pause_text = menu_font.render("PAUSED", True, WHITE)
-        text_width, text_height = menu_font.size("PAUSED")
+        text_width, text_heights = menu_font.size("PAUSED")
         text_x = (width - text_width) // 2
-        text_y = (height - text_height) // 2
+        text_y = (height - text_heights) // 2
         screen.blit(pause_text, (text_x, text_y))
 
     # Update the display
