@@ -23,7 +23,7 @@ width, height = pygame.display.get_surface().get_size()
 pygame.display.set_caption("2D Shooter")
 FPS = 60
 
-tile_image = pygame.image.load('sprites/tile.png')
+tile_image = pygame.image.load('sprites/tile.png')  # Load tiles for the game
 tile_size = 128  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
 
@@ -99,9 +99,9 @@ exp_image = pygame.image.load("sprites/exp.png")
 
 paused = False
 
-# Gun variables
-base_gun_cooldown = 2
-base_sword_cooldown = 1
+# Fireball variables
+base_fireball_cooldown = 10
+current_fireball_cooldown = 0
 
 def draw_tiles(camera_offset_x, camera_offset_y):
     for y in range(-tile_size, height + tile_size, tile_size):
@@ -114,16 +114,20 @@ def animate_bullet(bullet):
         bullet['frame'] = 0
     return bullet_frames[bullet['frame']]
 
-def shoot_base_gun(player_x, player_y, bullets, bullet_speed):
-    mouseX, mouseY = pygame.mouse.get_pos()
-    angle = math.atan2(mouseY - height // 2, mouseX - width // 2)  # Use the center of the screen for angle calculation
-    bullets.append({
-        'x': player_x,
-        'y': player_y,
-        'dx': bullet_speed * math.cos(angle),
-        'dy': bullet_speed * math.sin(angle),
-        'frame': 0  # Start animation frame
-    })
+def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
+    global current_fireball_cooldown
+    if current_fireball_cooldown == 0:  # Check if the cooldown period has elapsed
+        mouseX, mouseY = pygame.mouse.get_pos()
+        angle = math.atan2(mouseY - height // 2, mouseX - width // 2)  # Use the center of the screen for angle calculation
+        bullets.append({
+            'x': player_x,
+            'y': player_y,
+            'dx': bullet_speed * math.cos(angle),
+            'dy': bullet_speed * math.sin(angle),
+            'frame': 0  # Start animation frame
+        })
+        current_fireball_cooldown = base_fireball_cooldown  # Reset the cooldown
+
 
 def draw_kill_counter(kills):
     font = pygame.font.Font(None, 24)
@@ -198,7 +202,7 @@ while True:
                 paused = not paused  # Toggle pause state
 
         if pygame.mouse.get_pressed()[0] and paused is False:
-            shoot_base_gun(player_x, player_y, bullets, bullet_speed)
+            shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
 
     if not paused:  # Only update game state if not paused
         # Update player input and game state
@@ -229,6 +233,10 @@ while True:
         player_x += move_x
         player_y += move_y
 
+        # Decrease the current fireball cooldown
+        if current_fireball_cooldown > 0:
+            current_fireball_cooldown -= 1
+
         # Update frame count and current frame if the player is moving
         if move_x != 0 or move_y != 0:
             frame_count += 1
@@ -250,8 +258,9 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy(player_x, player_y)
-        elif random.randint(0, 1000) == 69: # 1 in 1000 chance
+        elif random.randint(0, 10000) == 69:  # 1 in 1000 chance
             spawn_crashing_enemy(player_x, player_y)
+
 
         # Update enemy positions and check for collisions with the player
         for crashing_enemy in crashing_enemies:
@@ -332,7 +341,7 @@ while True:
             enemies.remove(enemy)
 
         if player_hp <= 0:
-            sys.exit()
+            sys.exit("You died...")
 
         # Check for collisions between player and exp orbs
         for exp_orb in active_exp_orbs:
