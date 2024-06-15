@@ -100,11 +100,14 @@ exp_image = pygame.image.load("sprites/exp.png")
 paused = False
 
 # Fireball variables
-base_fireball_cooldown = 10
+base_fireball_cooldown = 50
 current_fireball_cooldown = 0
 fireball_upgrade1 = False  # Upgrade 1 tracking
 fireball_upgrade2 = False # Upgrade 2 tracking
 fireball_upgrade3 = False # Upgrade 3 tracking
+cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
+cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
+cooldown_reduction_upgrade3 = 10 # Cooldown reduction Upgrade 3
 
 def draw_tiles(camera_offset_x, camera_offset_y):
     for y in range(-tile_size, height + tile_size, tile_size):
@@ -159,7 +162,15 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
                 'dy': bullet_speed * math.sin(right_angle),
                 'frame': 0  # Start animation frame
             })
-        current_fireball_cooldown = base_fireball_cooldown  # Reset the cooldown
+        # Apply the reduced cooldown based on the upgrades
+        cooldown_reduction = 0
+        if fireball_upgrade1:
+            cooldown_reduction += cooldown_reduction_upgrade1
+        if fireball_upgrade2:
+            cooldown_reduction += cooldown_reduction_upgrade2
+        if fireball_upgrade3:
+            cooldown_reduction += cooldown_reduction_upgrade3
+        current_fireball_cooldown = base_fireball_cooldown - cooldown_reduction  # Apply reduced cooldown
 
 def draw_kill_counter(kills):
     font = pygame.font.Font(None, 24)
@@ -174,7 +185,7 @@ def level_up():
     global player_level, exp, current_max_exp, paused, show_upgrade_menu  # Declare global variables
     player_level += 1
     exp -= current_max_exp  # Subtract current max exp from player's exp
-    current_max_exp = int(current_max_exp * 1.2)  # Increase current max exp exponentially for the next level
+    current_max_exp = int(current_max_exp * 1.3)  # Increase current max exp exponentially for the next level
     paused = True
     show_upgrade_menu = True  # Show the upgrade menu
 
