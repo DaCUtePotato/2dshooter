@@ -102,6 +102,9 @@ paused = False
 # Fireball variables
 base_fireball_cooldown = 10
 current_fireball_cooldown = 0
+fireball_upgrade1 = False  # Upgrade 1 tracking
+fireball_upgrade2 = False # Upgrade 2 tracking
+fireball_upgrade3 = False # Upgrade 3 tracking
 
 def draw_tiles(camera_offset_x, camera_offset_y):
     for y in range(-tile_size, height + tile_size, tile_size):
@@ -126,8 +129,37 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
             'dy': bullet_speed * math.sin(angle),
             'frame': 0  # Start animation frame
         })
+        if fireball_upgrade1:
+            # Shoot fireball in the opposite direction
+            backwards_angle = angle + math.pi  # Calculate opposite angle
+            bullets.append({
+                'x': player_x,
+                'y': player_y,
+                'dx': bullet_speed * math.cos(backwards_angle),
+                'dy': bullet_speed * math.sin(backwards_angle),
+                'frame': 0 # Start animation frame
+            })
+        if fireball_upgrade2:
+            #Shoot fireball to the right
+            right_angle = angle + math.pi/ 2  # Angle for right direction
+            bullets.append({
+                'x': player_x,
+                'y': player_y,
+                'dx': bullet_speed * math.cos(right_angle),
+                'dy': bullet_speed * math.sin(right_angle),
+                'frame': 0  # Start animation frame
+            })
+        if fireball_upgrade3:
+            #Shoot fireball to the left
+            right_angle = angle - math.pi/ 2  # Angle for left direction
+            bullets.append({
+                'x': player_x,
+                'y': player_y,
+                'dx': bullet_speed * math.cos(right_angle),
+                'dy': bullet_speed * math.sin(right_angle),
+                'frame': 0  # Start animation frame
+            })
         current_fireball_cooldown = base_fireball_cooldown  # Reset the cooldown
-
 
 def draw_kill_counter(kills):
     font = pygame.font.Font(None, 24)
@@ -139,11 +171,12 @@ def draw_kill_counter(kills):
 
 # level up function
 def level_up():
-    global player_level, exp, current_max_exp, paused  # Declare global variables
+    global player_level, exp, current_max_exp, paused, show_upgrade_menu  # Declare global variables
     player_level += 1
     exp -= current_max_exp  # Subtract current max exp from player's exp
     current_max_exp = int(current_max_exp * 1.2)  # Increase current max exp exponentially for the next level
     paused = True
+    show_upgrade_menu = True  # Show the upgrade menu
 
 # Function to draw experience bar
 def draw_exp_bar():
@@ -191,6 +224,7 @@ def draw_hp_bar():
     screen.blit(hp_text, (220, height - 30))
 
 # Game loop
+show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -201,10 +235,24 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 paused = not paused  # Toggle pause state
 
-        if pygame.mouse.get_pressed()[0] and paused is False:
+            if show_upgrade_menu:  # Handle upgrade selection
+                if event.key == pygame.K_RETURN and not fireball_upgrade1:
+                    fireball_upgrade1 = True  # Apply the first fireball upgrade
+                    show_upgrade_menu = False
+                    paused = False  # Unpause the game after selecting the upgrade
+                elif event.key == pygame.K_RETURN and fireball_upgrade1 and not fireball_upgrade2:
+                    fireball_upgrade2 = True  # Apply the second fireball upgrade
+                    show_upgrade_menu = False
+                    paused = False  # Unpause the game after selecting the upgrade
+                elif event.key == pygame.K_RETURN and fireball_upgrade2:
+                    fireball_upgrade3 = True  # Apply the third fireball upgrade
+                    show_upgrade_menu = False
+                    paused = False  # Unpause the game after selecting the upgrade
+
+        if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu:
             shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
 
-    if not paused:  # Only update game state if not paused
+    if not paused and not show_upgrade_menu:  # Only update game state if not paused and upgrade menu is not shown
         # Update player input and game state
         player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)
         keys = pygame.key.get_pressed()
@@ -409,12 +457,39 @@ while True:
         level_up()
 
     # If game is paused, show pause menu
-    if paused:
+    if paused and not show_upgrade_menu:
         pause_text = menu_font.render("PAUSED", True, WHITE)
         text_width, text_heights = menu_font.size("PAUSED")
         text_x = (width - text_width) // 2
         text_y = (height - text_heights) // 2
         screen.blit(pause_text, (text_x, text_y))
+
+    # If upgrade menu is shown, display upgrade options
+    if show_upgrade_menu:
+        if not fireball_upgrade1:
+            upgrade_text1 = menu_font.render("1. Fireball shoots in opposite direction", True, WHITE)
+            text_width, text_height = menu_font.size("1. Fireball shoots in opposite direction")
+            text_x = (width - text_width) // 2
+            text_y = (height - text_height) // 2 + 50
+            screen.blit(upgrade_text1, (text_x, text_y))
+        elif fireball_upgrade1 and not fireball_upgrade2:
+            upgrade_text2 = menu_font.render("2. Fireball shoots in the right direction", True, WHITE)
+            text_width, text_height = menu_font.size("2. Fireball shoots in the right direction")
+            text_x = (width - text_width) // 2
+            text_y = (height - text_height) // 2 + 50
+            screen.blit(upgrade_text2, (text_x, text_y))
+        elif fireball_upgrade1 and fireball_upgrade2 and not fireball_upgrade3:
+            upgrade_text2 = menu_font.render("3. Fireball shoots in the left direction", True, WHITE)
+            text_width, text_height = menu_font.size("3. Fireball shoots in the left direction")
+            text_x = (width - text_width) // 2
+            text_y = (height - text_height) // 2 + 50
+            screen.blit(upgrade_text2, (text_x, text_y))
+        else:
+            out_of_upgrades_text = menu_font.render("So um funny story, I'm out of upgrade ideas...", True, WHITE)
+            text_width, text_height = menu_font.size("So um funny story, I'm out of upgrade ideas...")
+            text_x = (width - text_width) // 2
+            text_y = (height - text_height) // 2 + 50
+            screen.blit(out_of_upgrades_text, (text_x, text_y))
 
     # Update the display
     pygame.display.flip()
