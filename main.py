@@ -60,14 +60,15 @@ RED = (255, 0, 0)
 player_x = width // 2
 player_y = height // 2
 player_speed = 5
-player_height = frame_width
-player_width = frame_height
+player_height = int(niko_scaling_height)
+player_width = int(niko_scaling_width)
 player_hp = 100
 invince_frames = 10
 i_frame_temp = invince_frames
 kills = 0
-player_hitbox = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)
 
+# Correctly position the hitbox at the center of the player sprite
+player_hitbox = pygame.Rect(player_x - player_width // 2, player_y - player_height // 2, player_width, player_height)
 
 # Experience system
 exp = 0
@@ -266,15 +267,17 @@ def draw_exp_bar():
 
 # Function to spawn enemies
 def spawn_enemy(player_x, player_y):
-    enemy_x = random.randint(-width // 2, width // 2) + player_x
-    enemy_y = random.randint(-height // 2, height // 2) + player_y
+    # Calculate the boundaries for off-screen spawning
+    off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    basic_enemy = Enemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
+    basic_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
     enemies.append(basic_enemy)
 
 # Function to spawn crashing enemies
 def spawn_crashing_enemy(player_x, player_y):
-    enemy_x = random.randint(-width // 2, width // 2) + player_x
+    enemy_x = random.randint((-width), width // 2) + player_x
     enemy_y = random.randint(-height // 2, height // 2) + player_y
 
     crashingenemy = crashingEnemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
@@ -440,8 +443,13 @@ while True:
 
         enemies_to_remove = []
         for enemy in enemies:
-            distance_y = player_y - enemy.y  # Calculate the vertical distance between player and enemy
-            distance_x = player_x - enemy.x  # Calculate the horizontal distance between player and enemy
+            # Calculate the center coordinates of the player
+            player_center_x = player_x + player_width / 2
+            player_center_y = player_y + player_height / 2
+
+            # Calculate the vertical and horizontal distance between the enemy and the player's center
+            distance_y = player_center_y - enemy.y
+            distance_x = player_center_x - enemy.x
 
             # Calculate the angle between the player and the enemy
             angle = math.atan2(distance_y, distance_x)
@@ -491,11 +499,9 @@ while True:
             orb_radius = exp_orb['size']
             orb_exp = exp_orb['value']  # Extract the exp value associated with the orb
 
-            # Calculate the distance between player and exp orb's center
-            distance_to_orb = math.sqrt((player_x - orb_center_x) ** 2 + (player_y - orb_center_y) ** 2)
-
-            # Check if the player collides with the exp orb
-            if distance_to_orb < orb_radius + player_width / 2:
+            # Check for collisions with the player
+            if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
+                    player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
                 # Player gains exp equal to the amount associated with the exp orb
                 exp += orb_exp
                 # Remove the exp orb from the active list
