@@ -70,8 +70,10 @@ kills = 0
 
 # Correctly position the hitbox at the center of the player sprite
 player_hitbox = pygame.Rect(player_x - player_width // 2, player_y - player_height // 2, player_width, player_height)
+center_x, center_y = player_hitbox.center
 
 # Experience system
+gambling_mode = False
 exp = 0
 enemy_exp = 0
 active_exp_orbs = []
@@ -80,6 +82,9 @@ max_level = 1000  # for ending
 player_level = 1  # keeping track of the player's current level
 exp_increase_per_level = 5
 levelling = False
+pickup_sound = pygame.mixer.Sound("sounds/exp.wav")
+level_up_sound = pygame.mixer.Sound("sounds/level_up_normal.wav")
+gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
 
 # Bullet attributes
 bullets = []
@@ -135,6 +140,9 @@ def animate_bullet(bullet):
 def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     global current_fireball_cooldown
 
+    player_center_x = player_x + player_width / 2
+    player_center_y = player_y + player_height / 4
+
     if upgrades==7:  # If the 7th upgrade is active, shoot upwards
         fireball_sound_7.play()
         angle = -math.pi / 2  # Angle for shooting upwards
@@ -142,10 +150,11 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         mouseX, mouseY = pygame.mouse.get_pos()
         angle = math.atan2(mouseY - height // 2, mouseX - width // 2)  # Use the center of the screen for angle calculation
     if upgrades==0:
+        fireball_sound_1.set_volume(0.5)  # Set volume to 50%
         fireball_sound_1.play()
         bullets.append({
-            'x': player_x,
-            'y': player_y,
+            'x': player_center_x,
+            'y': player_center_y,
             'dx': bullet_speed * math.cos(angle),
             'dy': bullet_speed * math.sin(angle),
             'frame': 0  # Start animation frame
@@ -155,8 +164,8 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         # Shoot fireball in the opposite direction
         backwards_angle = angle + math.pi  # Calculate opposite angle
         bullets.append({
-            'x': player_x,
-            'y': player_y,
+            'x': player_center_x,
+            'y': player_center_y,
             'dx': bullet_speed * math.cos(backwards_angle),
             'dy': bullet_speed * math.sin(backwards_angle),
             'frame': 0 # Start animation frame
@@ -166,8 +175,8 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         #Shoot fireball to the right
         right_angle = angle + math.pi/ 2  # Angle for right direction
         bullets.append({
-            'x': player_x,
-            'y': player_y,
+            'x': player_center_x,
+            'y': player_center_y,
             'dx': bullet_speed * math.cos(right_angle),
             'dy': bullet_speed * math.sin(right_angle),
             'frame': 0  # Start animation frame
@@ -177,8 +186,8 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         #Shoot fireball to the left
         left_angle = angle - math.pi/ 2  # Angle for left direction
         bullets.append({
-            'x': player_x,
-            'y': player_y,
+            'x': player_center_x,
+            'y': player_center_y,
             'dx': bullet_speed * math.cos(left_angle),
             'dy': bullet_speed * math.sin(left_angle),
             'frame': 0  # Start animation frame
@@ -187,8 +196,8 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         fireball_sound_5.play()
         upright_angle = angle + math.pi / 4  # Angle for upright direction
         bullets.append({
-            'x': player_x,
-            'y': player_y,
+            'x': player_center_x,
+            'y': player_center_y,
             'dx': bullet_speed * math.cos(upright_angle),
             'dy': bullet_speed * math.sin(upright_angle),
             'frame': 0  # Start animation frame
@@ -196,8 +205,8 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         # Shoot fireball upleft
         upleft_angle = angle - math.pi / 4  # Angle for upleft direction
         bullets.append({
-            'x': player_x,
-            'y': player_y,
+            'x': player_center_x,
+            'y': player_center_y,
             'dx': bullet_speed * math.cos(upleft_angle),
             'dy': bullet_speed * math.sin(upleft_angle),
             'frame': 0  # Start animation frame
@@ -206,8 +215,8 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         fireball_sound_6.play()
         upright_angle = angle + 3 * math.pi / 4  # Angle for upright direction
         bullets.append({
-            'x': player_x,
-            'y': player_y,
+            'x': player_center_x,
+            'y': player_center_y,
             'dx': bullet_speed * math.cos(upright_angle),
             'dy': bullet_speed * math.sin(upright_angle),
             'frame': 0  # Start animation frame
@@ -216,8 +225,8 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         # Shoot fireball upleft
         upleft_angle = angle - 3 * math.pi / 4  # Angle for upleft direction
         bullets.append({
-            'x': player_x,
-            'y': player_y,
+            'x': player_center_x,
+            'y': player_center_y,
             'dx': bullet_speed * math.cos(upleft_angle),
             'dy': bullet_speed * math.sin(upleft_angle),
             'frame': 0  # Start animation frame
@@ -257,6 +266,11 @@ def level_up():
     current_max_exp = int(current_max_exp * 1.3)  # Increase current max exp exponentially for the next level
     paused = True
     show_upgrade_menu = True  # Show the upgrade menu
+    if gambling_mode:
+        gambling_sound.play()
+    elif gambling_mode == False:
+        level_up_sound.play()
+
 
 # Function to draw experience bar
 def draw_exp_bar():
@@ -317,6 +331,10 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 paused = not paused  # Toggle pause state
 
+            if event.key == pygame.K_g:
+                gambling_mode = True
+                print("You are now gambling!!")
+
             if show_upgrade_menu:  # Handle upgrade selection
                 if event.key == pygame.K_RETURN and upgrades!=1:
                     upgrades=1  # Apply the first fireball upgrade
@@ -352,6 +370,8 @@ while True:
 
         if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and upgrades!=7 and current_fireball_cooldown==0:
             shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
+
+
 
     if not paused and not show_upgrade_menu:  # Only update game state if not paused and upgrade menu is not shown
         # Update player input and game state
@@ -512,6 +532,7 @@ while True:
             # Check for collisions with the player
             if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
                     player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
+                pickup_sound.play()
                 # Player gains exp equal to the amount associated with the exp orb
                 exp += orb_exp
                 # Remove the exp orb from the active list
