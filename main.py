@@ -79,7 +79,7 @@ center_y = player_y + player_height / 4
 # Experience system
 gambling_mode = False
 exp = 0
-enemy_exp = 0
+enemy_exp = random.randint(1, 5)
 active_exp_orbs = []
 current_max_exp = 30
 max_level = 1000  # for ending
@@ -101,7 +101,6 @@ for i in range(1, 6):  # Assume there are five fireball images named fireball1.p
     scaled_frame = pygame.transform.scale(original_frame, (scaled_width, scaled_height))
     bullet_frames.append(scaled_frame)
 
-base_enemy_exp = random.randint(1, 5)
 ENEMY_SPEED = 0.5  # Adjust this value as needed
 enemy_image = "Sprites/Ampter"
 
@@ -120,7 +119,7 @@ fireball_sound_6 = pygame.mixer.Sound("sounds/fireball6.wav")
 fireball_sound_7 = pygame.mixer.Sound("sounds/fireball7.wav")
 base_fireball_cooldown = 50
 current_fireball_cooldown = 0
-upgrades = 7
+upgrades = 0
 
 cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
 cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
@@ -347,11 +346,13 @@ def spawn_enemy(player_x, player_y):
 
 # Function to spawn crashing enemies
 def spawn_crashing_enemy(player_x, player_y):
-    enemy_x = random.randint((-width), width // 2) + player_x
-    enemy_y = random.randint(-height // 2, height // 2) + player_y
+    off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
+    spawn_y = player_y + random.choice([-1, 1]) * (
+        random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    crashingenemy = crashingEnemy(enemy_x, enemy_y, 20, 20, 10, ENEMY_SPEED)
-    crashing_enemies.append(crashingenemy)
+    crashing_enemiey = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
+    crashing_enemies.append(crashing_enemy)
 
 # Function to draw player's health bar
 def draw_hp_bar():
@@ -620,12 +621,16 @@ while True:
     screen.fill(BLACK)  # Clear the screen
     draw_tiles(camera_offset_x, camera_offset_y)
 
-    # Draw player, enemies, bullets, health bar, and experience bar...
     for exp_orb in active_exp_orbs:
+        # Resize the exp_image based on the orb's size
+        scaled_exp_image = pygame.transform.scale(exp_image, (exp_orb['size'], exp_orb['size']))
+
         # Calculate the top-left corner of the image so it's centered on the orb's position
-        image_x = exp_orb['x'] - exp_image.get_width() // 2 + camera_offset_x
-        image_y = exp_orb['y'] - exp_image.get_height() // 2 + camera_offset_y
-        screen.blit(exp_image, (image_x, image_y))
+        image_x = exp_orb['x'] - scaled_exp_image.get_width() // 2 + camera_offset_x
+        image_y = exp_orb['y'] - scaled_exp_image.get_height() // 2 + camera_offset_y
+
+        # Draw the scaled image
+        screen.blit(scaled_exp_image, (image_x, image_y))
 
     for enemy in enemies:
         pygame.draw.rect(screen, RED, (enemy.x + camera_offset_x, enemy.y + camera_offset_y, enemy.width, enemy.height))
