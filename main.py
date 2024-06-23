@@ -137,7 +137,7 @@ def animate_bullet(bullet):
         bullet['frame'] = 0
     return bullet_frames[bullet['frame']]
 
-def shoot_forwards(player_center_x, player_center_y,bullet_speed, angle):
+def shoot_forwards(player_center_x, player_center_y,bullet_speed, angle, bullets):
     bullets.append({
         'x': player_center_x,
         'y': player_center_y,
@@ -145,7 +145,7 @@ def shoot_forwards(player_center_x, player_center_y,bullet_speed, angle):
         'dy': bullet_speed * math.sin(angle),
         'frame': 0  # Start animation frame
     })
-def shoot_backwards(player_center_x, player_center_y,bullet_speed, angle):
+def shoot_backwards(player_center_x, player_center_y,bullet_speed, angle, bullets):
     # Shoot fireball in the opposite direction
     backwards_angle = angle + math.pi  # Calculate opposite angle
     bullets.append({
@@ -156,7 +156,7 @@ def shoot_backwards(player_center_x, player_center_y,bullet_speed, angle):
         'frame': 0  # Start animation frame
     })
 
-def shoot_right(player_center_x, player_center_y,bullet_speed, angle):
+def shoot_right(player_center_x, player_center_y,bullet_speed, angle, bullets):
     # Shoot fireball to the right
     right_angle = angle + math.pi / 2  # Angle for right direction
     bullets.append({
@@ -167,7 +167,7 @@ def shoot_right(player_center_x, player_center_y,bullet_speed, angle):
         'frame': 0  # Start animation frame
     })
 
-def shoot_left(player_center_x, player_center_y,bullet_speed, angle):
+def shoot_left(player_center_x, player_center_y,bullet_speed, angle, bullets):
     # Shoot fireball to the left
     left_angle = angle - math.pi / 2  # Angle for left direction
     bullets.append({
@@ -178,7 +178,7 @@ def shoot_left(player_center_x, player_center_y,bullet_speed, angle):
         'frame': 0  # Start animation frame
     })
 
-def shoot_up_directional(player_center_x, player_center_y,bullet_speed, angle):
+def shoot_up_directional(player_center_x, player_center_y,bullet_speed, angle, bullets):
     upright_angle = angle + math.pi / 4  # Angle for upright direction
     bullets.append({
         'x': player_center_x,
@@ -197,7 +197,7 @@ def shoot_up_directional(player_center_x, player_center_y,bullet_speed, angle):
         'frame': 0  # Start animation frame
     })
 
-def shoot_down_directional(player_center_x, player_center_y,bullet_speed, angle):
+def shoot_down_directional(player_center_x, player_center_y,bullet_speed, angle, bullets):
     downright_angle = angle + 3 * math.pi / 4  # Angle for upright direction
     bullets.append({
         'x': player_center_x,
@@ -227,41 +227,41 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         angle = -math.pi / 2  # Angle for shooting upwards
     else:
         mouseX, mouseY = pygame.mouse.get_pos()
-        angle = math.atan2(mouseY - height // 2, mouseX - width // 2)
+        angle = math.atan2(mouseY - player_center_x, mouseX - player_center_y)
     if upgrades==0:
-        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
         fireball_sound_1.set_volume(0.5)  # Set volume to 50%
         fireball_sound_1.play()
     if upgrades==1:
         fireball_sound_2.play()
-        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
     if upgrades==2:
         fireball_sound_3.play()
-        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_right(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_right(player_center_x, player_center_y, bullet_speed, angle, bullets)
     if upgrades==3:
         fireball_sound_4.play()
-        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_right(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_left(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_right(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_left(player_center_x, player_center_y, bullet_speed, angle, bullets)
     if upgrades==4:
         fireball_sound_5.play()
-        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_right(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_left(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_up_directional(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_right(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_left(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_up_directional(player_center_x, player_center_y, bullet_speed, angle, bullets)
     if upgrades==5:
         fireball_sound_6.play()
-        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_right(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_left(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_up_directional(player_center_x, player_center_y, bullet_speed, angle)
-        shoot_down_directional(player_center_x, player_center_y,bullet_speed, angle)
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_right(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_left(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_up_directional(player_center_x, player_center_y, bullet_speed, angle, bullets)
+        shoot_down_directional(player_center_x, player_center_y,bullet_speed, angle, bullets)
 
     # Apply the reduced cooldown based on the upgrades
     cooldown_reduction = 0
