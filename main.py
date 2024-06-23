@@ -116,7 +116,7 @@ fireball_sound_6 = pygame.mixer.Sound("sounds/fireball6.wav")
 fireball_sound_7 = pygame.mixer.Sound("sounds/fireball7.wav")
 base_fireball_cooldown = 50
 current_fireball_cooldown = 0
-upgrades = 1
+upgrades = 0
 
 cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
 cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
