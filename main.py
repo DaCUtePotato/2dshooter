@@ -7,6 +7,7 @@ from crashing_enemy import crashingEnemy, crashing_enemies
 
 # Initialize Pygame
 pygame.init()
+pygame.mixer.init()
 
 # Set up the game window
 fullscreen = False  # Change this variable to switch between fullscreen and windowed mode
@@ -101,15 +102,16 @@ exp_image = pygame.image.load("sprites/exp.png")
 paused = False
 
 # Fireball variables
+fireball_sound_1 = pygame.mixer.Sound("sounds/fireball1.wav")
+fireball_sound_2 = pygame.mixer.Sound("sounds/fireball2.wav")
+fireball_sound_3 = pygame.mixer.Sound("sounds/fireball3.wav")
+fireball_sound_4 = pygame.mixer.Sound("sounds/fireball4.wav")
+fireball_sound_5 = pygame.mixer.Sound("sounds/fireball5.wav")
+fireball_sound_6 = pygame.mixer.Sound("sounds/fireball6.wav")
+fireball_sound_7 = pygame.mixer.Sound("sounds/fireball7.wav")
 base_fireball_cooldown = 50
 current_fireball_cooldown = 0
-fireball_upgrade1 = False  # Upgrade 1 tracking
-fireball_upgrade2 = False # Upgrade 2 tracking
-fireball_upgrade3 = False # Upgrade 3 tracking
-fireball_upgrade4 = False # You get the idea...
-fireball_upgrade5 = False
-fireball_upgrade6 = False
-fireball_upgrade7 = False
+upgrades = 0
 
 cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
 cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
@@ -132,12 +134,15 @@ def animate_bullet(bullet):
 
 def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     global current_fireball_cooldown
-    if current_fireball_cooldown == 0:  # Check if the cooldown period has elapsed
-        if fireball_upgrade7:  # If the 7th upgrade is active, shoot upwards
-            angle = -math.pi / 2  # Angle for shooting upwards
-        else:
-            mouseX, mouseY = pygame.mouse.get_pos()
-            angle = math.atan2(mouseY - height // 2, mouseX - width // 2)  # Use the center of the screen for angle calculation
+
+    if upgrades==7:  # If the 7th upgrade is active, shoot upwards
+        fireball_sound_7.play()
+        angle = -math.pi / 2  # Angle for shooting upwards
+    else:
+        mouseX, mouseY = pygame.mouse.get_pos()
+        angle = math.atan2(mouseY - height // 2, mouseX - width // 2)  # Use the center of the screen for angle calculation
+    if upgrades==0:
+        fireball_sound_1.play()
         bullets.append({
             'x': player_x,
             'y': player_y,
@@ -145,91 +150,96 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
             'dy': bullet_speed * math.sin(angle),
             'frame': 0  # Start animation frame
         })
-        if fireball_upgrade1:
-            # Shoot fireball in the opposite direction
-            backwards_angle = angle + math.pi  # Calculate opposite angle
-            bullets.append({
-                'x': player_x,
-                'y': player_y,
-                'dx': bullet_speed * math.cos(backwards_angle),
-                'dy': bullet_speed * math.sin(backwards_angle),
-                'frame': 0 # Start animation frame
-            })
-        if fireball_upgrade2:
-            #Shoot fireball to the right
-            right_angle = angle + math.pi/ 2  # Angle for right direction
-            bullets.append({
-                'x': player_x,
-                'y': player_y,
-                'dx': bullet_speed * math.cos(right_angle),
-                'dy': bullet_speed * math.sin(right_angle),
-                'frame': 0  # Start animation frame
-            })
-        if fireball_upgrade3:
-            #Shoot fireball to the left
-            left_angle = angle - math.pi/ 2  # Angle for left direction
-            bullets.append({
-                'x': player_x,
-                'y': player_y,
-                'dx': bullet_speed * math.cos(left_angle),
-                'dy': bullet_speed * math.sin(left_angle),
-                'frame': 0  # Start animation frame
-            })
-        if fireball_upgrade4:
-            upright_angle = angle + math.pi / 4  # Angle for upright direction
-            bullets.append({
-                'x': player_x,
-                'y': player_y,
-                'dx': bullet_speed * math.cos(upright_angle),
-                'dy': bullet_speed * math.sin(upright_angle),
-                'frame': 0  # Start animation frame
-            })
-            # Shoot fireball upleft
-            upleft_angle = angle - math.pi / 4  # Angle for upleft direction
-            bullets.append({
-                'x': player_x,
-                'y': player_y,
-                'dx': bullet_speed * math.cos(upleft_angle),
-                'dy': bullet_speed * math.sin(upleft_angle),
-                'frame': 0  # Start animation frame
-            })
-        if fireball_upgrade5:
-            upright_angle = angle + 3 * math.pi / 4  # Angle for upright direction
-            bullets.append({
-                'x': player_x,
-                'y': player_y,
-                'dx': bullet_speed * math.cos(upright_angle),
-                'dy': bullet_speed * math.sin(upright_angle),
-                'frame': 0  # Start animation frame
+    if upgrades==1:
+        fireball_sound_2.play()
+        # Shoot fireball in the opposite direction
+        backwards_angle = angle + math.pi  # Calculate opposite angle
+        bullets.append({
+            'x': player_x,
+            'y': player_y,
+            'dx': bullet_speed * math.cos(backwards_angle),
+            'dy': bullet_speed * math.sin(backwards_angle),
+            'frame': 0 # Start animation frame
+        })
+    if upgrades==2:
+        fireball_sound_3.play()
+        #Shoot fireball to the right
+        right_angle = angle + math.pi/ 2  # Angle for right direction
+        bullets.append({
+            'x': player_x,
+            'y': player_y,
+            'dx': bullet_speed * math.cos(right_angle),
+            'dy': bullet_speed * math.sin(right_angle),
+            'frame': 0  # Start animation frame
+        })
+    if upgrades==3:
+        fireball_sound_4.play()
+        #Shoot fireball to the left
+        left_angle = angle - math.pi/ 2  # Angle for left direction
+        bullets.append({
+            'x': player_x,
+            'y': player_y,
+            'dx': bullet_speed * math.cos(left_angle),
+            'dy': bullet_speed * math.sin(left_angle),
+            'frame': 0  # Start animation frame
+        })
+    if upgrades==4:
+        fireball_sound_5.play()
+        upright_angle = angle + math.pi / 4  # Angle for upright direction
+        bullets.append({
+            'x': player_x,
+            'y': player_y,
+            'dx': bullet_speed * math.cos(upright_angle),
+            'dy': bullet_speed * math.sin(upright_angle),
+            'frame': 0  # Start animation frame
+        })
+        # Shoot fireball upleft
+        upleft_angle = angle - math.pi / 4  # Angle for upleft direction
+        bullets.append({
+            'x': player_x,
+            'y': player_y,
+            'dx': bullet_speed * math.cos(upleft_angle),
+            'dy': bullet_speed * math.sin(upleft_angle),
+            'frame': 0  # Start animation frame
+        })
+    if upgrades==5:
+        fireball_sound_6.play()
+        upright_angle = angle + 3 * math.pi / 4  # Angle for upright direction
+        bullets.append({
+            'x': player_x,
+            'y': player_y,
+            'dx': bullet_speed * math.cos(upright_angle),
+            'dy': bullet_speed * math.sin(upright_angle),
+            'frame': 0  # Start animation frame
 
-            })
-            # Shoot fireball upleft
-            upleft_angle = angle - 3 * math.pi / 4  # Angle for upleft direction
-            bullets.append({
-                'x': player_x,
-                'y': player_y,
-                'dx': bullet_speed * math.cos(upleft_angle),
-                'dy': bullet_speed * math.sin(upleft_angle),
-                'frame': 0  # Start animation frame
-            })
+        })
+        # Shoot fireball upleft
+        upleft_angle = angle - 3 * math.pi / 4  # Angle for upleft direction
+        bullets.append({
+            'x': player_x,
+            'y': player_y,
+            'dx': bullet_speed * math.cos(upleft_angle),
+            'dy': bullet_speed * math.sin(upleft_angle),
+            'frame': 0  # Start animation frame
+        })
 
-        # Apply the reduced cooldown based on the upgrades
-        cooldown_reduction = 0
-        if fireball_upgrade1:
-            cooldown_reduction += cooldown_reduction_upgrade1
-        if fireball_upgrade2:
-            cooldown_reduction += cooldown_reduction_upgrade2
-        if fireball_upgrade3:
-            cooldown_reduction += cooldown_reduction_upgrade3
-        if fireball_upgrade4:
-            cooldown_reduction += cooldown_reduction_upgrade4
-        if fireball_upgrade5:
-            cooldown_reduction += cooldown_reduction_upgrade5
-        if fireball_upgrade6:
-            cooldown_reduction += cooldown_reduction_upgrade6
-        if fireball_upgrade7:
-            cooldown_reduction += cooldown_reduction_upgrade7
-        current_fireball_cooldown = base_fireball_cooldown - cooldown_reduction  # Apply reduced cooldown
+    # Apply the reduced cooldown based on the upgrades
+    cooldown_reduction = 0
+    if upgrades==1:
+        cooldown_reduction += cooldown_reduction_upgrade1
+    if upgrades==2:
+        cooldown_reduction += cooldown_reduction_upgrade2
+    if upgrades==3:
+        cooldown_reduction += cooldown_reduction_upgrade3
+    if upgrades==4:
+        cooldown_reduction += cooldown_reduction_upgrade4
+    if upgrades==5:
+        cooldown_reduction += cooldown_reduction_upgrade5
+    if upgrades==6:
+        cooldown_reduction += cooldown_reduction_upgrade6
+    if upgrades==7:
+        cooldown_reduction += cooldown_reduction_upgrade7
+    current_fireball_cooldown = base_fireball_cooldown - cooldown_reduction  # Apply reduced cooldown
 
 def draw_kill_counter(kills):
     font = pygame.font.Font(None, 24)
@@ -308,39 +318,39 @@ while True:
                 paused = not paused  # Toggle pause state
 
             if show_upgrade_menu:  # Handle upgrade selection
-                if event.key == pygame.K_RETURN and not fireball_upgrade1:
-                    fireball_upgrade1 = True  # Apply the first fireball upgrade
+                if event.key == pygame.K_RETURN and upgrades!=1:
+                    upgrades=1  # Apply the first fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and fireball_upgrade1 and not fireball_upgrade2:
-                    fireball_upgrade2 = True  # Apply the second fireball upgrade
+                elif event.key == pygame.K_RETURN and upgrades==1 and upgrades!=2:
+                    upgrades=2  # Apply the second fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and fireball_upgrade2 and not fireball_upgrade3:
-                    fireball_upgrade3 = True  # Apply the third fireball upgrade
+                elif event.key == pygame.K_RETURN and upgrades==2 and upgrades!=3:
+                    upgrades=3  # Apply the third fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and fireball_upgrade3 and not fireball_upgrade4:
-                    fireball_upgrade4 = True  # Apply the third fireball upgrade
+                elif event.key == pygame.K_RETURN and upgrades==3 and upgrades!=4:
+                    upgrades=4  # Apply the third fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and fireball_upgrade4 and not fireball_upgrade5:
-                    fireball_upgrade5 = True  # Apply the third fireball upgrade
+                elif event.key == pygame.K_RETURN and upgrades==4 and upgrades!=5:
+                    upgrades=5  # Apply the third fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and fireball_upgrade5 and not fireball_upgrade6:
-                    fireball_upgrade6 = True  # Apply the sixth fireball upgrade
+                elif event.key == pygame.K_RETURN and upgrades==5 and upgrades!=6:
+                    upgrades=6  # Apply the sixth fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and fireball_upgrade6 and not fireball_upgrade7:
-                    fireball_upgrade7 = True  # Apply the sixth fireball upgrade
+                elif event.key == pygame.K_RETURN and upgrades==6 and upgrades!=7:
+                    upgrades=7  # Apply the sixth fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
                 elif event.key == pygame.K_RETURN:
                     show_upgrade_menu = False
                     paused = False
 
-        if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and not fireball_upgrade7:
+        if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and upgrades!=7 and current_fireball_cooldown==0:
             shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
 
     if not paused and not show_upgrade_menu:  # Only update game state if not paused and upgrade menu is not shown
@@ -377,7 +387,7 @@ while True:
             current_fireball_cooldown -= 1
 
         # Automatically shoot fireballs if the 7th upgrade is active
-        if fireball_upgrade7 and current_fireball_cooldown == 0:
+        if upgrades==7 and current_fireball_cooldown == 0:
             shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
 
         # Update frame count and current frame if the player is moving
@@ -476,7 +486,7 @@ while True:
 
                 if bullet_rect.colliderect(enemy_rect):
                     enemy.hp -= 10
-                    if not fireball_upgrade6:
+                    if upgrades!=6:
                         bullets.remove(bullet)
 
                     if enemy.hp <= 0:
@@ -565,43 +575,43 @@ while True:
 
     # If upgrade menu is shown, display upgrade options
     if show_upgrade_menu:
-        if not fireball_upgrade1:
+        if upgrades!=1:
             upgrade_text1 = menu_font.render("1. Fireball shoots in opposite direction", True, WHITE)
             text_width, text_height = menu_font.size("1. Fireball shoots in opposite direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text1, (text_x, text_y))
-        elif fireball_upgrade1 and not fireball_upgrade2:
+        elif upgrades==1 and upgrades!=2:
             upgrade_text2 = menu_font.render("2. Fireball shoots in the right direction", True, WHITE)
             text_width, text_height = menu_font.size("2. Fireball shoots in the right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text2, (text_x, text_y))
-        elif fireball_upgrade1 and fireball_upgrade2 and not fireball_upgrade3:
+        elif upgrades==1 and upgrades==2 and upgrades!=3:
             upgrade_text3 = menu_font.render("3. Fireball shoots in the left direction", True, WHITE)
             text_width, text_height = menu_font.size("3. Fireball shoots in the left direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text3, (text_x, text_y))
-        elif fireball_upgrade1 and fireball_upgrade3 and not fireball_upgrade4:
+        elif upgrades==1 and upgrades==3 and not upgrades!=4:
             upgrade_text4 = menu_font.render("4. Fireball shoots in the top left and right direction", True, WHITE)
             text_width, text_height = menu_font.size("4. Fireball shoots in the top left and right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text4, (text_x, text_y))
-        elif fireball_upgrade1 and fireball_upgrade4 and not fireball_upgrade5:
+        elif upgrades==1 and upgrades==4 and not upgrades!=5:
             upgrade_text5 = menu_font.render("5. Fireball shoots in the bottom left and right direction", True, WHITE)
             text_width, text_height = menu_font.size("5. Fireball shoots in the bottom left and right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text5, (text_x, text_y))
-        elif fireball_upgrade1 and fireball_upgrade5 and not fireball_upgrade6:
+        elif upgrades==1 and upgrades==5 and not upgrades!=6:
             upgrade_text6 = menu_font.render("6. Fireball goes through enemies", True, WHITE)
             text_width, text_height = menu_font.size("6. Fireball goes through enemies")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text6, (text_x, text_y))
-        elif fireball_upgrade1 and fireball_upgrade6 and not fireball_upgrade7:
+        elif upgrades==1 and upgrades==6 and not upgrades!=7:
             upgrade_text7 = menu_font.render("7. Automode", True, WHITE)
             text_width, text_height = menu_font.size("7. Automode")
             text_x = (width - text_width) // 2
