@@ -82,7 +82,7 @@ exp = 0
 enemy_exp = random.randint(1, 5)
 active_exp_orbs = []
 current_max_exp = 30
-max_level = 1000  # for ending
+max_level = 10000  # for ending
 player_level = 1  # keeping track of the player's current level
 exp_increase_per_level = 5
 levelling = False
@@ -125,7 +125,7 @@ fireball_sound_6 = pygame.mixer.Sound("sounds/fireball6.wav")
 fireball_sound_7 = pygame.mixer.Sound("sounds/fireball7.wav")
 base_fireball_cooldown = 50
 current_fireball_cooldown = 0
-upgrades = 0
+upgrades = 5
 
 cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
 cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
@@ -511,7 +511,7 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy(player_x, player_y)
-        elif random.randint(0, 10000) == 69:  # 1 in 1000 chance
+        if kills > 100 and random.randint(0, 10000) == 69:
             spawn_crashing_enemy(player_x, player_y)
 
 
@@ -594,7 +594,7 @@ while True:
                         active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         kills += 1
-                        if random.randint(0, 10) == 1:
+                        if random.randint(0, 100) == 69:
                             active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                             print("A wild regen orb spawned!!!!!")
                         break
@@ -732,13 +732,13 @@ while True:
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text5, (text_x, text_y))
-        elif upgrades == 6:
+        elif upgrades == 5:
             upgrade_text6 = menu_font.render("6. Fireball goes through enemies", True, WHITE)
             text_width, text_height = menu_font.size("6. Fireball goes through enemies")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text6, (text_x, text_y))
-        elif upgrades == 7:
+        elif upgrades == 6:
             upgrade_text7 = menu_font.render("7. Automode", True, WHITE)
             text_width, text_height = menu_font.size("7. Automode")
             text_x = (width - text_width) // 2
