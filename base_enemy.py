@@ -11,5 +11,5 @@ class Enemy:
         self.speed = speed
 
 
-exp = random.randint(0, 5)
+exp = random.randint(1, 5)
 enemies = []

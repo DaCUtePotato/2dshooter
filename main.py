@@ -90,6 +90,12 @@ pickup_sound = pygame.mixer.Sound("sounds/exp.wav")
 level_up_sound = pygame.mixer.Sound("sounds/level_up_normal.wav")
 gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
 
+#Regeneration
+active_regen_orbs = []
+regen_amount = 30
+pickup_sound_regen = pygame.mixer.Sound("sounds/pickup_regen.wav")
+regen_orb_size = 10
+
 # Bullet attributes
 bullets = []
 bullet_speed = 10
@@ -315,7 +321,6 @@ def level_up():
         gambling_sound.play()
     elif gambling_mode == False:
         level_up_sound.play()
-
 
 # Function to draw experience bar
 def draw_exp_bar():
@@ -586,9 +591,12 @@ while True:
 
                     if enemy.hp <= 0:
                         enemies_to_remove.append(enemy)
-                        active_exp_orbs.append({'size': enemy_exp * 3, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
+                        active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         kills += 1
+                        if random.randint(0, 10) == 1:
+                            active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
+                            print("A wild regen orb spawned!!!!!")
                         break
 
         for enemy in enemies_to_remove:
@@ -612,6 +620,21 @@ while True:
                 exp += orb_exp
                 # Remove the exp orb from the active list
                 active_exp_orbs.remove(exp_orb)
+
+        for regen_orb in active_regen_orbs:
+            orb_center_x = regen_orb['x']
+            orb_center_y = regen_orb['y']
+            orb_radius = regen_orb['size']
+            orb_value = regen_orb['value']  # Extract the exp value associated with the orb
+
+            # Check for collisions with the player
+            if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
+                    player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
+                pickup_sound_regen.play()
+                # Player gains exp equal to the amount associated with the exp orb
+                player_hp += orb_value
+                # Remove the exp orb from the active list
+                active_regen_orbs.remove(regen_orb)
 
     # Calculate camera offset
     camera_offset_x = width // 2 - player_x
@@ -637,6 +660,9 @@ while True:
 
     for crashing_enemy in crashing_enemies:
         pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
+
+    for regen_orb in active_regen_orbs:
+        pygame.draw.circle(screen, RED, (regen_orb['x']+camera_offset_x, regen_orb['y']+camera_offset_y), regen_orb['size'])
 
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity
