@@ -116,7 +116,7 @@ fireball_sound_6 = pygame.mixer.Sound("sounds/fireball6.wav")
 fireball_sound_7 = pygame.mixer.Sound("sounds/fireball7.wav")
 base_fireball_cooldown = 50
 current_fireball_cooldown = 0
-upgrades = 0
+upgrades = 1
 
 cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
 cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
@@ -137,6 +137,85 @@ def animate_bullet(bullet):
         bullet['frame'] = 0
     return bullet_frames[bullet['frame']]
 
+def shoot_forwards(player_center_x, player_center_y,bullet_speed, angle):
+    bullets.append({
+        'x': player_center_x,
+        'y': player_center_y,
+        'dx': bullet_speed * math.cos(angle),
+        'dy': bullet_speed * math.sin(angle),
+        'frame': 0  # Start animation frame
+    })
+def shoot_backwards(player_center_x, player_center_y,bullet_speed, angle):
+    # Shoot fireball in the opposite direction
+    backwards_angle = angle + math.pi  # Calculate opposite angle
+    bullets.append({
+        'x': player_center_x,
+        'y': player_center_y,
+        'dx': bullet_speed * math.cos(backwards_angle),
+        'dy': bullet_speed * math.sin(backwards_angle),
+        'frame': 0  # Start animation frame
+    })
+
+def shoot_right(player_center_x, player_center_y,bullet_speed, angle):
+    # Shoot fireball to the right
+    right_angle = angle + math.pi / 2  # Angle for right direction
+    bullets.append({
+        'x': player_center_x,
+        'y': player_center_y,
+        'dx': bullet_speed * math.cos(right_angle),
+        'dy': bullet_speed * math.sin(right_angle),
+        'frame': 0  # Start animation frame
+    })
+
+def shoot_left(player_center_x, player_center_y,bullet_speed, angle):
+    # Shoot fireball to the left
+    left_angle = angle - math.pi / 2  # Angle for left direction
+    bullets.append({
+        'x': player_center_x,
+        'y': player_center_y,
+        'dx': bullet_speed * math.cos(left_angle),
+        'dy': bullet_speed * math.sin(left_angle),
+        'frame': 0  # Start animation frame
+    })
+
+def shoot_up_directional(player_center_x, player_center_y,bullet_speed, angle):
+    upright_angle = angle + math.pi / 4  # Angle for upright direction
+    bullets.append({
+        'x': player_center_x,
+        'y': player_center_y,
+        'dx': bullet_speed * math.cos(upright_angle),
+        'dy': bullet_speed * math.sin(upright_angle),
+        'frame': 0  # Start animation frame
+    })
+    # Shoot fireball upleft
+    upleft_angle = angle - math.pi / 4  # Angle for upleft direction
+    bullets.append({
+        'x': player_center_x,
+        'y': player_center_y,
+        'dx': bullet_speed * math.cos(upleft_angle),
+        'dy': bullet_speed * math.sin(upleft_angle),
+        'frame': 0  # Start animation frame
+    })
+
+def shoot_down_directional(player_center_x, player_center_y,bullet_speed, angle):
+    downright_angle = angle + 3 * math.pi / 4  # Angle for upright direction
+    bullets.append({
+        'x': player_center_x,
+        'y': player_center_y,
+        'dx': bullet_speed * math.cos(downright_angle),
+        'dy': bullet_speed * math.sin(downright_angle),
+        'frame': 0  # Start animation frame
+    })
+    # Shoot fireball upleft
+    downleft_angle = angle - 3 * math.pi / 4  # Angle for upleft direction
+    bullets.append({
+        'x': player_center_x,
+        'y': player_center_y,
+        'dx': bullet_speed * math.cos(downleft_angle),
+        'dy': bullet_speed * math.sin(downleft_angle),
+        'frame': 0  # Start animation frame
+    })
+
 def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     global current_fireball_cooldown
 
@@ -150,87 +229,39 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         mouseX, mouseY = pygame.mouse.get_pos()
         angle = math.atan2(mouseY - height // 2, mouseX - width // 2)
     if upgrades==0:
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
         fireball_sound_1.set_volume(0.5)  # Set volume to 50%
         fireball_sound_1.play()
-        bullets.append({
-            'x': player_center_x,
-            'y': player_center_y,
-            'dx': bullet_speed * math.cos(angle),
-            'dy': bullet_speed * math.sin(angle),
-            'frame': 0  # Start animation frame
-        })
     if upgrades==1:
         fireball_sound_2.play()
-        # Shoot fireball in the opposite direction
-        backwards_angle = angle + math.pi  # Calculate opposite angle
-        bullets.append({
-            'x': player_center_x,
-            'y': player_center_y,
-            'dx': bullet_speed * math.cos(backwards_angle),
-            'dy': bullet_speed * math.sin(backwards_angle),
-            'frame': 0 # Start animation frame
-        })
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
     if upgrades==2:
         fireball_sound_3.play()
-        #Shoot fireball to the right
-        right_angle = angle + math.pi/ 2  # Angle for right direction
-        bullets.append({
-            'x': player_center_x,
-            'y': player_center_y,
-            'dx': bullet_speed * math.cos(right_angle),
-            'dy': bullet_speed * math.sin(right_angle),
-            'frame': 0  # Start animation frame
-        })
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_right(player_center_x, player_center_y, bullet_speed, angle)
     if upgrades==3:
         fireball_sound_4.play()
-        #Shoot fireball to the left
-        left_angle = angle - math.pi/ 2  # Angle for left direction
-        bullets.append({
-            'x': player_center_x,
-            'y': player_center_y,
-            'dx': bullet_speed * math.cos(left_angle),
-            'dy': bullet_speed * math.sin(left_angle),
-            'frame': 0  # Start animation frame
-        })
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_right(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_left(player_center_x, player_center_y, bullet_speed, angle)
     if upgrades==4:
         fireball_sound_5.play()
-        upright_angle = angle + math.pi / 4  # Angle for upright direction
-        bullets.append({
-            'x': player_center_x,
-            'y': player_center_y,
-            'dx': bullet_speed * math.cos(upright_angle),
-            'dy': bullet_speed * math.sin(upright_angle),
-            'frame': 0  # Start animation frame
-        })
-        # Shoot fireball upleft
-        upleft_angle = angle - math.pi / 4  # Angle for upleft direction
-        bullets.append({
-            'x': player_center_x,
-            'y': player_center_y,
-            'dx': bullet_speed * math.cos(upleft_angle),
-            'dy': bullet_speed * math.sin(upleft_angle),
-            'frame': 0  # Start animation frame
-        })
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_right(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_left(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_up_directional(player_center_x, player_center_y, bullet_speed, angle)
     if upgrades==5:
         fireball_sound_6.play()
-        upright_angle = angle + 3 * math.pi / 4  # Angle for upright direction
-        bullets.append({
-            'x': player_center_x,
-            'y': player_center_y,
-            'dx': bullet_speed * math.cos(upright_angle),
-            'dy': bullet_speed * math.sin(upright_angle),
-            'frame': 0  # Start animation frame
-
-        })
-        # Shoot fireball upleft
-        upleft_angle = angle - 3 * math.pi / 4  # Angle for upleft direction
-        bullets.append({
-            'x': player_center_x,
-            'y': player_center_y,
-            'dx': bullet_speed * math.cos(upleft_angle),
-            'dy': bullet_speed * math.sin(upleft_angle),
-            'frame': 0  # Start animation frame
-        })
+        shoot_forwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_backwards(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_right(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_left(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_up_directional(player_center_x, player_center_y, bullet_speed, angle)
+        shoot_down_directional(player_center_x, player_center_y,bullet_speed, angle)
 
     # Apply the reduced cooldown based on the upgrades
     cooldown_reduction = 0
@@ -336,31 +367,31 @@ while True:
                 print("You are now gambling!!")
 
             if show_upgrade_menu:  # Handle upgrade selection
-                if event.key == pygame.K_RETURN and upgrades!=1:
+                if event.key == pygame.K_RETURN and upgrades==0:
                     upgrades=1  # Apply the first fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==1 and upgrades!=2:
+                elif event.key == pygame.K_RETURN and upgrades==1:
                     upgrades=2  # Apply the second fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==2 and upgrades!=3:
+                elif event.key == pygame.K_RETURN and upgrades==2:
                     upgrades=3  # Apply the third fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==3 and upgrades!=4:
+                elif event.key == pygame.K_RETURN and upgrades==3:
                     upgrades=4  # Apply the third fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==4 and upgrades!=5:
+                elif event.key == pygame.K_RETURN and upgrades==4:
                     upgrades=5  # Apply the third fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==5 and upgrades!=6:
+                elif event.key == pygame.K_RETURN and upgrades==5:
                     upgrades=6  # Apply the sixth fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==6 and upgrades!=7:
+                elif event.key == pygame.K_RETURN and upgrades==6:
                     upgrades=7  # Apply the sixth fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
@@ -506,7 +537,7 @@ while True:
 
                 if bullet_rect.colliderect(enemy_rect):
                     enemy.hp -= 10
-                    if upgrades!=6:
+                    if upgrades<=6:
                         bullets.remove(bullet)
 
                     if enemy.hp <= 0:
@@ -638,7 +669,7 @@ while True:
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text7, (text_x, text_y))
-        else:
+        elif upgrades>7:
             out_of_upgrades_text = menu_font.render("So um funny story, I'm out of upgrade ideas...", True, WHITE)
             text_width, text_height = menu_font.size("So um funny story, I'm out of upgrade ideas...")
             text_x = (width - text_width) // 2
