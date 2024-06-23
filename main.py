@@ -351,7 +351,7 @@ def spawn_crashing_enemy(player_x, player_y):
     spawn_y = player_y + random.choice([-1, 1]) * (
         random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    crashing_enemiey = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
+    crashing_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
     crashing_enemies.append(crashing_enemy)
 
 # Function to draw player's health bar
