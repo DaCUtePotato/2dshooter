@@ -148,7 +148,7 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         angle = -math.pi / 2  # Angle for shooting upwards
     else:
         mouseX, mouseY = pygame.mouse.get_pos()
-        angle = math.atan2(mouseY - height // 2, mouseX - width // 2)  # Use the center of the screen for angle calculation
+        angle = math.atan2(mouseY - height // 2, mouseX - width // 2)
     if upgrades==0:
         fireball_sound_1.set_volume(0.5)  # Set volume to 50%
         fireball_sound_1.play()
@@ -596,43 +596,43 @@ while True:
 
     # If upgrade menu is shown, display upgrade options
     if show_upgrade_menu:
-        if upgrades!=1:
+        if upgrades==1:
             upgrade_text1 = menu_font.render("1. Fireball shoots in opposite direction", True, WHITE)
             text_width, text_height = menu_font.size("1. Fireball shoots in opposite direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text1, (text_x, text_y))
-        elif upgrades==1 and upgrades!=2:
+        elif upgrades==2:
             upgrade_text2 = menu_font.render("2. Fireball shoots in the right direction", True, WHITE)
             text_width, text_height = menu_font.size("2. Fireball shoots in the right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text2, (text_x, text_y))
-        elif upgrades==1 and upgrades==2 and upgrades!=3:
+        elif upgrades==3:
             upgrade_text3 = menu_font.render("3. Fireball shoots in the left direction", True, WHITE)
             text_width, text_height = menu_font.size("3. Fireball shoots in the left direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text3, (text_x, text_y))
-        elif upgrades==1 and upgrades==3 and not upgrades!=4:
+        elif upgrades==4:
             upgrade_text4 = menu_font.render("4. Fireball shoots in the top left and right direction", True, WHITE)
             text_width, text_height = menu_font.size("4. Fireball shoots in the top left and right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text4, (text_x, text_y))
-        elif upgrades==1 and upgrades==4 and not upgrades!=5:
+        elif upgrades==5:
             upgrade_text5 = menu_font.render("5. Fireball shoots in the bottom left and right direction", True, WHITE)
             text_width, text_height = menu_font.size("5. Fireball shoots in the bottom left and right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text5, (text_x, text_y))
-        elif upgrades==1 and upgrades==5 and not upgrades!=6:
+        elif upgrades==6:
             upgrade_text6 = menu_font.render("6. Fireball goes through enemies", True, WHITE)
             text_width, text_height = menu_font.size("6. Fireball goes through enemies")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text6, (text_x, text_y))
-        elif upgrades==1 and upgrades==6 and not upgrades!=7:
+        elif upgrades==7:
             upgrade_text7 = menu_font.render("7. Automode", True, WHITE)
             text_width, text_height = menu_font.size("7. Automode")
             text_x = (width - text_width) // 2
