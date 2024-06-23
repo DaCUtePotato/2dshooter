@@ -219,15 +219,15 @@ def shoot_down_directional(player_center_x, player_center_y,bullet_speed, angle,
 def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     global current_fireball_cooldown
 
-    player_center_x = player_x + player_width / 2
-    player_center_y = player_y + player_height / 4
+    player_center_x = player_x + player_width // 2
+    player_center_y = player_y + player_height // 4
 
     if upgrades==7:  # If the 7th upgrade is active, shoot upwards
         fireball_sound_7.play()
         angle = -math.pi / 2  # Angle for shooting upwards
     else:
         mouseX, mouseY = pygame.mouse.get_pos()
-        angle = math.atan2(mouseY - player_center_x, mouseX - player_center_y)
+        angle = math.atan2(mouseY-player_center_y, mouseX - player_center_x)
     if upgrades==0:
         shoot_forwards(player_center_x, player_center_y, bullet_speed, angle, bullets)
         fireball_sound_1.set_volume(0.5)  # Set volume to 50%
