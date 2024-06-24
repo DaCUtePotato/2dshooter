@@ -3,7 +3,7 @@ import pygame
 import sys
 import random
 from base_enemy import Enemy, enemies
-from crashing_enemy import crashingEnemy, crashing_enemies
+from crashing_enemy import crashing_enemies
 
 # Initialize Pygame
 pygame.init()
@@ -25,6 +25,7 @@ width, height = pygame.display.get_surface().get_size()
 pygame.display.set_caption("2D Shooter")
 FPS = 60
 
+
 tile_image = pygame.image.load('sprites/tile.png')  # Load tiles for the game
 tile_size = 128  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
@@ -41,16 +42,28 @@ sprite_sheet_down = pygame.image.load(sprite_sheet_path_down).convert_alpha()
 sprite_sheet_left = pygame.image.load(sprite_sheet_path_left).convert_alpha()
 
 # Frame setup
-frame_width, frame_height = 24, 30
+
+# Frames player
+player_frame_width, plyer_frame_height = 24, 30
 scaling_factor = 2.77
-niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor
-frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
-frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
-frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
-frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+niko_scaling_width, niko_scaling_height = player_frame_width * scaling_factor, plyer_frame_height * scaling_factor
+frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(player_frame_width * i, 0, player_frame_width, plyer_frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(player_frame_width * i, 0, player_frame_width, plyer_frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(player_frame_width * i, 0, player_frame_width, plyer_frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(player_frame_width * i, 0, player_frame_width, plyer_frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 current_frame = 0
 frame_count = 0
 rendering = "down"
+
+enemy_frames = []
+for i in range(1, 4):  # Assume there are five fireball images named fireball1.png to fireball5.png
+    original_enemy_frame = pygame.image.load(f"sprites/enemies/enemy{i}.png").convert_alpha()
+    scaled_enemy_width = original_enemy_frame.get_width() * 3
+    scaled_enemy_height = original_enemy_frame.get_height() * 3
+    scaled_enemy_frame = pygame.transform.scale(original_enemy_frame, (scaled_enemy_width, scaled_enemy_height))
+    enemy_frames.append(scaled_enemy_frame)
+enemy_frame_skips = FPS
+temp_enemy_frame_skips = enemy_frame_skips
 
 # Colors
 BLACK = (0, 0, 0)
@@ -110,7 +123,6 @@ for i in range(1, 6):  # Assume there are five fireball images named fireball1.p
     bullet_frames.append(scaled_frame)
 
 ENEMY_SPEED = 0.5  # Adjust this value as needed
-enemy_image = "Sprites/Ampter"
 
 # Load experience orb image
 exp_image = pygame.image.load("sprites/exp.png")
@@ -129,7 +141,7 @@ base_fireball_cooldown = 50
 current_fireball_cooldown = 0
 upgrades = 5
 
-cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
+cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade
 cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
 cooldown_reduction_upgrade3 = 10 # Cooldown reduction Upgrade 3
 cooldown_reduction_upgrade4 = 5 # Same here
@@ -148,6 +160,14 @@ def animate_bullet(bullet):
         bullet['frame'] = 0
     return bullet_frames[bullet['frame']]
 
+def animate_enemy(enemy):
+    enemy.frame += 1
+    if enemy.frame >= len(enemy_frames):
+        enemy.frame = 0
+    return enemy_frames[enemy.frame]
+for enemy in enemies:
+    enemy_image = animate_enemy(enemy)
+    temp_enemy_images = enemy_image
 def shoot_forwards(player_x, player_y,bullet_speed,angle, bullets):
     bullets.append({
         'x': player_x,
@@ -320,7 +340,7 @@ def level_up():
     paused = True
     show_upgrade_menu = True  # Show the upgrade menu
     if gambling_mode:
-        gambling_sound.play()
+        gambling_sound.play(loops=-1)
     elif gambling_mode == False:
         level_up_sound.play()
 
@@ -348,7 +368,7 @@ def spawn_enemy(player_x, player_y):
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    basic_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
+    basic_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED, 0)
     enemies.append(basic_enemy)
 
 # Function to spawn crashing enemies
@@ -358,7 +378,7 @@ def spawn_crashing_enemy(player_x, player_y):
     spawn_y = player_y + random.choice([-1, 1]) * (
         random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    crashing_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
+    crashing_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED, 0)
     crashing_enemies.append(crashing_enemy)
 
 # Function to draw player's health bar
@@ -420,32 +440,40 @@ while True:
                 if event.key == pygame.K_RETURN and upgrades==0:
                     upgrades=1  # Apply the first fireball upgrade
                     show_upgrade_menu = False
+                    gambling_sound.stop()
                     paused = False  # Unpause the game after selecting the upgrade
                 elif event.key == pygame.K_RETURN and upgrades==1:
                     upgrades=2  # Apply the second fireball upgrade
+                    gambling_sound.stop()
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
                 elif event.key == pygame.K_RETURN and upgrades==2:
                     upgrades=3  # Apply the third fireball upgrade
+                    gambling_sound.stop()
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
                 elif event.key == pygame.K_RETURN and upgrades==3:
                     upgrades=4  # Apply the third fireball upgrade
+                    gambling_sound.stop()
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
                 elif event.key == pygame.K_RETURN and upgrades==4:
                     upgrades=5  # Apply the third fireball upgrade
+                    gambling_sound.stop()
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
                 elif event.key == pygame.K_RETURN and upgrades==5:
                     upgrades=6  # Apply the sixth fireball upgrade
+                    gambling_sound.stop()
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
                 elif event.key == pygame.K_RETURN and upgrades==6:
                     upgrades=7  # Apply the sixth fireball upgrade
+                    gambling_sound.stop()
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
                 elif event.key == pygame.K_RETURN:
+                    gambling_sound.stop()
                     show_upgrade_menu = False
                     paused = False
 
@@ -558,7 +586,7 @@ while True:
         for enemy in enemies:
             # Calculate the center coordinates of the player
             player_x_center = player_x + player_width / 2
-            player_y_center = player_y + player_height / 2
+            player_y_center = player_y + player_height /4
 
             # Calculate the vertical and horizontal distance between the enemy and the player's center
             distance_y = player_y_center - enemy.y
@@ -574,6 +602,11 @@ while True:
             # Update enemy position
             enemy.x += move_x
             enemy.y += move_y
+            enemy_image = animate_enemy(enemy)  # Animate enemy
+            #screen.blit(enemy_image, (
+            #enemy.x - enemy_image.get_width() / 2, enemy.y - enemy_image.get_height() / 2))
+
+
 
             # Check for collisions with the player
             if (player_x < enemy.x + enemy.width and player_x + player_width > enemy.x and
@@ -658,9 +691,6 @@ while True:
         # Draw the scaled image
         screen.blit(scaled_exp_image, (image_x, image_y))
 
-    for enemy in enemies:
-        pygame.draw.rect(screen, RED, (enemy.x + camera_offset_x, enemy.y + camera_offset_y, enemy.width, enemy.height))
-
     for crashing_enemy in crashing_enemies:
         pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
 
@@ -678,6 +708,25 @@ while True:
         screen.blit(rotated_bullet_image, (
             bullet['x'] - rotated_bullet_image.get_width() / 2 + camera_offset_x, bullet['y'] - rotated_bullet_image.get_height() / 2 + camera_offset_y))
 
+
+    for enemy in enemies:
+        if temp_enemy_frame_skips >= enemy_frame_skips and not paused:
+            # Animate enemy
+            enemy_image = animate_enemy(enemy)
+            screen.blit(enemy_image, (
+                enemy.x - enemy_image.get_width() / 2 + camera_offset_x,
+                enemy.y - enemy_image.get_height() / 2 + camera_offset_y))
+            #print("next frame!!!")
+            # Draw the enemy image at the enemy's position
+            temp_enemy_frame_skips = 0
+            temp_enemy_images = enemy_image
+        elif not paused:
+            temp_enemy_frame_skips+=1
+            screen.blit(temp_enemy_images, (enemy.x - temp_enemy_images.get_width()/2+camera_offset_x,
+                                      enemy.y - temp_enemy_images.get_height()/2+camera_offset_y))
+            #print(f"frames skip = {temp_enemy_frame_skips}")
+
+
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
     draw_kill_counter(kills)
@@ -694,6 +743,7 @@ while True:
         invince_frames += 1
     if exp >= current_max_exp:
         level_up()
+
 
     # If game is paused, show pause menu
     if paused and not show_upgrade_menu:

@@ -1,15 +1,15 @@
-import random
+# base_enemy.py
+import pygame
 
-# Enemy attributes
 class Enemy:
-    def __init__(self, x, y, width, height, hp, speed):
+    def __init__(self, x, y, width, height, hp, speed, frame):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.hp = hp
         self.speed = speed
+        self.frame = frame
 
-
-exp = random.randint(1, 5)
+# Keep track of all enemies
 enemies = []
