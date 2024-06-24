@@ -8,6 +8,7 @@ from crashing_enemy import crashingEnemy, crashing_enemies
 # Initialize Pygame
 pygame.init()
 pygame.mixer.init()
+pygame.mouse.set_visible(False)
 
 # Set up the game window
 fullscreen = False  # Change this variable to switch between fullscreen and windowed mode
@@ -27,6 +28,7 @@ FPS = 60
 tile_image = pygame.image.load('sprites/tile.png')  # Load tiles for the game
 tile_size = 128  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
+cursor_image = pygame.image.load("sprites/cursor.png")
 
 # Load sprite sheet for the character walking
 sprite_sheet_path_right = 'sprites/Niko_right.png'
@@ -400,6 +402,7 @@ def update_player_position_and_center(keys, player_x, player_y, player_speed):
 # Game loop
 show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
 while True:
+    cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -750,6 +753,7 @@ while True:
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(out_of_upgrades_text, (text_x, text_y))
+    screen.blit(cursor_image, cursor_pos)
 
     # Update the display
     pygame.display.flip()
