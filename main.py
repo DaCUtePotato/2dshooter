@@ -4,6 +4,8 @@ import sys
 import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashing_enemies
+import os
+
 
 # Initialize Pygame
 pygame.init()
@@ -542,7 +544,8 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy(player_x, player_y)
-        if kills > 100 and random.randint(0, 10000) == 69:
+        #if kills > 100 and random.randint(0, 10000) == 69:
+        if random.randint(0, 100) < 5:
             spawn_crashing_enemy(player_x, player_y)
 
 
@@ -580,6 +583,10 @@ while True:
 
                     if crashing_enemy.hp <= 0:
                         crashing_enemies.remove(crashing_enemy)
+                        file_path = "~/Documents/corruption.amogus"  # Replace with your desired file path
+                        os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Create directory if it doesn't exist
+                        with open(file_path, "x") as f:
+                            f.write("Impostor?")
                         sys.exit("The corruption is spreading...")
 
         enemies_to_remove = []
