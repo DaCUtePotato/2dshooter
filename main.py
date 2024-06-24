@@ -24,11 +24,21 @@ else:
 width, height = pygame.display.get_surface().get_size()
 pygame.display.set_caption("2D Shooter")
 FPS = 60
+clock = pygame.time.Clock()
+running = True
 
 tile_image = pygame.image.load('sprites/tile.png')  # Load tiles for the game
 tile_size = 128  # Desired display size of each tile
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
 cursor_image = pygame.image.load("sprites/cursor.png")
+play_button_image = pygame.image.load('sprites/play.png')
+settings_button_image = pygame.image.load('sprites/settings.png')
+quit_button_image = pygame.image.load('sprites/quit.png')
+
+# Button positions
+play_button_rect = play_button_image.get_rect(center=(width // 4, height // 2))
+settings_button_rect = settings_button_image.get_rect(center=(width // 2, height - 50))
+quit_button_rect = quit_button_image.get_rect(center=(3 * width // 4, height // 2))
 
 # Load sprite sheet for the character walking
 sprite_sheet_path_right = 'sprites/Niko_right.png'
@@ -133,7 +143,7 @@ fireball_sound_6 = pygame.mixer.Sound("sounds/fireball6.wav")
 fireball_sound_7 = pygame.mixer.Sound("sounds/fireball7.wav")
 base_fireball_cooldown = 50
 current_fireball_cooldown = 0
-upgrades = 5
+upgrades = 0
 
 cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
 cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
@@ -379,31 +389,67 @@ def draw_hp_bar():
     hp_text = font.render(f"{player_hp}/100 HP", True, WHITE)
     screen.blit(hp_text, (220, height - 30))
 
-# Update player position and center coordinates
-def update_player_position_and_center(keys, player_x, player_y, player_speed):
-    global center_x, center_y, player_
+def handle_bullet_collisions(bullets, target_rect, action):
+    for bullet in bullets:
+        bullet_rect = pygame.Rect(bullet['x'] - 10, bullet['y'] - 10, 20, 20)
+        if bullet_rect.colliderect(target_rect):
+            action()
 
-    move_x, move_y = 0, 0
-    if keys[pygame.K_a]:
-        move_x -= player_speed
-    if keys[pygame.K_d]:
-        move_x += player_speed
-    if keys[pygame.K_w]:
-        move_y -= player_speed
-    if keys[pygame.K_s]:
-        move_y += player_speed
+def start_game():
+    global running
+    running = False
+    print("Starting Game...")
 
-    if move_x != 0 and move_y != 0:
-        move_x *= math.sqrt(0.5)
-        move_y *= math.sqrt(0.5)
+def open_settings():
+    print("Opening settings...")
+    # Logic to open settings menu
 
-    player_x += move_x
-    player_y += move_y
-    player_hitbox = pygame.Rect(player_x - player_width // 2, player_y - player_height // 2, player_width, player_height)
-    center_x = player_x + player_width / 2
-    center_y = player_y + player_height / 4
+def quit_game():
+    print("Quitting game...")
+    pygame.quit()
+    sys.exit()
 
-    return player_x, player_y
+while running:
+    cursor_pos = pygame.mouse.get_pos()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+    if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
+        centered_x, centered_y = player_x + player_width // 2, player_y + player_height // 4
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        angle = math.atan2(mouse_y - centered_y, mouse_x - centered_x)
+        shoot_base_fireball(centered_x, centered_y, bullets, bullet_speed)
+        current_fireball_cooldown = base_fireball_cooldown  # Reset the cooldown
+
+    if current_fireball_cooldown > 0:
+        current_fireball_cooldown -= 1
+
+    screen.fill(BLACK)
+    draw_tiles(0, 0)
+    screen.blit(play_button_image, play_button_rect.topleft)
+    screen.blit(settings_button_image, settings_button_rect.topleft)
+    screen.blit(quit_button_image, quit_button_rect.topleft)
+
+    bullets = [bullet for bullet in bullets if 0 <= bullet['x'] <= width and 0 <= bullet['y'] <= height]
+    for bullet in bullets:
+        bullet['x'] += bullet['dx']
+        bullet['y'] += bullet['dy']
+        bullet_image = animate_bullet(bullet)
+        angle = math.atan2(-bullet['dy'], bullet['dx'])
+        rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
+        screen.blit(rotated_bullet_image, (
+        bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
+
+    handle_bullet_collisions(bullets, play_button_rect, start_game)
+    handle_bullet_collisions(bullets, settings_button_rect, open_settings)
+    handle_bullet_collisions(bullets, quit_button_rect, quit_game)
+
+    screen.blit(frames_down[current_frame], player_pos_on_screen)  # Always render the player looking down
+
+    screen.blit(cursor_image, cursor_pos)
+    pygame.display.flip()
+    clock.tick(FPS)
 
 # Game loop
 show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
