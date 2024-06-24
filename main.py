@@ -594,7 +594,7 @@ while True:
 
                 if bullet_rect.colliderect(enemy_rect):
                     enemy.hp -= 10
-                    if upgrades<=6:
+                    if upgrades<=5:
                         bullets.remove(bullet)
 
                     if enemy.hp <= 0:
@@ -759,7 +759,7 @@ while True:
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text7, (text_x, text_y))
-        elif upgrades > 7:
+        elif upgrades >= 7:
             out_of_upgrades_text = menu_font.render("So um funny story, I'm out of upgrade ideas...", True, WHITE)
             text_width, text_height = menu_font.size("So um funny story, I'm out of upgrade ideas...")
             text_x = (width - text_width) // 2
