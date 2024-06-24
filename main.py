@@ -106,7 +106,7 @@ gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
 active_regen_orbs = []
 regen_amount = 30
 pickup_sound_regen = pygame.mixer.Sound("sounds/pickup_regen.wav")
-regen_orb_size = 10
+regen_orb_size = 15
 
 # Bullet attributes
 bullets = []
@@ -130,6 +130,9 @@ for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, ene
 
 # Load experience orb image
 exp_image = pygame.image.load("sprites/exp.png")
+
+# Load regen orb image
+regen_image = pygame.image.load("sprites/REGEN.png")
 
 paused = False
 
@@ -648,7 +651,7 @@ while True:
                         active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         kills += 1
-                        if random.randint(0, 100) == 69:
+                        if random.randint(0, 1) == 0:
                             active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                             print("A wild regen orb spawned!!!!!")
                         break
@@ -709,6 +712,17 @@ while True:
         # Draw the scaled image
         screen.blit(scaled_exp_image, (image_x, image_y))
 
+    for regen_orb in active_regen_orbs:
+        # Resize the exp_image based on the orb's size
+        scaled_regen_image = pygame.transform.scale(regen_image, (regen_orb_size * 2, regen_orb_size * 2))
+
+        # Calculate the top-left corner of the image so it's centered on the orb's position
+        image_x = regen_orb['x'] - scaled_regen_image.get_width() // 2 + camera_offset_x
+        image_y = regen_orb['y'] - scaled_regen_image.get_height() // 2 + camera_offset_y
+
+        # Draw the scaled image
+        screen.blit(scaled_regen_image, (image_x, image_y))
+
     for enemy in enemies:
         # Animate and draw enemy
         enemy.frame_count += 1
@@ -722,8 +736,6 @@ while True:
     for crashing_enemy in crashing_enemies:
         pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
 
-    for regen_orb in active_regen_orbs:
-        pygame.draw.circle(screen, RED, (regen_orb['x']+camera_offset_x, regen_orb['y']+camera_offset_y), regen_orb['size'])
 
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity
