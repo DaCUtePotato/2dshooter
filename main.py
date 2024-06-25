@@ -88,7 +88,7 @@ i_frames_counter = 0
 i_frames = 10
 kills = 0
 
-# Correctly position the hitbox at the center of the player sprite
+# Position the hitbox at the center of the player sprite
 player_hitbox = pygame.Rect(player_x - player_width // 2, player_y - player_height // 2, player_width-3, player_height-3)
 center_x = player_x + player_width / 2
 center_y = player_y + player_height / 4
