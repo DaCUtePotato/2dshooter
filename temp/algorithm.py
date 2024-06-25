@@ -45,9 +45,19 @@ def get_scaled_tile(tile_type, zoom):
     scaled_size = int(ORIGINAL_TILE_SIZE * zoom)
     return pygame.transform.scale(tile_images[tile_type], (scaled_size, scaled_size)), scaled_size
 
-def get_random_tile_type():
-    """ Return a random tile type. """
-    return random.choice(list(tile_images.keys()))
+def generate_random_tile_map(width, height, seed=None):
+    """ Generate a random tile map with random tile types using a seed. """
+    if seed is None:
+        seed = random.randint(0, 1000000)
+    random.seed(seed)  # Set the seed for random number generation
+    print(f"Using seed: {seed}")
+    tile_types = list(tile_images.keys())
+    return [[random.choice(tile_types) for _ in range(width)] for _ in range(height)], seed
+
+# Generate a random tile map with a random seed (or specify a seed)
+input_seed = None  # Set to None for random seed, or specify an integer for a specific seed
+TILE_MAP_WIDTH, TILE_MAP_HEIGHT = 20, 20  # Increase the map size for more variation
+tile_map, seed = generate_random_tile_map(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, input_seed)
 
 # Main loop
 running = True
@@ -81,14 +91,16 @@ while running:
     start_x = -(camera_x % TILE_SIZE)
     start_y = -(camera_y % TILE_SIZE)
 
-    # Calculate the offset for the top-left corner of the visible area
+    # Calculate the offset for the top-left corner of the visible area in the tile map
     offset_x = camera_x // TILE_SIZE
     offset_y = camera_y // TILE_SIZE
 
     # Draw the tiles
     for y in range(-1, SCREEN_HEIGHT // TILE_SIZE + 2):
         for x in range(-1, SCREEN_WIDTH // TILE_SIZE + 2):
-            tile_type = get_random_tile_type()
+            map_x = (x + offset_x) % TILE_MAP_WIDTH
+            map_y = (y + offset_y) % TILE_MAP_HEIGHT
+            tile_type = tile_map[map_y][map_x]
             scaled_tile_image, _ = get_scaled_tile(tile_type, zoom)
             screen_x = start_x + x * TILE_SIZE
             screen_y = start_y + y * TILE_SIZE
