@@ -60,11 +60,11 @@ TILE_MAP_WIDTH, TILE_MAP_HEIGHT = 20, 20  # Increase the map size for more varia
 tile_map, seed = generate_random_tile_map(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, input_seed)
 
 # Main loop
-main_menu = True
-while main_menu:
+running = True
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            main_menu = False
+            running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
                 zoom *= 1.1  # Zoom in
