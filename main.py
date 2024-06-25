@@ -651,7 +651,7 @@ while True:
                         active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         kills += 1
-                        if random.randint(0, 1) == 0:
+                        if random.randint(0, 100) == 69:
                             active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                             print("A wild regen orb spawned!!!!!")
                         break
