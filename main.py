@@ -5,61 +5,68 @@ import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
 
-# Initialize Pygame
+# Initialize pygame
 pygame.init()
+# Initialize pygame.mixer
 pygame.mixer.init()
+# Make default cursor invisible
 pygame.mouse.set_visible(False)
 
 # Set up the game window
-fullscreen = False  # Change this variable to switch between fullscreen and windowed mode
-menu_font = pygame.font.Font(None, 36)
+fullscreen = False  # Fullscreen doesn't work as of right now, the enemy spawning crashes it
+menu_font = pygame.font.Font(None, 36)  # Setup default font
 
 if fullscreen:
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # Fullscreen is currently bugged
 else:
-    screen_width = 690  # Screen width
-    screen_height = 690  # Screen height
-    screen = pygame.display.set_mode((screen_width, screen_height))
+    screen_width = 690  # Width of the window
+    screen_height = 690  # Height of the window
+    screen = pygame.display.set_mode((screen_width, screen_height))  # Setup window
 
-width, height = pygame.display.get_surface().get_size()
-pygame.display.set_caption("2D Shooter")
-FPS = 60
-clock = pygame.time.Clock()
-running = True
+width, height = pygame.display.get_surface().get_size() # Obtain dimensions of the game window
+pygame.display.set_caption("2D Shooter")  # Set "title" of the window
+FPS = 60  # Set FPS
+clock = pygame.time.Clock()  # Used to control frame rate
+main_menu = True  # Enables main menu
 
-tile_image = pygame.image.load('sprites/tile.png')  # Load tiles for the game
-tile_size = 128  # Desired display size of each tile
-scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
+# Load and scale images
+tile_image = pygame.image.load('sprites/tile.png')
+tile_size = 128
+scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))
 cursor_image = pygame.image.load("sprites/cursor.png")
 play_button_image = pygame.image.load('sprites/play.png')
 settings_button_image = pygame.image.load('sprites/settings.png')
 quit_button_image = pygame.image.load('sprites/quit.png')
 
-# Button positions
+# Positions of play, settings and quit button
 play_button_rect = play_button_image.get_rect(center=(width // 4, height // 2))
 settings_button_rect = settings_button_image.get_rect(center=(width // 2, height - 50))
 quit_button_rect = quit_button_image.get_rect(center=(3 * width // 4, height // 2))
 
-# Load sprite sheet for the character walking
-sprite_sheet_path_right = 'sprites/Niko_right.png'
-sprite_sheet_path_up = 'sprites/Niko_up.png'
-sprite_sheet_path_down = 'sprites/Niko_down.png'
-sprite_sheet_path_left = 'sprites/Niko_left.png'
-sprite_sheet_right = pygame.image.load(sprite_sheet_path_right).convert_alpha()
-sprite_sheet_up = pygame.image.load(sprite_sheet_path_up).convert_alpha()
-sprite_sheet_down = pygame.image.load(sprite_sheet_path_down).convert_alpha()
-sprite_sheet_left = pygame.image.load(sprite_sheet_path_left).convert_alpha()
+# Load sprite sheet for the character walking. Convert alpha is used for performance optimization
+sprite_sheet_right = pygame.image.load('sprites/Niko_right.png').convert_alpha()
+sprite_sheet_up = pygame.image.load('sprites/Niko_up.png').convert_alpha()
+sprite_sheet_down = pygame.image.load('sprites/Niko_down.png').convert_alpha()
+sprite_sheet_left = pygame.image.load('sprites/Niko_left.png').convert_alpha()
 
-# Frame setup
-frame_width, frame_height = 24, 30
-scaling_factor = 2.77
-niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor
+# Sprite setup
+frame_width, frame_height = 24, 30  # Setup size of each sprite
+scaling_factor = 2.77  # Define scaling factor
+niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor  # Setup scaling
+
+# Animate sprites
+# Subsurface extracts the defined rectangle from the sprite sheet
+# Then it gets scaled to the defined height and width
 frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+
+# Used to track frames
 current_frame = 0
 frame_count = 0
+
+# Make sure the sprite spawns facing down
 rendering = "down"
 
 # Colors
@@ -70,17 +77,15 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 
 # Player attributes
-player_pos_on_screen = (width // 2, height // 2)
-player_x = width//2
+player_x = width // 2
 player_y = height // 2
-hyp_player_x = player_x
-hyp_player_y = player_y
+player_pos_on_screen = (player_x, player_y)
 player_speed = 5
 player_height = int(niko_scaling_height)
 player_width = int(niko_scaling_width)
 player_hp = 100
-invince_frames = 10
-i_frame_temp = invince_frames
+i_frames_counter = 0
+i_frames = 10
 kills = 0
 
 # Correctly position the hitbox at the center of the player sprite
@@ -399,8 +404,8 @@ def handle_bullet_collisions(bullets, target_rect, action):
             action()
 
 def start_game():
-    global running
-    running = False
+    global main_menu
+    main_menu = False
     print("Starting Game...")
 
 def open_settings():
@@ -412,7 +417,7 @@ def quit_game():
     pygame.quit()
     sys.exit()
 
-while running:
+while main_menu:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -591,9 +596,9 @@ while True:
 
             if (player_x < crashing_enemy.x + crashing_enemy.width and player_x + player_width > crashing_enemy.x and
                     player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):
-                if invince_frames == i_frame_temp:
+                if i_frames_counter == i_frames:
                     player_hp -= 5
-                    invince_frames = 0
+                    i_frames_counter = 0
 
             # Check for collisions with bullets
             for bullet in bullets:
@@ -632,9 +637,9 @@ while True:
             # Check for collisions with the player
             if (player_x < enemy.x + enemy.width and player_x + player_width > enemy.x and
                     player_y < enemy.y + enemy.height and player_y + player_height > enemy.y):
-                if invince_frames == i_frame_temp:
+                if i_frames_counter == i_frames:
                     player_hp -= 5
-                    invince_frames = 0
+                    i_frames_counter = 0
 
             # Check for collisions with bullets
             for bullet in bullets:
@@ -765,8 +770,8 @@ while True:
         screen.blit(frames_left[current_frame], (player_pos_on_screen))
     if rendering == "down":
         screen.blit(frames_down[current_frame], (player_pos_on_screen))
-    if invince_frames < i_frame_temp:
-        invince_frames += 1
+    if i_frames_counter < i_frames:
+        i_frames_counter += 1
     if exp >= current_max_exp:
         level_up()
 
