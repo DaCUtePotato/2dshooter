@@ -132,7 +132,7 @@ for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, ene
 exp_image = pygame.image.load("sprites/exp.png")
 
 # Load regen orb image
-regen_image = pygame.image.load("sprites/REGEN.png")
+regen_image = pygame.image.load("sprites/regen_orb.png")
 
 paused = False
 
@@ -726,14 +726,14 @@ while True:
     for enemy in enemies:
         # Animate and draw enemy
         enemy.frame_count += 1
-        if enemy.frame_count % 10 == 0:  # Adjust frame rate of animation here
+        if enemy.frame_count % 10 == 0 and not paused:  # Adjust frame rate of animation here
             enemy.frame = (enemy.frame + 1) % len(enemy_frames)
 
         # Draw enemy using current frame
         enemy_image = enemy_frames[enemy.frame]
         screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
 
-    for crashing_enemy in crashing_enemies:
+    for crashing_enemy in crashing_enemies and not paused:
         pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
 
 
