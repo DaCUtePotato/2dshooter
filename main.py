@@ -148,10 +148,10 @@ base_fireball_cooldown = 50
 current_fireball_cooldown = 0
 upgrades = 0
 
-cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
-cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
-cooldown_reduction_upgrade3 = 10 # Cooldown reduction Upgrade 3
-cooldown_reduction_upgrade4 = 5 # Same here
+cooldown_reduction_upgrade1 = 10  # Cooldown reduction Upgrade 1
+cooldown_reduction_upgrade2 = 5  # Cooldown reduction Upgrade 2
+cooldown_reduction_upgrade3 = 10  # Cooldown reduction Upgrade 3
+cooldown_reduction_upgrade4 = 5  # Same here
 cooldown_reduction_upgrade5 = 5
 cooldown_reduction_upgrade6 = -40
 cooldown_reduction_upgrade7 = 10
@@ -569,7 +569,7 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy(player_x, player_y)
-        if kills > 100 and random.randint(0, 10000) == 69:
+        if kills > 300 and random.randint(0, 600) == 69:
             spawn_crashing_enemy(player_x, player_y)
 
 
@@ -724,10 +724,11 @@ while True:
         screen.blit(scaled_regen_image, (image_x, image_y))
 
     for enemy in enemies:
-        # Animate and draw enemy
-        enemy.frame_count += 1
-        if enemy.frame_count % 10 == 0:  # Adjust frame rate of animation here
-            enemy.frame = (enemy.frame + 1) % len(enemy_frames)
+        if not paused and not show_upgrade_menu:
+            # Animate and draw enemy
+            enemy.frame_count += 1
+            if enemy.frame_count % 10 == 0:  # Adjust frame rate of animation here
+                enemy.frame = (enemy.frame + 1) % len(enemy_frames)
 
         # Draw enemy using current frame
         enemy_image = enemy_frames[enemy.frame]
