@@ -119,7 +119,7 @@ for i in range(1, 6):  # Assume there are five fireball images named fireball1.p
     bullet_scaled_frame = pygame.transform.scale(bullet_original_frame, (bullet_scaled_width, bullet_scaled_height))
     bullet_frames.append(bullet_scaled_frame)
 
-ENEMY_SPEED = 0.5  # Adjust this value as needed
+ENEMY_SPEED = 0.75  # Adjust this value as needed
 enemy_frames = []
 for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, enemy2.png, and enemy3.png
     enemy_original_frame = pygame.image.load(f"sprites/enemies/enemy{i}.png").convert_alpha()
@@ -132,7 +132,7 @@ for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, ene
 exp_image = pygame.image.load("sprites/exp.png")
 
 # Load regen orb image
-regen_image = pygame.image.load("sprites/REGEN.png")
+regen_image = pygame.image.load("sprites/regen_orb.png")
 
 paused = False
 
@@ -148,10 +148,10 @@ base_fireball_cooldown = 50
 current_fireball_cooldown = 0
 upgrades = 0
 
-cooldown_reduction_upgrade1 = 10  # Cooldown reduction Upgrade 1
-cooldown_reduction_upgrade2 = 5  # Cooldown reduction Upgrade 2
-cooldown_reduction_upgrade3 = 10  # Cooldown reduction Upgrade 3
-cooldown_reduction_upgrade4 = 5  # Same here
+cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
+cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
+cooldown_reduction_upgrade3 = 10 # Cooldown reduction Upgrade 3
+cooldown_reduction_upgrade4 = 5 # Same here
 cooldown_reduction_upgrade5 = 5
 cooldown_reduction_upgrade6 = -40
 cooldown_reduction_upgrade7 = 10
@@ -569,7 +569,7 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy(player_x, player_y)
-        if kills > 300 and random.randint(0, 600) == 69:
+        if kills > 100 and random.randint(0, 10000) == 69:
             spawn_crashing_enemy(player_x, player_y)
 
 
@@ -651,7 +651,7 @@ while True:
                         active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         kills += 1
-                        if random.randint(0, 1) == 0:
+                        if random.randint(0, 100) == 69:
                             active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                             print("A wild regen orb spawned!!!!!")
                         break
@@ -724,17 +724,21 @@ while True:
         screen.blit(scaled_regen_image, (image_x, image_y))
 
     for enemy in enemies:
-        if not paused and not show_upgrade_menu:
-            # Animate and draw enemy
-            enemy.frame_count += 1
-            if enemy.frame_count % 10 == 0:  # Adjust frame rate of animation here
-                enemy.frame = (enemy.frame + 1) % len(enemy_frames)
+        # Animate and draw enemy
+        enemy.frame_count += 1
+        if enemy.frame_count % 10 == 0 and not paused:  # Adjust frame rate of animation here
+            enemy.frame = (enemy.frame + 1) % len(enemy_frames)
 
-        # Draw enemy using current frame
-        enemy_image = enemy_frames[enemy.frame]
+        if enemy.x > player_x:
+            # Enemy is coming from the left side of the screen, flip the sprite
+            enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
+        else:
+            # Enemy is coming from the right side of the screen, use the original sprite
+            enemy_image = enemy_frames[enemy.frame]
+
         screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
 
-    for crashing_enemy in crashing_enemies:
+    for crashing_enemy in crashing_enemies and not paused:
         pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
 
 
