@@ -23,14 +23,14 @@ FPS = 60
 clock = pygame.time.Clock()
 
 # Load assets
-tile_image = pygame.image.load('sprites/tile.png')
+tile_image = pygame.image.load('../sprites/tile.png')
 tile_size = 128
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))
-cursor_image = pygame.image.load("sprites/cursor.png")
+cursor_image = pygame.image.load("../sprites/cursor.png")
 
-play_button_image = pygame.image.load('sprites/play.png')
-settings_button_image = pygame.image.load('sprites/settings.png')
-quit_button_image = pygame.image.load('sprites/quit.png')
+play_button_image = pygame.image.load('../sprites/play.png')
+settings_button_image = pygame.image.load('../sprites/settings.png')
+quit_button_image = pygame.image.load('../sprites/quit.png')
 
 # Button positions
 play_button_rect = play_button_image.get_rect(center=(width // 4, height // 2))
@@ -50,7 +50,7 @@ player_height = 60
 player_width = 60
 
 # Load sprite for the character looking down
-sprite_sheet_path_down = 'sprites/Niko_down.png'
+sprite_sheet_path_down = '../sprites/Niko_down.png'
 sprite_sheet_down = pygame.image.load(sprite_sheet_path_down).convert_alpha()
 
 frame_width, frame_height = 24, 30
