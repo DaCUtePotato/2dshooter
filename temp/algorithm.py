@@ -9,7 +9,7 @@ pygame.init()
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 
 # Original tile dimensions
-ORIGINAL_TILE_SIZE = 476
+ORIGINAL_TILE_SIZE = 16
 
 # Load tile images for different types
 tile_images = {
@@ -22,6 +22,19 @@ tile_images = {
     "down-left": pygame.image.load('dirt/Dirt11.png'),
     "down": pygame.image.load('dirt/Dirt5.png'),
     "down-right": pygame.image.load('dirt/Dirt9.png')
+}
+
+# Rules for how tiles connect
+tile_connections = {
+    "up-left": {"bottom": ["up-left", "left", "center", "down-left"], "right": ["up-left", "up", "center", "up-right"]},
+    "up": {"bottom": ["up", "center", "down"], "right": ["up", "center", "right"], "left": ["up", "center", "left"]},
+    "up-right": {"bottom": ["up-right", "right", "center", "down-right"], "left": ["up-right", "up", "center", "up-left"]},
+    "left": {"right": ["left", "center", "right"], "top": ["left", "down-left", "center"], "bottom": ["left", "up-left", "center"]},
+    "center": {"top": ["down", "center"], "bottom": ["up", "center"], "left": ["right", "center"], "right": ["left", "center"]},
+    "right": {"left": ["right", "center", "left"], "top": ["right", "down-right", "center"], "bottom": ["right", "up-right", "center"]},
+    "down-left": {"top": ["down-left", "left", "center", "up-left"], "right": ["down-left", "down", "center", "down-right"]},
+    "down": {"top": ["down", "center", "up"], "right": ["down", "center", "right"], "left": ["down", "center", "left"]},
+    "down-right": {"top": ["down-right", "right", "center", "up-right"], "left": ["down-right", "down", "center", "down-left"]}
 }
 
 # Create the screen with vSync enabled
@@ -46,13 +59,41 @@ def get_scaled_tile(tile_type, zoom):
     return pygame.transform.scale(tile_images[tile_type], (scaled_size, scaled_size)), scaled_size
 
 def generate_random_tile_map(width, height, seed=None):
-    """ Generate a random tile map with random tile types using a seed. """
+    """ Generate a random tile map with random tile types using a seed, ensuring alignment. """
     if seed is None:
         seed = random.randint(0, 1000000)
     random.seed(seed)  # Set the seed for random number generation
     print(f"Using seed: {seed}")
+
     tile_types = list(tile_images.keys())
-    return [[random.choice(tile_types) for _ in range(width)] for _ in range(height)], seed
+    tile_map = [[None for _ in range(width)] for _ in range(height)]
+
+    # Fill the tile map with constraints
+    for y in range(height):
+        for x in range(width):
+            possible_tiles = tile_types.copy()
+
+            # Enforce bottom constraint for the tile above
+            if y > 0:
+                top_tile = tile_map[y - 1][x]
+                possible_tiles = [tile for tile in possible_tiles if
+                                  "bottom" not in tile_connections[top_tile] or tile in tile_connections[top_tile]["bottom"]]
+
+            # Enforce right constraint for the tile to the left
+            if x > 0:
+                left_tile = tile_map[y][x - 1]
+                possible_tiles = [tile for tile in possible_tiles if
+                                  "right" not in tile_connections[left_tile] or tile in tile_connections[left_tile]["right"]]
+
+            # Select a random tile from the possible ones
+            if possible_tiles:
+                selected_tile = random.choice(possible_tiles)
+                tile_map[y][x] = selected_tile
+            else:
+                # If no tile fits the constraints, use a fallback (center tile as a default)
+                tile_map[y][x] = "center"
+
+    return tile_map, seed
 
 # Generate a random tile map with a random seed (or specify a seed)
 input_seed = None  # Set to None for random seed, or specify an integer for a specific seed

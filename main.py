@@ -4,6 +4,7 @@ import sys
 import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
+import os
 
 # Initialize Pygame
 pygame.init()
@@ -108,6 +109,11 @@ regen_amount = 30
 pickup_sound_regen = pygame.mixer.Sound("sounds/pickup_regen.wav")
 regen_orb_size = 15
 
+# Savefile
+# Define the file path
+documents_path = os.path.expanduser("~/Documents")
+file_path = os.path.join(documents_path, "savefile.bulletheaven")
+
 # Bullet attributes
 bullets = []
 bullet_speed = 10
@@ -156,10 +162,30 @@ cooldown_reduction_upgrade5 = 5
 cooldown_reduction_upgrade6 = -40
 cooldown_reduction_upgrade7 = 10
 
+# Check if the file exists
+if os.path.exists(file_path):
+    # Read data from the file and assign to variables
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+        upgrades = int(lines[0].strip())
+        kills = int(lines[1].strip())
+        player_hp = int(lines[2].strip())
+        exp = int(lines[3].strip())
+        player_level = int(lines[4].strip())
+
 def draw_tiles(camera_offset_x, camera_offset_y):
     for y in range(-tile_size, height + tile_size, tile_size):
         for x in range(-tile_size, width + tile_size, tile_size):
             screen.blit(scaled_tile_image, (x + camera_offset_x % tile_size - tile_size, y + camera_offset_y % tile_size - tile_size))
+
+def save():
+    # Write data to the file
+    with open(file_path, "w") as file:
+        file.write(f"{upgrades}\n")
+        file.write(f"{kills}\n")
+        file.write(f"{player_hp}\n")
+        file.write(f"{exp}\n")
+        file.write(f"{player_level}\n")
 
 def animate_bullet(bullet):
     bullet['frame'] += 1
@@ -409,15 +435,19 @@ def open_settings():
 
 def quit_game():
     print("Quitting game...")
+    save()
     pygame.quit()
     sys.exit()
+
 
 while running:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            save()
             pygame.quit()
             sys.exit()
+
     if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
         centered_x, centered_y = player_x + player_width // 2, player_y + player_height // 4
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -460,6 +490,7 @@ while True:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            save()
             pygame.quit()
             sys.exit()
 
@@ -606,6 +637,7 @@ while True:
                     bullets.remove(bullet)
 
                     if crashing_enemy.hp <= 0:
+                        save()
                         crashing_enemies.remove(crashing_enemy)
                         sys.exit("The corruption is spreading...")
 
@@ -660,6 +692,7 @@ while True:
             enemies.remove(enemy)
 
         if player_hp <= 0:
+            save()
             sys.exit("You died...")
 
         # Check for collisions between player and exp orbs
