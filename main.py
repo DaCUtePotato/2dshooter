@@ -4,6 +4,7 @@ import sys
 import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
+import os
 
 # Initialize pygame
 pygame.init()
@@ -160,6 +161,32 @@ cooldown_reduction_upgrade4 = 5 # Same here
 cooldown_reduction_upgrade5 = 5
 cooldown_reduction_upgrade6 = -40
 cooldown_reduction_upgrade7 = 10
+
+#save file
+# Define the file path
+documents_path = os.path.expanduser("~/Documents")
+file_path = os.path.join(documents_path, "savefile.bulletheaven")
+
+# Check if the file exists
+if os.path.exists(file_path):
+    # Read data from the file and assign to variables
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+        upgrades = int(lines[0].strip())
+        kills = int(lines[1].strip())
+        player_hp = int(lines[2].strip())
+        exp = int(lines[3].strip())
+        player_level = int(lines[4].strip())
+
+def save():
+    # Write data to the file
+    with open(file_path, "w") as file:
+        file.write(f"{upgrades}\n")
+        file.write(f"{kills}\n")
+        file.write(f"{player_hp}\n")
+        file.write(f"{exp}\n")
+        file.write(f"{player_level}\n")
+
 
 def draw_tiles(camera_offset_x, camera_offset_y):
     for y in range(-tile_size, height + tile_size, tile_size):
@@ -414,6 +441,7 @@ def open_settings():
 
 def quit_game():
     print("Quitting game...")
+    save()
     pygame.quit()
     sys.exit()
 
@@ -421,6 +449,7 @@ while main_menu:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            save()
             pygame.quit()
             sys.exit()
     if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
@@ -465,6 +494,7 @@ while True:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            save()
             pygame.quit()
             sys.exit()
 
@@ -612,6 +642,7 @@ while True:
 
                     if crashing_enemy.hp <= 0:
                         crashing_enemies.remove(crashing_enemy)
+                        save()
                         sys.exit("The corruption is spreading...")
 
         enemies_to_remove = []
@@ -665,6 +696,7 @@ while True:
             enemies.remove(enemy)
 
         if player_hp <= 0:
+            save()
             sys.exit("You died...")
 
         # Check for collisions between player and exp orbs
