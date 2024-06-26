@@ -4,63 +4,69 @@ import sys
 import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
-import os
 
-# Initialize Pygame
+# Initialize pygame
 pygame.init()
+# Initialize pygame.mixer
 pygame.mixer.init()
+# Make default cursor invisible
 pygame.mouse.set_visible(False)
 
 # Set up the game window
-fullscreen = False  # Change this variable to switch between fullscreen and windowed mode
-menu_font = pygame.font.Font(None, 36)
+fullscreen = False  # Fullscreen doesn't work as of right now, the enemy spawning crashes it
+menu_font = pygame.font.Font(None, 36)  # Setup default font
 
 if fullscreen:
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # Fullscreen is currently bugged
 else:
-    screen_width = 690  # Screen width
-    screen_height = 690  # Screen height
-    screen = pygame.display.set_mode((screen_width, screen_height))
+    screen_width = 690  # Width of the window
+    screen_height = 690  # Height of the window
+    screen = pygame.display.set_mode((screen_width, screen_height))  # Setup window
 
-width, height = pygame.display.get_surface().get_size()
-pygame.display.set_caption("2D Shooter")
-FPS = 60
-clock = pygame.time.Clock()
-running = True
+width, height = pygame.display.get_surface().get_size() # Obtain dimensions of the game window
+pygame.display.set_caption("2D Shooter")  # Set "title" of the window
+FPS = 60  # Set FPS
+clock = pygame.time.Clock()  # Used to control frame rate
+main_menu = True  # Enables main menu
 
-tile_image = pygame.image.load('sprites/tile.png')  # Load tiles for the game
-tile_size = 128  # Desired display size of each tile
-scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))  # Scale the image
+# Load and scale images
+tile_image = pygame.image.load('sprites/tile.png')
+tile_size = 128
+scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))
 cursor_image = pygame.image.load("sprites/cursor.png")
 play_button_image = pygame.image.load('sprites/play.png')
 settings_button_image = pygame.image.load('sprites/settings.png')
 quit_button_image = pygame.image.load('sprites/quit.png')
 
-# Button positions
+# Positions of play, settings and quit button
 play_button_rect = play_button_image.get_rect(center=(width // 4, height // 2))
 settings_button_rect = settings_button_image.get_rect(center=(width // 2, height - 50))
 quit_button_rect = quit_button_image.get_rect(center=(3 * width // 4, height // 2))
 
-# Load sprite sheet for the character walking
-sprite_sheet_path_right = 'sprites/Niko_right.png'
-sprite_sheet_path_up = 'sprites/Niko_up.png'
-sprite_sheet_path_down = 'sprites/Niko_down.png'
-sprite_sheet_path_left = 'sprites/Niko_left.png'
-sprite_sheet_right = pygame.image.load(sprite_sheet_path_right).convert_alpha()
-sprite_sheet_up = pygame.image.load(sprite_sheet_path_up).convert_alpha()
-sprite_sheet_down = pygame.image.load(sprite_sheet_path_down).convert_alpha()
-sprite_sheet_left = pygame.image.load(sprite_sheet_path_left).convert_alpha()
+# Load sprite sheet for the character walking. Convert alpha is used for performance optimization
+sprite_sheet_right = pygame.image.load('sprites/Niko_right.png').convert_alpha()
+sprite_sheet_up = pygame.image.load('sprites/Niko_up.png').convert_alpha()
+sprite_sheet_down = pygame.image.load('sprites/Niko_down.png').convert_alpha()
+sprite_sheet_left = pygame.image.load('sprites/Niko_left.png').convert_alpha()
 
-# Frame setup
-frame_width, frame_height = 24, 30
-scaling_factor = 2.77
-niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor
+# Sprite setup
+frame_width, frame_height = 24, 30  # Setup size of each sprite
+scaling_factor = 2.77  # Define scaling factor
+niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor  # Setup scaling
+
+# Animate sprites
+# Subsurface extracts the defined rectangle from the sprite sheet
+# Then it gets scaled to the defined height and width
 frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+
+# Used to track frames
 current_frame = 0
 frame_count = 0
+
+# Make sure the sprite spawns facing down
 rendering = "down"
 
 # Colors
@@ -71,20 +77,18 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 
 # Player attributes
-player_pos_on_screen = (width // 2, height // 2)
-player_x = width//2
+player_x = width // 2
 player_y = height // 2
-hyp_player_x = player_x
-hyp_player_y = player_y
+player_pos_on_screen = (player_x, player_y)
 player_speed = 5
 player_height = int(niko_scaling_height)
 player_width = int(niko_scaling_width)
 player_hp = 100
-invince_frames = 10
-i_frame_temp = invince_frames
+i_frames_counter = 0
+i_frames = 10
 kills = 0
 
-# Correctly position the hitbox at the center of the player sprite
+# Position the hitbox at the center of the player sprite
 player_hitbox = pygame.Rect(player_x - player_width // 2, player_y - player_height // 2, player_width-3, player_height-3)
 center_x = player_x + player_width / 2
 center_y = player_y + player_height / 4
@@ -109,11 +113,6 @@ regen_amount = 30
 pickup_sound_regen = pygame.mixer.Sound("sounds/pickup_regen.wav")
 regen_orb_size = 15
 
-# Savefile
-# Define the file path
-documents_path = os.path.expanduser("~/Documents")
-file_path = os.path.join(documents_path, "savefile.bulletheaven")
-
 # Bullet attributes
 bullets = []
 bullet_speed = 10
@@ -125,7 +124,7 @@ for i in range(1, 6):  # Assume there are five fireball images named fireball1.p
     bullet_scaled_frame = pygame.transform.scale(bullet_original_frame, (bullet_scaled_width, bullet_scaled_height))
     bullet_frames.append(bullet_scaled_frame)
 
-ENEMY_SPEED = 0.5  # Adjust this value as needed
+ENEMY_SPEED = 0.75  # Adjust this value as needed
 enemy_frames = []
 for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, enemy2.png, and enemy3.png
     enemy_original_frame = pygame.image.load(f"sprites/enemies/enemy{i}.png").convert_alpha()
@@ -162,30 +161,10 @@ cooldown_reduction_upgrade5 = 5
 cooldown_reduction_upgrade6 = -40
 cooldown_reduction_upgrade7 = 10
 
-# Check if the file exists
-if os.path.exists(file_path):
-    # Read data from the file and assign to variables
-    with open(file_path, "r") as file:
-        lines = file.readlines()
-        upgrades = int(lines[0].strip())
-        kills = int(lines[1].strip())
-        player_hp = int(lines[2].strip())
-        exp = int(lines[3].strip())
-        player_level = int(lines[4].strip())
-
 def draw_tiles(camera_offset_x, camera_offset_y):
     for y in range(-tile_size, height + tile_size, tile_size):
         for x in range(-tile_size, width + tile_size, tile_size):
             screen.blit(scaled_tile_image, (x + camera_offset_x % tile_size - tile_size, y + camera_offset_y % tile_size - tile_size))
-
-def save():
-    # Write data to the file
-    with open(file_path, "w") as file:
-        file.write(f"{upgrades}\n")
-        file.write(f"{kills}\n")
-        file.write(f"{player_hp}\n")
-        file.write(f"{exp}\n")
-        file.write(f"{player_level}\n")
 
 def animate_bullet(bullet):
     bullet['frame'] += 1
@@ -425,8 +404,8 @@ def handle_bullet_collisions(bullets, target_rect, action):
             action()
 
 def start_game():
-    global running
-    running = False
+    global main_menu
+    main_menu = False
     print("Starting Game...")
 
 def open_settings():
@@ -435,19 +414,15 @@ def open_settings():
 
 def quit_game():
     print("Quitting game...")
-    save()
     pygame.quit()
     sys.exit()
 
-
-while running:
+while main_menu:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            save()
             pygame.quit()
             sys.exit()
-
     if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
         centered_x, centered_y = player_x + player_width // 2, player_y + player_height // 4
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -490,7 +465,6 @@ while True:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            save()
             pygame.quit()
             sys.exit()
 
@@ -622,9 +596,9 @@ while True:
 
             if (player_x < crashing_enemy.x + crashing_enemy.width and player_x + player_width > crashing_enemy.x and
                     player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):
-                if invince_frames == i_frame_temp:
+                if i_frames_counter == i_frames:
                     player_hp -= 5
-                    invince_frames = 0
+                    i_frames_counter = 0
 
             # Check for collisions with bullets
             for bullet in bullets:
@@ -637,7 +611,6 @@ while True:
                     bullets.remove(bullet)
 
                     if crashing_enemy.hp <= 0:
-                        save()
                         crashing_enemies.remove(crashing_enemy)
                         sys.exit("The corruption is spreading...")
 
@@ -664,9 +637,9 @@ while True:
             # Check for collisions with the player
             if (player_x < enemy.x + enemy.width and player_x + player_width > enemy.x and
                     player_y < enemy.y + enemy.height and player_y + player_height > enemy.y):
-                if invince_frames == i_frame_temp:
+                if i_frames_counter == i_frames:
                     player_hp -= 5
-                    invince_frames = 0
+                    i_frames_counter = 0
 
             # Check for collisions with bullets
             for bullet in bullets:
@@ -692,7 +665,6 @@ while True:
             enemies.remove(enemy)
 
         if player_hp <= 0:
-            save()
             sys.exit("You died...")
 
         # Check for collisions between player and exp orbs
@@ -762,8 +734,13 @@ while True:
         if enemy.frame_count % 10 == 0 and not paused:  # Adjust frame rate of animation here
             enemy.frame = (enemy.frame + 1) % len(enemy_frames)
 
-        # Draw enemy using current frame
-        enemy_image = enemy_frames[enemy.frame]
+        if enemy.x > player_x:
+            # Enemy is coming from the left side of the screen, flip the sprite
+            enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
+        else:
+            # Enemy is coming from the right side of the screen, use the original sprite
+            enemy_image = enemy_frames[enemy.frame]
+
         screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
 
     for crashing_enemy in crashing_enemies and not paused:
@@ -793,8 +770,8 @@ while True:
         screen.blit(frames_left[current_frame], (player_pos_on_screen))
     if rendering == "down":
         screen.blit(frames_down[current_frame], (player_pos_on_screen))
-    if invince_frames < i_frame_temp:
-        invince_frames += 1
+    if i_frames_counter < i_frames:
+        i_frames_counter += 1
     if exp >= current_max_exp:
         level_up()
 
