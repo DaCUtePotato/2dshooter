@@ -14,11 +14,14 @@ pygame.mixer.init()
 pygame.mouse.set_visible(False)
 
 # Set up the game window
-fullscreen = True  # Fullscreen doesn't work as of right now, the enemy spawning crashes it
+fullscreen = False
 menu_font = pygame.font.Font(None, 36)  # Setup default font
 
+# Set default volume
+volume = 0.5
+
 if fullscreen:
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # Fullscreen is currently bugged
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen_width, screen_height = pygame.display.get_surface().get_size()
 else:
     screen_width = 690  # Width of the window
@@ -435,9 +438,46 @@ def start_game():
     main_menu = False
     print("Starting Game...")
 
+
 def open_settings():
-    print("Opening settings...")
-    # Logic to open settings menu
+    global volume, screen, width, height
+    options_menu = True
+    while options_menu:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                save()
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    options_menu = False
+                if event.key == pygame.K_d:
+                    volume = min(volume + 0.1, 1.0)
+                if event.key == pygame.K_a:
+                    volume = max(volume - 0.1, 0.0)
+
+        # Update volume for all sounds
+        pickup_sound.set_volume(volume)
+        level_up_sound.set_volume(volume)
+        gambling_sound.set_volume(volume)
+        pickup_sound_regen.set_volume(volume)
+        fireball_sound_1.set_volume(volume)
+        fireball_sound_2.set_volume(volume)
+        fireball_sound_3.set_volume(volume)
+        fireball_sound_4.set_volume(volume)
+        fireball_sound_5.set_volume(volume)
+        fireball_sound_6.set_volume(volume)
+        fireball_sound_7.set_volume(volume)
+
+        screen.fill(BLACK)
+        draw_tiles(0, 0)
+
+        volume_text = menu_font.render(f"Volume: {int(volume * 100)}%", True, WHITE)
+        screen.blit(volume_text, (width // 2 - volume_text.get_width() // 2, height // 2 - 50))
+
+        pygame.display.flip()
+        clock.tick(FPS)
 
 def quit_game():
     print("Quitting game...")
