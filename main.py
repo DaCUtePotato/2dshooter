@@ -14,11 +14,12 @@ pygame.mixer.init()
 pygame.mouse.set_visible(False)
 
 # Set up the game window
-fullscreen = False  # Fullscreen doesn't work as of right now, the enemy spawning crashes it
+fullscreen = True  # Fullscreen doesn't work as of right now, the enemy spawning crashes it
 menu_font = pygame.font.Font(None, 36)  # Setup default font
 
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # Fullscreen is currently bugged
+    screen_width, screen_height = pygame.display.get_surface().get_size()
 else:
     screen_width = 690  # Width of the window
     screen_height = 690  # Height of the window
@@ -90,7 +91,6 @@ i_frames = 10
 kills = 0
 
 # Position the hitbox at the center of the player sprite
-player_hitbox = pygame.Rect(player_x - player_width // 2, player_y - player_height // 2, player_width-3, player_height-3)
 center_x = player_x + player_width / 2
 center_y = player_y + player_height / 4
 
@@ -569,7 +569,6 @@ while True:
         # Update player position
         player_x += move_x
         player_y += move_y
-        player_hitbox = pygame.Rect(player_x - player_width // 2, player_y - player_height // 2, player_width,player_height)
         center_x = player_x + player_width / 2
         center_y = player_y + player_height / 4
         # Decrease the current fireball cooldown
