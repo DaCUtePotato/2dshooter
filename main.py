@@ -167,7 +167,7 @@ cooldown_reduction_upgrade7 = 10
 
 #save file
 # Define the file path
-documents_path = os.path.expanduser("~/Documents")
+documents_path = os.path.expanduser("~/")
 file_path = os.path.join(documents_path, "savefile.bulletheaven")
 
 # Check if the file exists
@@ -286,7 +286,7 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     centered_x, centered_y = player_x+player_width//2, player_y+player_height//4
     mouseX, mouseY = pygame.mouse.get_pos()
     angle = math.atan2(mouseY-height//2-player_height//4, mouseX-width//2-player_width//2)  # Use the center of the screen for angle calculation
-    if upgrades == 7:  # If the 7th upgrade is active, shoot upwards
+    if upgrades >= 7:  # If the 7th upgrade is active, shoot upwards
         up = -math.pi / 2  # Angle for shooting upwards
         shoot_forwards(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, up, bullets)
@@ -496,8 +496,9 @@ while main_menu:
         centered_x, centered_y = player_x + player_width // 2, player_y + player_height // 4
         mouse_x, mouse_y = pygame.mouse.get_pos()
         angle = math.atan2(mouse_y - centered_y, mouse_x - centered_x)
-        shoot_base_fireball(centered_x, centered_y, bullets, bullet_speed)
+        shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         current_fireball_cooldown = base_fireball_cooldown  # Reset the cooldown
+        fireball_sound_1.play()
 
     if current_fireball_cooldown > 0:
         current_fireball_cooldown -= 1
