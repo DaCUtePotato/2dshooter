@@ -13,12 +13,9 @@ pygame.mixer.init()
 # Make default cursor invisible
 pygame.mouse.set_visible(False)
 
-# Set up the game window
-fullscreen = False
+fullscreen = False # Set Fullscreen to false by default
 menu_font = pygame.font.Font(None, 36)  # Setup default font
-
-# Set default volume
-volume = 0.5
+volume = 0.5  # Set default volume
 
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -128,7 +125,13 @@ for i in range(1, 6):  # Assume there are five fireball images named fireball1.p
     bullet_scaled_frame = pygame.transform.scale(bullet_original_frame, (bullet_scaled_width, bullet_scaled_height))
     bullet_frames.append(bullet_scaled_frame)
 
+
 ENEMY_SPEED = 0.75  # Adjust this value as needed
+ENEMY_HP = 10
+SPEED_SCALING_FACTOR = 0.005  # Increase in speed per kill
+HP_SCALING_FACTOR = 0.01     # Increase in HP per kill
+BULLET_DAMAGE = 10.5
+
 enemy_frames = []
 for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, enemy2.png, and enemy3.png
     enemy_original_frame = pygame.image.load(f"sprites/enemies/enemy{i}.png").convert_alpha()
@@ -180,6 +183,9 @@ if os.path.exists(file_path):
         player_hp = int(lines[2].strip())
         exp = int(lines[3].strip())
         player_level = int(lines[4].strip())
+
+scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR
+scaled_hp = ENEMY_HP + kills * SPEED_SCALING_FACTOR
 
 def save():
     # Write data to the file
@@ -298,7 +304,6 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
 
     if upgrades == 0:
         shoot_forwards(centered_x, centered_y, bullet_speed,angle, bullets)
-        fireball_sound_1.set_volume(0.5)  # Set volume to 50%
         fireball_sound_1.play()
     elif upgrades == 1:
         fireball_sound_2.play()
@@ -402,15 +407,14 @@ def spawn_enemy(player_x, player_y):
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    basic_enemy = Enemy(spawn_x, spawn_y, enemy_scaled_width, enemy_scaled_height, 10, ENEMY_SPEED)
+    basic_enemy = Enemy(spawn_x, spawn_y, enemy_scaled_width, enemy_scaled_height, scaled_hp, scaled_speed)
     enemies.append(basic_enemy)
 
 # Function to spawn crashing enemies
 def spawn_crashing_enemy(player_x, player_y):
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
-    spawn_y = player_y + random.choice([-1, 1]) * (
-        random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
     crashing_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
     crashing_enemies.append(crashing_enemy)
@@ -677,7 +681,7 @@ while True:
                                          crashing_enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
-                    crashing_enemy.hp -= 10
+                    crashing_enemy.hp -= BULLET_DAMAGE
                     bullets.remove(bullet)
 
                     if crashing_enemy.hp <= 0:
@@ -698,8 +702,8 @@ while True:
             # Calculate the angle between the player and the enemy
             angle = math.atan2(distance_y, distance_x)
             # Calculate the movement components based on the angle and enemy speed
-            move_x = ENEMY_SPEED * math.cos(angle)
-            move_y = ENEMY_SPEED * math.sin(angle)
+            move_x = scaled_speed * math.cos(angle)
+            move_y = scaled_speed * math.sin(angle)
 
             # Update enemy position
             enemy.x += move_x
@@ -718,9 +722,7 @@ while True:
                 enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
-                    enemy.hp -= 10
-                    if upgrades<=5:
-                        bullets.remove(bullet)
+                    enemy.hp -= BULLET_DAMAGE
 
                     if enemy.hp <= 0:
                         enemies_to_remove.append(enemy)
@@ -731,6 +733,8 @@ while True:
                             active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                             print("A wild regen orb spawned!!!!!")
                         break
+                    elif upgrades<=5 or enemy.hp <= BULLET_DAMAGE:
+                        bullets.remove(bullet)
 
         for enemy in enemies_to_remove:
             enemies.remove(enemy)
@@ -815,9 +819,8 @@ while True:
 
         screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
 
-    for crashing_enemy in crashing_enemies and not paused:
-        pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
-
+    for crashing_enemy in crashing_enemies:
+        pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width,crashing_enemy.height))
 
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity
