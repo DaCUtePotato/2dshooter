@@ -4,6 +4,7 @@ import sys
 import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
+from bulky_enemy import Bulky, bulkies
 import os
 
 # Initialize pygame
@@ -139,6 +140,14 @@ for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, ene
     enemy_scaled_height = enemy_original_frame.get_height() * 5
     enemy_scaled_frame = pygame.transform.scale(enemy_original_frame, (enemy_scaled_width, enemy_scaled_height))
     enemy_frames.append(enemy_scaled_frame)
+
+bulky_frames = []
+for i in range(1, 4):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
+    bulky_original_frame = pygame.image.load(f"sprites/enemies/bulky{i}.png").convert_alpha()
+    bulky_scaled_width = bulky_original_frame.get_width() * 5  # Adjust the scaling factor as needed
+    bulky_scaled_height = bulky_original_frame.get_height() * 5
+    bulky_scaled_frame = pygame.transform.scale(bulky_original_frame, (bulky_scaled_width, bulky_scaled_height))
+    bulky_frames.append(bulky_scaled_frame)
 
 # Load experience orb image
 exp_image = pygame.image.load("sprites/exp.png")
@@ -729,11 +738,13 @@ while True:
                         active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         kills += 1
+                        if upgrades <= 5:
+                            bullets.remove(bullet)
                         if random.randint(0, 100) == 69:
                             active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                             print("A wild regen orb spawned!!!!!")
                         break
-                    elif upgrades<=5 or enemy.hp <= BULLET_DAMAGE:
+                    elif enemy.hp > 0:
                         bullets.remove(bullet)
 
         for enemy in enemies_to_remove:
