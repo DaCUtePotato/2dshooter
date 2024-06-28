@@ -934,17 +934,17 @@ while True:
         if enemy.hit_animation_playing and not enemy.death_animation_playing:
             enemy.hit_frame_count += 1
             if enemy.hit_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
-                enemy.hit_frame = (enemy.hit_frame + 1) % len(hit_enemy_frames)
+                enemy.hit_frame = enemy.hit_frame + 1
 
             # Check if hit animation duration is over
-            if enemy.hit_frame_count >= enemy.hit_animation_duration:
+            if enemy.hit_frame >= len(hit_enemy_frames):
                 enemy.hit_animation_playing = False
                 enemy.hit_frame_count = 0
 
         elif enemy.death_animation_playing:
             enemy.death_frame_count += 1
             if enemy.death_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
-                enemy.death_frame = (enemy.death_frame + 1)
+                enemy.death_frame = enemy.death_frame + 1
 
             # Check if death animation duration is over
             if enemy.death_frame >= len(death_enemy_frames):  # Ensure the death animation has completed
