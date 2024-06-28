@@ -34,17 +34,23 @@ main_menu = True  # Enables main menu
 
 # Load and scale images
 tile_image = pygame.image.load('sprites/tile.png')
-tile_size = 128
-scaled_tile_image = pygame.transform.scale(tile_image, (tile_size, tile_size))
+tile_x = 1011
+tile_y = 624
+scaled_tile_image = pygame.transform.scale(tile_image, (tile_x, tile_y))
 cursor_image = pygame.image.load("sprites/cursor.png")
+title_image = pygame.image.load("sprites/title.png")
 play_button_image = pygame.image.load('sprites/play.png')
 settings_button_image = pygame.image.load('sprites/settings.png')
 quit_button_image = pygame.image.load('sprites/quit.png')
+title_scaled_width = title_image.get_width() / 2
+title_scaled_height = title_image.get_height() / 2
+scaled_title_image = pygame.transform.scale(title_image, (title_scaled_width, title_scaled_height))
 
 # Positions of play, settings and quit button
-play_button_rect = play_button_image.get_rect(center=(width // 4, height // 2))
-settings_button_rect = settings_button_image.get_rect(center=(width // 2, height-height//10))
-quit_button_rect = quit_button_image.get_rect(center=(3 * width // 4, height // 2))
+title_rect = scaled_title_image.get_rect(center=(width / 2, height / 4))
+play_button_rect = play_button_image.get_rect(center=(width / 4, height / 2))
+settings_button_rect = settings_button_image.get_rect(center=(width // 2, height-height/ 5))
+quit_button_rect = quit_button_image.get_rect(center=(3 * width / 4, height / 2))
 
 # Load sprite sheet for the character walking. Convert alpha is used for performance optimization
 sprite_sheet_right = pygame.image.load('sprites/Niko_right.png').convert_alpha()
@@ -163,10 +169,10 @@ for i in range(1, 6):  # Assuming there are 5 death frames named batdeath1.png, 
     death_enemy_frames.append(death_enemy_scaled_frame)
 
 bulky_frames = []
-for i in range(1, 4):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
-    bulky_original_frame = pygame.image.load(f"sprites/enemies/bulky{i}.png").convert_alpha()
-    bulky_scaled_width = bulky_original_frame.get_width() * 7  # Adjust the scaling factor as needed
-    bulky_scaled_height = bulky_original_frame.get_height() * 7
+for i in range(1, 17):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
+    bulky_original_frame = pygame.image.load(f"sprites/enemies/slime{i}.png").convert_alpha()
+    bulky_scaled_width = bulky_original_frame.get_width() * 3  # Adjust the scaling factor as needed
+    bulky_scaled_height = bulky_original_frame.get_height() * 3
     bulky_scaled_frame = pygame.transform.scale(bulky_original_frame, (bulky_scaled_width, bulky_scaled_height))
     bulky_frames.append(bulky_scaled_frame)
 
@@ -235,9 +241,9 @@ def save():
 
 
 def draw_tiles(camera_offset_x, camera_offset_y):
-    for y in range(-tile_size, height + tile_size, tile_size):
-        for x in range(-tile_size, width + tile_size, tile_size):
-            screen.blit(scaled_tile_image, (x + camera_offset_x % tile_size - tile_size, y + camera_offset_y % tile_size - tile_size))
+    for y in range(-tile_y, height + tile_y, tile_y):
+        for x in range(-tile_x, width + tile_x, tile_x):
+            screen.blit(scaled_tile_image, (x + camera_offset_x % tile_x - tile_x, y + camera_offset_y % tile_y - tile_y))
 
 def animate_bullet(bullet):
     bullet['frame'] += 1
@@ -465,8 +471,8 @@ def spawn_bulky(player_x, player_y):
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
-
-    bulky = Bulky(spawn_x, spawn_y, bulky_scaled_width, bulky_scaled_height, 100, 0.5)
+    print("Spawned a Slime at", spawn_x, spawn_y)
+    bulky = Bulky(spawn_x, spawn_y, bulky_scaled_width, bulky_scaled_height, 100, 0.7)
     bulkies.append(bulky)
     bulky_spawned = True
 
@@ -580,9 +586,10 @@ while main_menu:
 
     screen.fill(BLACK)
     draw_tiles(0, 0)
-    screen.blit(play_button_image, play_button_rect.topleft)
-    screen.blit(settings_button_image, settings_button_rect.topleft)
-    screen.blit(quit_button_image, quit_button_rect.topleft)
+    screen.blit(scaled_title_image, title_rect)
+    screen.blit(play_button_image, play_button_rect)
+    screen.blit(settings_button_image, settings_button_rect)
+    screen.blit(quit_button_image, quit_button_rect)
 
     bullets = [bullet for bullet in bullets if 0 <= bullet['x'] <= width and 0 <= bullet['y'] <= height]
     for bullet in bullets:
@@ -774,13 +781,13 @@ while True:
 
             # Calculate the angle between the player and the enemy
             angle = math.atan2(distance_y, distance_x)
-            # Calculate the movement components based on the angle and enemy speed
             move_x = scaled_speed * math.cos(angle)
             move_y = scaled_speed * math.sin(angle)
 
             # Update enemy position
-            enemy.x += move_x
-            enemy.y += move_y
+            if not enemy.death_animation_playing:
+                enemy.x += move_x
+                enemy.y += move_y
 
             # Check for collisions with the player
             if (player_x < enemy.x + enemy.width and player_x + player_width > enemy.x and
