@@ -890,7 +890,7 @@ while True:
     for enemy in enemies:
         if enemy.hit_animation_playing:
             enemy.hit_frame_count += 1
-            if enemy.hit_frame_count % 4 == 0 and not paused:  # Adjust frame rate of hit animation here
+            if enemy.hit_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
                 enemy.hit_frame = (enemy.hit_frame + 1) % len(hit_enemy_frames)
 
             # Check if hit animation duration is over
@@ -900,7 +900,7 @@ while True:
 
         else:
             enemy.frame_count += 1
-            if enemy.frame_count % 6 == 0 and not paused:
+            if enemy.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
                 enemy.frame = (enemy.frame + 1) % len(enemy_frames)
 
         # Choose the appropriate frame to display
@@ -923,7 +923,7 @@ while True:
     for bulky in bulkies:
         # Animate and draw enemy
         bulky.frame_count += 1
-        if bulky.frame_count % 10 == 0 and not paused:  # Adjust frame rate of animation here
+        if bulky.frame_count % 10 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of animation here
             bulky.frame = (bulky.frame + 1) % len(bulky_frames)
 
         if bulky.x > player_x:
