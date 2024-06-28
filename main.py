@@ -43,7 +43,7 @@ quit_button_image = pygame.image.load('sprites/quit.png')
 
 # Positions of play, settings and quit button
 play_button_rect = play_button_image.get_rect(center=(width // 4, height // 2))
-settings_button_rect = settings_button_image.get_rect(center=(width // 2, height - 50))
+settings_button_rect = settings_button_image.get_rect(center=(width // 2, height-height//10))
 quit_button_rect = quit_button_image.get_rect(center=(3 * width // 4, height // 2))
 
 # Load sprite sheet for the character walking. Convert alpha is used for performance optimization
@@ -83,7 +83,7 @@ YELLOW = (255, 255, 0)
 # Player attributes
 player_x = width // 2
 player_y = height // 2
-player_pos_on_screen = (player_x, player_y)
+player_pos_on_screen = width//2-25, height//2
 player_speed = 5
 player_height = int(niko_scaling_height)
 player_width = int(niko_scaling_width)
@@ -326,7 +326,7 @@ def shoot_down_directional(player_x, player_y,bullet_speed, angle, bullets):
 
 def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     global current_fireball_cooldown
-    centered_x, centered_y = player_x+player_width//2, player_y+player_height//4
+    centered_x, centered_y = player_x+player_width//2-25, player_y+player_height//4
     mouseX, mouseY = pygame.mouse.get_pos()
     angle = math.atan2(mouseY-height//2-player_height//4, mouseX-width//2-player_width//2)  # Use the center of the screen for angle calculation
     if upgrades >= 7:  # If the 7th upgrade is active, shoot upwards
@@ -593,7 +593,6 @@ while main_menu:
         rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
         screen.blit(rotated_bullet_image, (
         bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
-        fireball_sound_1.play()
 
     handle_bullet_collisions(bullets, play_button_rect, start_game)
     handle_bullet_collisions(bullets, settings_button_rect, open_settings)
@@ -714,7 +713,9 @@ while True:
             screen.blit(rotated_bullet_image, (bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
 
         # Filter bullets that go off-screen
-        bullets = [bullet for bullet in bullets if bullet['x'] > player_x - width // 2 and bullet['x'] < player_x + width // 2 and bullet['y'] > player_y - height // 2 and bullet['y'] < player_y + height // 2]
+        bullets = [bullet for bullet in bullets if
+                   player_x - width // 2 < bullet['x'] < player_x + width // 2 and player_y - height // 2 < bullet[
+                       'y'] < player_y + height // 2]
 
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
@@ -797,15 +798,9 @@ while True:
                     enemy.hp -= BULLET_DAMAGE
 
                     if enemy.hp <= 0:
-                        enemies_to_remove.append(enemy)
-                        active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
-                        enemy_exp = random.randint(1, 5)
-                        kills += 1
+                        enemy.death_animation_playing = True  # Trigger death animation
                         if upgrades <= 5:
                             bullets.remove(bullet)
-                        if random.randint(0, 100) == 69:
-                            active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
-                            print("A wild regen orb spawned!!!!!")
                         break
                     elif enemy.hp > 0:
                         enemy.hit_animation_playing = True  # Trigger hit animation
@@ -932,7 +927,7 @@ while True:
         screen.blit(scaled_regen_image, (image_x, image_y))
 
     for enemy in enemies:
-        if enemy.hit_animation_playing:
+        if enemy.hit_animation_playing and not enemy.death_animation_playing:
             enemy.hit_frame_count += 1
             if enemy.hit_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
                 enemy.hit_frame = (enemy.hit_frame + 1) % len(hit_enemy_frames)
@@ -942,17 +937,39 @@ while True:
                 enemy.hit_animation_playing = False
                 enemy.hit_frame_count = 0
 
+        elif enemy.death_animation_playing:
+            enemy.death_frame_count += 1
+            if enemy.death_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
+                enemy.death_frame = (enemy.death_frame + 1) % len(death_enemy_frames)
+
+            # Check if hit animation duration is over
+            if enemy.death_frame_count >= enemy.death_animation_duration:
+                enemy.death_animation_playing = False
+                enemy.death_frame_count = 0
+                enemies.remove(enemy)
+                active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
+                enemy_exp = random.randint(1, 5)
+                kills += 1
+                if random.randint(0, 100) == 69:
+                    active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
+                    print("A wild regen orb spawned!!!!!")
+
+
         else:
             enemy.frame_count += 1
             if enemy.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
                 enemy.frame = (enemy.frame + 1) % len(enemy_frames)
 
         # Choose the appropriate frame to display
-        if enemy.hit_animation_playing:
+        if enemy.hit_animation_playing and not enemy.death_animation_playing:
             if enemy.x > player_x:
                 enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
             else:
                 enemy_image = hit_enemy_frames[enemy.hit_frame]
+
+        elif enemy.death_animation_playing:
+            enemy_image = death_enemy_frames[enemy.death_frame]
+
         else:
             if enemy.x > player_x:
                 enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
