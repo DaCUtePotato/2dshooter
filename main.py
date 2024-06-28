@@ -136,10 +136,10 @@ BULLET_DAMAGE = 10.5
 bulky_spawned = False
 
 enemy_frames = []
-for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, enemy2.png, and enemy3.png
-    enemy_original_frame = pygame.image.load(f"sprites/enemies/enemy{i}.png").convert_alpha()
-    enemy_scaled_width = enemy_original_frame.get_width() * 5  # Adjust the scaling factor as needed
-    enemy_scaled_height = enemy_original_frame.get_height() * 5
+for i in range(1, 5):  # Assuming there are 4 enemy images named bat1.png, bat2.png, bat3.png and bat4.png
+    enemy_original_frame = pygame.image.load(f"sprites/enemies/bat{i}.png").convert_alpha()
+    enemy_scaled_width = enemy_original_frame.get_width() * 2.5  # Adjust the scaling factor as needed
+    enemy_scaled_height = enemy_original_frame.get_height() * 2.5
     enemy_scaled_frame = pygame.transform.scale(enemy_original_frame, (enemy_scaled_width, enemy_scaled_height))
     enemy_frames.append(enemy_scaled_frame)
 
@@ -877,7 +877,7 @@ while True:
     for enemy in enemies:
         # Animate and draw enemy
         enemy.frame_count += 1
-        if enemy.frame_count % 10 == 0 and not paused:  # Adjust frame rate of animation here
+        if enemy.frame_count % 5 == 0 and not paused:  # Adjust frame rate of animation here
             enemy.frame = (enemy.frame + 1) % len(enemy_frames)
 
         if enemy.x > player_x:
