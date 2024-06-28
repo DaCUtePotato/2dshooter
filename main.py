@@ -152,6 +152,14 @@ for i in range(1, 6):  # Assuming there are 5 hit frames named bathit1.png, bath
     hit_enemy_scaled_frame = pygame.transform.scale(hit_enemy_original_frame, (hit_enemy_scaled_width, hit_enemy_scaled_height))
     hit_enemy_frames.append(hit_enemy_scaled_frame)
 
+# Load death animation frames
+death_enemy_frames = []
+for i in range(1, 6):  # Assuming there are 5 death frames named batdeath1.png, batdeath2.png ...
+    death_enemy_original_frame = pygame.image.load(f"sprites/enemies/batdeath{i}.png").convert_alpha()
+    death_enemy_scaled_width = death_enemy_original_frame.get_width() * 2.5
+    death_enemy_scaled_height = death_enemy_original_frame.get_height() * 2.5
+    death_enemy_scaled_frame = pygame.transform.scale(death_enemy_original_frame, (death_enemy_scaled_width, death_enemy_scaled_height))
+    death_enemy_frames.append(death_enemy_scaled_frame)
 
 bulky_frames = []
 for i in range(1, 4):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
