@@ -11,7 +11,9 @@ class Bulky:
         self.speed = speed
         self.frame = 0
         self.frame_count = 0
-
+        self.death_animation_playing = False
+        self.death_frame = 0
+        self.death_frame_count = 0
 
 exp = random.randint(10, 50)
 bulkies = []

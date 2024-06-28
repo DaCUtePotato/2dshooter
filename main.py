@@ -176,6 +176,14 @@ for i in range(1, 17):  # Assuming there are 3 bulky images named bulky1.png, bu
     bulky_scaled_frame = pygame.transform.scale(bulky_original_frame, (bulky_scaled_width, bulky_scaled_height))
     bulky_frames.append(bulky_scaled_frame)
 
+bulky_death_frames = []
+for i in range(1, 7):  # Assuming there are 6 bulky death frames named bulkydeath1.png, bulkydeath2.png ...
+    bulky_death_original_frame = pygame.image.load(f"sprites/enemies/slimedeath{i}.png").convert_alpha()
+    bulky_death_scaled_width = bulky_death_original_frame.get_width() * 3
+    bulky_death_scaled_height = bulky_death_original_frame.get_height() * 3
+    bulky_death_scaled_frame = pygame.transform.scale(bulky_death_original_frame, (bulky_death_scaled_width, bulky_death_scaled_height))
+    bulky_death_frames.append(bulky_death_scaled_frame)
+
 # Load experience orb image
 exp_image = pygame.image.load("sprites/exp.png")
 
@@ -811,7 +819,7 @@ while True:
                     elif enemy.hp > 0:
                         enemy.hit_animation_playing = True  # Trigger hit animation
                         bullets.remove(bullet)
-        bulkies_to_remove = []
+
         for bulky in bulkies:
             # Calculate the center coordinates of the player
             player_x_center = player_x + player_width / 2
@@ -823,16 +831,17 @@ while True:
 
             # Calculate the angle between the player and the enemy
             angle = math.atan2(distance_y, distance_x)
-            # Calculate the movement components based on the angle and enemy speed
             move_x = 0.5 * math.cos(angle)
             move_y = 0.5 * math.sin(angle)
 
             # Update enemy position
-            bulky.x += move_x
-            bulky.y += move_y
+            if not bulky.death_animation_playing:
+                bulky.x += move_x
+                bulky.y += move_y
 
             # Check for collisions with the player
-            if (player_x < bulky.x + bulky.width and player_x + player_width > bulky.x and player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
+            if (player_x < bulky.x + bulky.width and player_x + player_width > bulky.x and
+                    player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
                 if i_frames_counter == i_frames:
                     player_hp -= 5
                     i_frames_counter = 0
@@ -846,18 +855,12 @@ while True:
                     bulky.hp -= BULLET_DAMAGE
 
                     if bulky.hp <= 0:
-                        bulkies_to_remove.append(bulky)
-                        active_exp_orbs.append({'size': enemy_exp * 5, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
-                        enemy_exp = random.randint(10, 50)
-                        kills += 1
+                        bulky.death_animation_playing = True  # Trigger death animation
                         if upgrades <= 5:
                             bullets.remove(bullet)
                         break
                     elif bulky.hp > 0:
                         bullets.remove(bullet)
-
-        for bulky in bulkies_to_remove:
-            bulkies.remove(bulky)
 
         if player_hp <= 0:
             upgrades = 0
@@ -987,21 +990,43 @@ while True:
     for enemy in enemies_to_remove:
         enemies.remove(enemy)
 
-
+    bulkies_to_remove = []
     for bulky in bulkies:
-        # Animate and draw enemy
-        bulky.frame_count += 1
-        if bulky.frame_count % 10 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of animation here
-            bulky.frame = (bulky.frame + 1) % len(bulky_frames)
+        if bulky.death_animation_playing:
+            bulky.death_frame_count += 1
+            if bulky.death_frame_count % 4 == 0 and not paused and not show_upgrade_menu:
+                bulky.death_frame = bulky.death_frame + 1
 
-        if bulky.x > player_x:
-            # Enemy is coming from the left side of the screen, flip the sprite
-            bulky_image = pygame.transform.flip(bulky_frames[bulky.frame], True, False)
+            if bulky.death_frame >= len(bulky_death_frames) - 1:  # Ensure the death animation has completed
+                bulkies_to_remove.append(bulky)
+                active_exp_orbs.append({'size': enemy_exp, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
+                enemy_exp = random.randint(10, 50)
+                kills += 1
+
+            else:
+                # Display the current frame of the death animation
+                bulky_image = bulky_death_frames[bulky.death_frame]
+                if bulky.x > player_x:
+                    bulky_image = pygame.transform.flip(bulky_image, True, False)
+                screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
+                continue  # Skip the rest of the loop to ensure no other animation is played
         else:
-            # Enemy is coming from the right side of the screen, use the original sprite
-            bulky_image = bulky_frames[bulky.frame]
+            # Animate and draw bulky enemy
+            bulky.frame_count += 1
+            if bulky.frame_count % 10 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of animation here
+                bulky.frame = (bulky.frame + 1) % len(bulky_frames)
 
-        screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
+            if bulky.x > player_x:
+                # Enemy is coming from the left side of the screen, flip the sprite
+                bulky_image = pygame.transform.flip(bulky_frames[bulky.frame], True, False)
+            else:
+                # Enemy is coming from the right side of the screen, use the original sprite
+                bulky_image = bulky_frames[bulky.frame]
+
+            screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
+
+    for bulky in bulkies_to_remove:
+        bulkies.remove(bulky)
 
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity
