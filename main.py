@@ -143,6 +143,16 @@ for i in range(1, 5):  # Assuming there are 4 enemy images named bat1.png, bat2.
     enemy_scaled_frame = pygame.transform.scale(enemy_original_frame, (enemy_scaled_width, enemy_scaled_height))
     enemy_frames.append(enemy_scaled_frame)
 
+# Load hit animation frames
+hit_enemy_frames = []
+for i in range(1, 6):  # Assuming there are 5 hit frames named bathit1.png, bathit2.png ...
+    hit_enemy_original_frame = pygame.image.load(f"sprites/enemies/bathit{i}.png").convert_alpha()
+    hit_enemy_scaled_width = hit_enemy_original_frame.get_width() * 2.5
+    hit_enemy_scaled_height = hit_enemy_original_frame.get_height() * 2.5
+    hit_enemy_scaled_frame = pygame.transform.scale(hit_enemy_original_frame, (hit_enemy_scaled_width, hit_enemy_scaled_height))
+    hit_enemy_frames.append(hit_enemy_scaled_frame)
+
+
 bulky_frames = []
 for i in range(1, 4):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
     bulky_original_frame = pygame.image.load(f"sprites/enemies/bulky{i}.png").convert_alpha()
@@ -410,10 +420,14 @@ def draw_exp_bar():
 
 # Function to spawn enemies
 def spawn_enemy(player_x, player_y):
+    global scaled_speed, scaled_hp
     # Calculate the boundaries for off-screen spawning
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+
+    scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR
+    scaled_hp = ENEMY_HP + kills * HP_SCALING_FACTOR
 
     basic_enemy = Enemy(spawn_x, spawn_y, enemy_scaled_width, enemy_scaled_height, scaled_hp, scaled_speed)
     enemies.append(basic_enemy)
@@ -554,8 +568,6 @@ while main_menu:
 # Game loop
 show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
 while True:
-    scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR
-    scaled_hp = ENEMY_HP + kills * SPEED_SCALING_FACTOR
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -757,6 +769,7 @@ while True:
                             print("A wild regen orb spawned!!!!!")
                         break
                     elif enemy.hp > 0:
+                        enemy.hit_animation_playing = True  # Trigger hit animation
                         bullets.remove(bullet)
         bulkies_to_remove = []
         for bulky in bulkies:
@@ -875,17 +888,32 @@ while True:
         screen.blit(scaled_regen_image, (image_x, image_y))
 
     for enemy in enemies:
-        # Animate and draw enemy
-        enemy.frame_count += 1
-        if enemy.frame_count % 5 == 0 and not paused:  # Adjust frame rate of animation here
-            enemy.frame = (enemy.frame + 1) % len(enemy_frames)
+        if enemy.hit_animation_playing:
+            enemy.hit_frame_count += 1
+            if enemy.hit_frame_count % 4 == 0 and not paused:  # Adjust frame rate of hit animation here
+                enemy.hit_frame = (enemy.hit_frame + 1) % len(hit_enemy_frames)
 
-        if enemy.x > player_x:
-            # Enemy is coming from the left side of the screen, flip the sprite
-            enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
+            # Check if hit animation duration is over
+            if enemy.hit_frame_count >= enemy.hit_animation_duration:
+                enemy.hit_animation_playing = False
+                enemy.hit_frame_count = 0
+
         else:
-            # Enemy is coming from the right side of the screen, use the original sprite
-            enemy_image = enemy_frames[enemy.frame]
+            enemy.frame_count += 1
+            if enemy.frame_count % 6 == 0 and not paused:
+                enemy.frame = (enemy.frame + 1) % len(enemy_frames)
+
+        # Choose the appropriate frame to display
+        if enemy.hit_animation_playing:
+            if enemy.x > player_x:
+                enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
+            else:
+                enemy_image = hit_enemy_frames[enemy.hit_frame]
+        else:
+            if enemy.x > player_x:
+                enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
+            else:
+                enemy_image = enemy_frames[enemy.frame]
 
         screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
 
