@@ -11,7 +11,14 @@ class Enemy:
         self.speed = speed
         self.frame = 0
         self.frame_count = 0
-
+        self.hit_frame = 0
+        self.hit_frame_count = 0
+        self.hit_animation_playing = False
+        self.hit_animation_duration = 20
+        self.death_frame = 0
+        self.death_frame_count = 0
+        self.death_animation_playing = False
+        self.death_animation_duration = 20
 
 exp = random.randint(1, 5)
 enemies = []

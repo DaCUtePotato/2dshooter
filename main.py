@@ -4,6 +4,7 @@ import sys
 import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
+from bulky_enemy import Bulky, bulkies
 import os
 
 # Initialize pygame
@@ -13,12 +14,9 @@ pygame.mixer.init()
 # Make default cursor invisible
 pygame.mouse.set_visible(False)
 
-# Set up the game window
-fullscreen = False
+fullscreen = False # Set Fullscreen to false by default
 menu_font = pygame.font.Font(None, 36)  # Setup default font
-
-# Set default volume
-volume = 0.5
+volume = 0.5  # Set default volume
 
 if fullscreen:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -129,14 +127,48 @@ for i in range(1, 6):  # Assume there are five fireball images named fireball1.p
     bullet_scaled_frame = pygame.transform.scale(bullet_original_frame, (bullet_scaled_width, bullet_scaled_height))
     bullet_frames.append(bullet_scaled_frame)
 
+
 ENEMY_SPEED = 0.75  # Adjust this value as needed
+ENEMY_HP = 10
+SPEED_SCALING_FACTOR = 0.005  # Increase in speed per kill
+HP_SCALING_FACTOR = 0.01     # Increase in HP per kill
+BULLET_DAMAGE = 10.5
+
+bulky_spawned = False
+
 enemy_frames = []
-for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, enemy2.png, and enemy3.png
-    enemy_original_frame = pygame.image.load(f"sprites/enemies/enemy{i}.png").convert_alpha()
-    enemy_scaled_width = enemy_original_frame.get_width() * 5  # Adjust the scaling factor as needed
-    enemy_scaled_height = enemy_original_frame.get_height() * 5
+for i in range(1, 5):  # Assuming there are 4 enemy images named bat1.png, bat2.png, bat3.png and bat4.png
+    enemy_original_frame = pygame.image.load(f"sprites/enemies/bat{i}.png").convert_alpha()
+    enemy_scaled_width = enemy_original_frame.get_width() * 2.5  # Adjust the scaling factor as needed
+    enemy_scaled_height = enemy_original_frame.get_height() * 2.5
     enemy_scaled_frame = pygame.transform.scale(enemy_original_frame, (enemy_scaled_width, enemy_scaled_height))
     enemy_frames.append(enemy_scaled_frame)
+
+# Load hit animation frames
+hit_enemy_frames = []
+for i in range(1, 6):  # Assuming there are 5 hit frames named bathit1.png, bathit2.png ...
+    hit_enemy_original_frame = pygame.image.load(f"sprites/enemies/bathit{i}.png").convert_alpha()
+    hit_enemy_scaled_width = hit_enemy_original_frame.get_width() * 2.5
+    hit_enemy_scaled_height = hit_enemy_original_frame.get_height() * 2.5
+    hit_enemy_scaled_frame = pygame.transform.scale(hit_enemy_original_frame, (hit_enemy_scaled_width, hit_enemy_scaled_height))
+    hit_enemy_frames.append(hit_enemy_scaled_frame)
+
+# Load death animation frames
+death_enemy_frames = []
+for i in range(1, 6):  # Assuming there are 5 death frames named batdeath1.png, batdeath2.png ...
+    death_enemy_original_frame = pygame.image.load(f"sprites/enemies/batdeath{i}.png").convert_alpha()
+    death_enemy_scaled_width = death_enemy_original_frame.get_width() * 2.5
+    death_enemy_scaled_height = death_enemy_original_frame.get_height() * 2.5
+    death_enemy_scaled_frame = pygame.transform.scale(death_enemy_original_frame, (death_enemy_scaled_width, death_enemy_scaled_height))
+    death_enemy_frames.append(death_enemy_scaled_frame)
+
+bulky_frames = []
+for i in range(1, 4):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
+    bulky_original_frame = pygame.image.load(f"sprites/enemies/bulky{i}.png").convert_alpha()
+    bulky_scaled_width = bulky_original_frame.get_width() * 7  # Adjust the scaling factor as needed
+    bulky_scaled_height = bulky_original_frame.get_height() * 7
+    bulky_scaled_frame = pygame.transform.scale(bulky_original_frame, (bulky_scaled_width, bulky_scaled_height))
+    bulky_frames.append(bulky_scaled_frame)
 
 # Load experience orb image
 exp_image = pygame.image.load("sprites/exp.png")
@@ -309,7 +341,6 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
 
     if upgrades == 0:
         shoot_forwards(centered_x, centered_y, bullet_speed,angle, bullets)
-        fireball_sound_1.set_volume(0.5)  # Set volume to 50%
         fireball_sound_1.play()
     elif upgrades == 1:
         fireball_sound_2.play()
@@ -408,23 +439,36 @@ def draw_exp_bar():
 
 # Function to spawn enemies
 def spawn_enemy(player_x, player_y):
+    global scaled_speed, scaled_hp
     # Calculate the boundaries for off-screen spawning
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    basic_enemy = Enemy(spawn_x, spawn_y, enemy_scaled_width, enemy_scaled_height, 10, ENEMY_SPEED)
+    scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR
+    scaled_hp = ENEMY_HP + kills * HP_SCALING_FACTOR
+
+    basic_enemy = Enemy(spawn_x, spawn_y, enemy_scaled_width, enemy_scaled_height, scaled_hp, scaled_speed)
     enemies.append(basic_enemy)
 
 # Function to spawn crashing enemies
 def spawn_crashing_enemy(player_x, player_y):
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
-    spawn_y = player_y + random.choice([-1, 1]) * (
-        random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    crashing_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
+    crashing_enemy = crashingEnemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
     crashing_enemies.append(crashing_enemy)
+
+def spawn_bulky(player_x, player_y):
+    global bulky_spawned
+    off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+
+    bulky = Bulky(spawn_x, spawn_y, bulky_scaled_width, bulky_scaled_height, 100, 0.5)
+    bulkies.append(bulky)
+    bulky_spawned = True
 
 # Function to draw player's health bar
 def draw_hp_bar():
@@ -677,7 +721,8 @@ while True:
             spawn_enemy(player_x, player_y)
         if kills > 100 and random.randint(0, 10000) == 69:
             spawn_crashing_enemy(player_x, player_y)
-
+        if kills == 50 and not bulky_spawned:
+            spawn_bulky(player_x, player_y)
 
         # Update enemy positions and check for collisions with the player
         for crashing_enemy in crashing_enemies:
@@ -708,7 +753,7 @@ while True:
                                          crashing_enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
-                    crashing_enemy.hp -= 10
+                    crashing_enemy.hp -= BULLET_DAMAGE
                     bullets.remove(bullet)
 
                     if crashing_enemy.hp <= 0:
@@ -729,8 +774,8 @@ while True:
             # Calculate the angle between the player and the enemy
             angle = math.atan2(distance_y, distance_x)
             # Calculate the movement components based on the angle and enemy speed
-            move_x = ENEMY_SPEED * math.cos(angle)
-            move_y = ENEMY_SPEED * math.sin(angle)
+            move_x = scaled_speed * math.cos(angle)
+            move_y = scaled_speed * math.sin(angle)
 
             # Update enemy position
             enemy.x += move_x
@@ -749,22 +794,72 @@ while True:
                 enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
 
                 if bullet_rect.colliderect(enemy_rect):
-                    enemy.hp -= 10
-                    if upgrades<=5:
-                        bullets.remove(bullet)
+                    enemy.hp -= BULLET_DAMAGE
 
                     if enemy.hp <= 0:
                         enemies_to_remove.append(enemy)
                         active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         kills += 1
+                        if upgrades <= 5:
+                            bullets.remove(bullet)
                         if random.randint(0, 100) == 69:
                             active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                             print("A wild regen orb spawned!!!!!")
                         break
+                    elif enemy.hp > 0:
+                        enemy.hit_animation_playing = True  # Trigger hit animation
+                        bullets.remove(bullet)
+        bulkies_to_remove = []
+        for bulky in bulkies:
+            # Calculate the center coordinates of the player
+            player_x_center = player_x + player_width / 2
+            player_y_center = player_y + player_height / 2
+
+            # Calculate the vertical and horizontal distance between the enemy and the player's center
+            distance_y = player_y_center - bulky.y
+            distance_x = player_x_center - bulky.x
+
+            # Calculate the angle between the player and the enemy
+            angle = math.atan2(distance_y, distance_x)
+            # Calculate the movement components based on the angle and enemy speed
+            move_x = 0.5 * math.cos(angle)
+            move_y = 0.5 * math.sin(angle)
+
+            # Update enemy position
+            bulky.x += move_x
+            bulky.y += move_y
+
+            # Check for collisions with the player
+            if (player_x < bulky.x + bulky.width and player_x + player_width > bulky.x and player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
+                if i_frames_counter == i_frames:
+                    player_hp -= 5
+                    i_frames_counter = 0
+
+            # Check for collisions with bullets
+            for bullet in bullets:
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
+                bulky_rect = pygame.Rect(bulky.x, bulky.y, bulky.width, bulky.height)
+
+                if bullet_rect.colliderect(bulky_rect):
+                    bulky.hp -= BULLET_DAMAGE
+
+                    if bulky.hp <= 0:
+                        bulkies_to_remove.append(bulky)
+                        active_exp_orbs.append({'size': enemy_exp * 5, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
+                        enemy_exp = random.randint(10, 50)
+                        kills += 1
+                        if upgrades <= 5:
+                            bullets.remove(bullet)
+                        break
+                    elif bulky.hp > 0:
+                        bullets.remove(bullet)
 
         for enemy in enemies_to_remove:
             enemies.remove(enemy)
+
+        for bulky in bulkies_to_remove:
+            bulkies.remove(bulky)
 
         if player_hp <= 0:
             upgrades = 0
@@ -837,23 +932,52 @@ while True:
         screen.blit(scaled_regen_image, (image_x, image_y))
 
     for enemy in enemies:
-        # Animate and draw enemy
-        enemy.frame_count += 1
-        if enemy.frame_count % 10 == 0 and not paused:  # Adjust frame rate of animation here
-            enemy.frame = (enemy.frame + 1) % len(enemy_frames)
+        if enemy.hit_animation_playing:
+            enemy.hit_frame_count += 1
+            if enemy.hit_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
+                enemy.hit_frame = (enemy.hit_frame + 1) % len(hit_enemy_frames)
 
-        if enemy.x > player_x:
-            # Enemy is coming from the left side of the screen, flip the sprite
-            enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
+            # Check if hit animation duration is over
+            if enemy.hit_frame_count >= enemy.hit_animation_duration:
+                enemy.hit_animation_playing = False
+                enemy.hit_frame_count = 0
+
         else:
-            # Enemy is coming from the right side of the screen, use the original sprite
-            enemy_image = enemy_frames[enemy.frame]
+            enemy.frame_count += 1
+            if enemy.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
+                enemy.frame = (enemy.frame + 1) % len(enemy_frames)
+
+        # Choose the appropriate frame to display
+        if enemy.hit_animation_playing:
+            if enemy.x > player_x:
+                enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
+            else:
+                enemy_image = hit_enemy_frames[enemy.hit_frame]
+        else:
+            if enemy.x > player_x:
+                enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
+            else:
+                enemy_image = enemy_frames[enemy.frame]
 
         screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
 
-    for crashing_enemy in crashing_enemies and not paused:
-        pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
+    for crashing_enemy in crashing_enemies:
+        pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width,crashing_enemy.height))
 
+    for bulky in bulkies:
+        # Animate and draw enemy
+        bulky.frame_count += 1
+        if bulky.frame_count % 10 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of animation here
+            bulky.frame = (bulky.frame + 1) % len(bulky_frames)
+
+        if bulky.x > player_x:
+            # Enemy is coming from the left side of the screen, flip the sprite
+            bulky_image = pygame.transform.flip(bulky_frames[bulky.frame], True, False)
+        else:
+            # Enemy is coming from the right side of the screen, use the original sprite
+            bulky_image = bulky_frames[bulky.frame]
+
+        screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
 
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity
