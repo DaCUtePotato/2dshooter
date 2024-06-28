@@ -133,6 +133,8 @@ SPEED_SCALING_FACTOR = 0.005  # Increase in speed per kill
 HP_SCALING_FACTOR = 0.01     # Increase in HP per kill
 BULLET_DAMAGE = 10.5
 
+bulky_spawned = False
+
 enemy_frames = []
 for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, enemy2.png, and enemy3.png
     enemy_original_frame = pygame.image.load(f"sprites/enemies/enemy{i}.png").convert_alpha()
@@ -144,8 +146,8 @@ for i in range(1, 4):  # Assuming there are 3 enemy images named enemy1.png, ene
 bulky_frames = []
 for i in range(1, 4):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
     bulky_original_frame = pygame.image.load(f"sprites/enemies/bulky{i}.png").convert_alpha()
-    bulky_scaled_width = bulky_original_frame.get_width() * 5  # Adjust the scaling factor as needed
-    bulky_scaled_height = bulky_original_frame.get_height() * 5
+    bulky_scaled_width = bulky_original_frame.get_width() * 7  # Adjust the scaling factor as needed
+    bulky_scaled_height = bulky_original_frame.get_height() * 7
     bulky_scaled_frame = pygame.transform.scale(bulky_original_frame, (bulky_scaled_width, bulky_scaled_height))
     bulky_frames.append(bulky_scaled_frame)
 
@@ -192,9 +194,6 @@ if os.path.exists(file_path):
         player_hp = int(lines[2].strip())
         exp = int(lines[3].strip())
         player_level = int(lines[4].strip())
-
-scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR
-scaled_hp = ENEMY_HP + kills * SPEED_SCALING_FACTOR
 
 def save():
     # Write data to the file
@@ -425,8 +424,18 @@ def spawn_crashing_enemy(player_x, player_y):
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    crashing_enemy = Enemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
+    crashing_enemy = crashingEnemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
     crashing_enemies.append(crashing_enemy)
+
+def spawn_bulky(player_x, player_y):
+    global bulky_spawned
+    off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+
+    bulky = Bulky(spawn_x, spawn_y, bulky_scaled_width, bulky_scaled_height, 100, 0.5)
+    bulkies.append(bulky)
+    bulky_spawned = True
 
 # Function to draw player's health bar
 def draw_hp_bar():
@@ -545,6 +554,8 @@ while main_menu:
 # Game loop
 show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
 while True:
+    scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR
+    scaled_hp = ENEMY_HP + kills * SPEED_SCALING_FACTOR
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -659,7 +670,8 @@ while True:
             spawn_enemy(player_x, player_y)
         if kills > 100 and random.randint(0, 10000) == 69:
             spawn_crashing_enemy(player_x, player_y)
-
+        if kills == 50 and not bulky_spawned:
+            spawn_bulky(player_x, player_y)
 
         # Update enemy positions and check for collisions with the player
         for crashing_enemy in crashing_enemies:
@@ -746,9 +758,56 @@ while True:
                         break
                     elif enemy.hp > 0:
                         bullets.remove(bullet)
+        bulkies_to_remove = []
+        for bulky in bulkies:
+            # Calculate the center coordinates of the player
+            player_x_center = player_x + player_width / 2
+            player_y_center = player_y + player_height / 2
+
+            # Calculate the vertical and horizontal distance between the enemy and the player's center
+            distance_y = player_y_center - bulky.y
+            distance_x = player_x_center - bulky.x
+
+            # Calculate the angle between the player and the enemy
+            angle = math.atan2(distance_y, distance_x)
+            # Calculate the movement components based on the angle and enemy speed
+            move_x = 0.5 * math.cos(angle)
+            move_y = 0.5 * math.sin(angle)
+
+            # Update enemy position
+            bulky.x += move_x
+            bulky.y += move_y
+
+            # Check for collisions with the player
+            if (player_x < bulky.x + bulky.width and player_x + player_width > bulky.x and player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
+                if i_frames_counter == i_frames:
+                    player_hp -= 5
+                    i_frames_counter = 0
+
+            # Check for collisions with bullets
+            for bullet in bullets:
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
+                bulky_rect = pygame.Rect(bulky.x, bulky.y, bulky.width, bulky.height)
+
+                if bullet_rect.colliderect(bulky_rect):
+                    bulky.hp -= BULLET_DAMAGE
+
+                    if bulky.hp <= 0:
+                        bulkies_to_remove.append(bulky)
+                        active_exp_orbs.append({'size': enemy_exp * 5, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
+                        enemy_exp = random.randint(10, 50)
+                        kills += 1
+                        if upgrades <= 5:
+                            bullets.remove(bullet)
+                        break
+                    elif bulky.hp > 0:
+                        bullets.remove(bullet)
 
         for enemy in enemies_to_remove:
             enemies.remove(enemy)
+
+        for bulky in bulkies_to_remove:
+            bulkies.remove(bulky)
 
         if player_hp <= 0:
             save()
@@ -832,6 +891,21 @@ while True:
 
     for crashing_enemy in crashing_enemies:
         pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width,crashing_enemy.height))
+
+    for bulky in bulkies:
+        # Animate and draw enemy
+        bulky.frame_count += 1
+        if bulky.frame_count % 10 == 0 and not paused:  # Adjust frame rate of animation here
+            bulky.frame = (bulky.frame + 1) % len(bulky_frames)
+
+        if bulky.x > player_x:
+            # Enemy is coming from the left side of the screen, flip the sprite
+            bulky_image = pygame.transform.flip(bulky_frames[bulky.frame], True, False)
+        else:
+            # Enemy is coming from the right side of the screen, use the original sprite
+            bulky_image = bulky_frames[bulky.frame]
+
+        screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
 
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity
