@@ -38,14 +38,19 @@ tile_x = 1011
 tile_y = 624
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_x, tile_y))
 cursor_image = pygame.image.load("sprites/cursor.png")
+title_image = pygame.image.load("sprites/title.png")
 play_button_image = pygame.image.load('sprites/play.png')
 settings_button_image = pygame.image.load('sprites/settings.png')
 quit_button_image = pygame.image.load('sprites/quit.png')
+title_scaled_width = title_image.get_width() / 2
+title_scaled_height = title_image.get_height() / 2
+scaled_title_image = pygame.transform.scale(title_image, (title_scaled_width, title_scaled_height))
 
 # Positions of play, settings and quit button
-play_button_rect = play_button_image.get_rect(center=(width // 4, height // 2))
-settings_button_rect = settings_button_image.get_rect(center=(width // 2, height-height//10))
-quit_button_rect = quit_button_image.get_rect(center=(3 * width // 4, height // 2))
+title_rect = scaled_title_image.get_rect(center=(width / 2, height / 4))
+play_button_rect = play_button_image.get_rect(center=(width / 4, height / 2))
+settings_button_rect = settings_button_image.get_rect(center=(width // 2, height-height/ 5))
+quit_button_rect = quit_button_image.get_rect(center=(3 * width / 4, height / 2))
 
 # Load sprite sheet for the character walking. Convert alpha is used for performance optimization
 sprite_sheet_right = pygame.image.load('sprites/Niko_right.png').convert_alpha()
@@ -466,7 +471,7 @@ def spawn_bulky(player_x, player_y):
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
-
+    print("Spawned a Slime at", spawn_x, spawn_y)
     bulky = Bulky(spawn_x, spawn_y, bulky_scaled_width, bulky_scaled_height, 100, 0.7)
     bulkies.append(bulky)
     bulky_spawned = True
@@ -581,9 +586,10 @@ while main_menu:
 
     screen.fill(BLACK)
     draw_tiles(0, 0)
-    screen.blit(play_button_image, play_button_rect.topleft)
-    screen.blit(settings_button_image, settings_button_rect.topleft)
-    screen.blit(quit_button_image, quit_button_rect.topleft)
+    screen.blit(scaled_title_image, title_rect)
+    screen.blit(play_button_image, play_button_rect)
+    screen.blit(settings_button_image, settings_button_rect)
+    screen.blit(quit_button_image, quit_button_rect)
 
     bullets = [bullet for bullet in bullets if 0 <= bullet['x'] <= width and 0 <= bullet['y'] <= height]
     for bullet in bullets:
