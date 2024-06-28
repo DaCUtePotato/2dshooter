@@ -769,7 +769,6 @@ while True:
                         save()
                         sys.exit("The corruption is spreading...")
 
-        enemies_to_remove = []
         for enemy in enemies:
             # Calculate the center coordinates of the player
             player_x_center = player_x + player_width / 2
@@ -857,9 +856,6 @@ while True:
                     elif bulky.hp > 0:
                         bullets.remove(bullet)
 
-        for enemy in enemies_to_remove:
-            enemies.remove(enemy)
-
         for bulky in bulkies_to_remove:
             bulkies.remove(bulky)
 
@@ -933,6 +929,7 @@ while True:
         # Draw the scaled image
         screen.blit(scaled_regen_image, (image_x, image_y))
 
+    enemies_to_remove = []
     for enemy in enemies:
         if enemy.hit_animation_playing and not enemy.death_animation_playing:
             enemy.hit_frame_count += 1
@@ -947,50 +944,49 @@ while True:
         elif enemy.death_animation_playing:
             enemy.death_frame_count += 1
             if enemy.death_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
-                enemy.death_frame = (enemy.death_frame + 1) % len(death_enemy_frames)
+                enemy.death_frame = (enemy.death_frame + 1)
 
-            # Check if hit animation duration is over
-            if enemy.death_frame_count >= enemy.death_animation_duration:
-                enemy.death_animation_playing = False
-                enemy.death_frame_count = 0
-                enemies.remove(enemy)
+            # Check if death animation duration is over
+            if enemy.death_frame >= len(death_enemy_frames):  # Ensure the death animation has completed
+                enemies_to_remove.append(enemy)
                 active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                 enemy_exp = random.randint(1, 5)
                 kills += 1
                 if random.randint(0, 100) == 69:
                     active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                     print("A wild regen orb spawned!!!!!")
-
+            else:
+                # Display the current frame of the death animation
+                enemy_image = death_enemy_frames[enemy.death_frame]
+                if enemy.x > player_x:
+                    enemy_image = pygame.transform.flip(enemy_image, True, False)
+                screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
+                continue  # Skip the rest of the loop to ensure no other animation is played
 
         else:
             enemy.frame_count += 1
             if enemy.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
                 enemy.frame = (enemy.frame + 1) % len(enemy_frames)
 
-        # Choose the appropriate frame to display
-        if enemy.hit_animation_playing and not enemy.death_animation_playing:
-            if enemy.x > player_x:
-                enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
+        # Choose the appropriate frame to display if not in death animation
+        if not enemy.death_animation_playing:
+            if enemy.hit_animation_playing:
+                if enemy.x > player_x:
+                    enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
+                else:
+                    enemy_image = hit_enemy_frames[enemy.hit_frame]
             else:
-                enemy_image = hit_enemy_frames[enemy.hit_frame]
+                if enemy.x > player_x:
+                    enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
+                else:
+                    enemy_image = enemy_frames[enemy.frame]
 
-        elif enemy.death_animation_playing and not enemy.hit_animation_playing:
-            if enemy.x > player_x:
-                enemy_image = pygame.transform.flip(death_enemy_frames[enemy.death_frame], True, False)
-            else:
-                enemy_image = death_enemy_frames[enemy.death_frame]
+            screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
 
+    # Remove enemies marked for removal after the loop
+    for enemy in enemies_to_remove:
+        enemies.remove(enemy)
 
-        else:
-            if enemy.x > player_x:
-                enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
-            else:
-                enemy_image = enemy_frames[enemy.frame]
-
-        screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
-
-    for crashing_enemy in crashing_enemies:
-        pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width,crashing_enemy.height))
 
     for bulky in bulkies:
         # Animate and draw enemy
