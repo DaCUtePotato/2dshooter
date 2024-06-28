@@ -974,11 +974,11 @@ while True:
             else:
                 enemy_image = hit_enemy_frames[enemy.hit_frame]
 
-        elif enemy.death_animation_playing and enemy.x > player_x:
-            enemy_image = death_enemy_frames[enemy.death_frame]
-            pygame.transform.flip(enemy_frames[enemy.frame], True, False)
-        elif enemy.death_animation_playing and enemy.x <= player_x:
-            enemy_image = death_enemy_frames[enemy.death_frame]
+        if enemy.death_animation_playing and not enemy.hit_animation_playing:
+            if enemy.x > player_x:
+                enemy_image = pygame.transform.flip(death_enemy_frames[enemy.death_frame], True, False)
+            else:
+                enemy_image = death_enemy_frames[enemy.death_frame]
 
 
         else:
