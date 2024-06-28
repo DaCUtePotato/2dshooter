@@ -80,6 +80,7 @@ WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
 
 # Player attributes
 player_x = width // 2
@@ -164,6 +165,16 @@ cooldown_reduction_upgrade4 = 5 # Same here
 cooldown_reduction_upgrade5 = 5
 cooldown_reduction_upgrade6 = -40
 cooldown_reduction_upgrade7 = 10
+
+# Settings
+# Define some settings
+volume = 0.5
+brightness = 0.5
+contrast = 0.5
+
+
+# Fonts
+menu_font = pygame.font.SysFont('Arial', 30)
 
 #save file
 # Define the file path
@@ -440,22 +451,38 @@ def start_game():
 
 
 def open_settings():
-    global volume, screen, width, height
-    options_menu = True
-    while options_menu:
+    global volume, brightness, contrast
+    bullets.remove(bullet)
+    settings = [
+        {"name": "Volume", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Brightness", "value": brightness, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Contrast", "value": contrast, "min": 0.0, "max": 1.0, "step": 0.1},
+    ]
+
+    selected_index = 0
+    settings_open = True
+    while settings_open:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 save()
                 pygame.quit()
                 sys.exit()
-
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    options_menu = False
+                    settings_open = False
+                if event.key == pygame.K_w:
+                    selected_index = (selected_index - 1) % len(settings)
+                if event.key == pygame.K_s:
+                    selected_index = (selected_index + 1) % len(settings)
                 if event.key == pygame.K_d:
-                    volume = min(volume + 0.1, 1.0)
+                    settings[selected_index]["value"] = min(settings[selected_index]["value"] + settings[selected_index]["step"], settings[selected_index]["max"])
                 if event.key == pygame.K_a:
-                    volume = max(volume - 0.1, 0.0)
+                    settings[selected_index]["value"] = max(settings[selected_index]["value"] - settings[selected_index]["step"], settings[selected_index]["min"])
+
+        # Update settings values
+        volume = settings[0]["value"]
+        brightness = settings[1]["value"]
+        contrast = settings[2]["value"]
 
         # Update volume for all sounds
         pickup_sound.set_volume(volume)
@@ -473,11 +500,14 @@ def open_settings():
         screen.fill(BLACK)
         draw_tiles(0, 0)
 
-        volume_text = menu_font.render(f"Volume: {int(volume * 100)}%", True, WHITE)
-        screen.blit(volume_text, (width // 2 - volume_text.get_width() // 2, height // 2 - 50))
+        for i, setting in enumerate(settings):
+            color = YELLOW if i == selected_index else WHITE
+            setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
+            screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
 
         pygame.display.flip()
         clock.tick(FPS)
+
 
 def quit_game():
     print("Quitting game...")
@@ -485,6 +515,7 @@ def quit_game():
     pygame.quit()
     sys.exit()
 
+main_menu = True
 while main_menu:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
@@ -518,6 +549,7 @@ while main_menu:
         rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
         screen.blit(rotated_bullet_image, (
         bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
+        fireball_sound_1.play()
 
     handle_bullet_collisions(bullets, play_button_rect, start_game)
     handle_bullet_collisions(bullets, settings_button_rect, open_settings)
@@ -528,7 +560,6 @@ while main_menu:
     screen.blit(cursor_image, cursor_pos)
     pygame.display.flip()
     clock.tick(FPS)
-
 # Game loop
 show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
 while True:
@@ -736,6 +767,11 @@ while True:
             enemies.remove(enemy)
 
         if player_hp <= 0:
+            upgrades = 0
+            kills = 0
+            player_hp = 100
+            exp = 0
+            player_level = 1
             save()
             sys.exit("You died...")
 
