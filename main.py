@@ -193,7 +193,7 @@ for i in range(1, 7):  # Assuming there are 6 bulky death frames named bulkydeat
     bulky_death_frames.append(bulky_death_scaled_frame)
 
 corrupty_frames = []
-for i in range(1, 5):  # Assuming there are 4 bulky images named bulky1.png, bulky2.png, and bulky3.png
+for i in range(1, 5):  # Assuming there are 4 bulky images named glitch1.png, glitch2.png, and glitch3.png
     corrupty_original_frame = pygame.image.load(f"sprites/enemies/glitch{i}.png").convert_alpha()
     corrupty_scaled_width = corrupty_original_frame.get_width() * 3  # Adjust the scaling factor as needed
     corrupty_scaled_height = corrupty_original_frame.get_height() * 3
@@ -220,10 +220,10 @@ base_fireball_cooldown = 50
 current_fireball_cooldown = 0
 upgrades = 0
 
-cooldown_reduction_upgrade1 = 10 # Cooldown reduction Upgrade 1
-cooldown_reduction_upgrade2 = 5 # Cooldown reduction Upgrade 2
-cooldown_reduction_upgrade3 = 10 # Cooldown reduction Upgrade 3
-cooldown_reduction_upgrade4 = 5 # Same here
+cooldown_reduction_upgrade1 = 10  # Cooldown reduction Upgrade 1
+cooldown_reduction_upgrade2 = 5  # Cooldown reduction Upgrade 2
+cooldown_reduction_upgrade3 = 10  # Cooldown reduction Upgrade 3
+cooldown_reduction_upgrade4 = 5  # Same here
 cooldown_reduction_upgrade5 = 5
 cooldown_reduction_upgrade6 = -40
 cooldown_reduction_upgrade7 = 10
@@ -907,7 +907,7 @@ while True:
 
                     if crashing_enemy.hp <= 0:
                         crashing_enemies.remove(crashing_enemy)
-                        corruption += 1
+                        corruption = True
                         save()
                         sys.exit("The corruption is spreading...")
         for enemy in enemies:
