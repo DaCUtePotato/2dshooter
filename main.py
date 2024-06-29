@@ -813,6 +813,7 @@ def show_victory_screen():
         clock.tick(FPS)
 
 
+
 # Main menu handling function
 def open_menu():
     global paused, settings_open
