@@ -648,7 +648,7 @@ explosion_y = 0
 explosion_frame_index = 0
 explosion_frame_duration = 4
 explosion_cooldown = 1000
-EXPLOSION_DAMAGE = 25
+EXPLOSION_DAMAGE = 1.25
 explosion_radius = 50  # Adjust this based on the size of your explosion
 
 # Check for collisions with the explosion
