@@ -104,10 +104,6 @@ i_frames_counter = 0
 i_frames = 10
 kills = 0
 
-# Position the hitbox at the center of the player sprite
-center_x = player_x + player_width / 2
-center_y = player_y + player_height / 4
-
 # Experience system
 gambling_mode = False
 exp = 0
@@ -1008,8 +1004,9 @@ while True:
 
         # Update enemy positions and check for collisions with the player
         for crashing_enemy in crashing_enemies:
-            distance_y = player_y - crashing_enemy.y  # Calculate the vertical distance between player and enemy
-            distance_x = player_x - crashing_enemy.x  # Calculate the horizontal distance between player and enemy
+            fak_x, fak_y = player_pos_on_screen
+            distance_y, distance_x = fak_y- crashing_enemy.y, fak_x-crashing_enemy.x  # Calculate the vertical distance between player and enemy
+            #distance_x = player_x - crashing_enemy.x  # Calculate the horizontal distance between player and enemy
 
             # Calculate the angle between the player and the enemy
             angle = math.atan2(distance_y, distance_x)
@@ -1022,7 +1019,7 @@ while True:
             crashing_enemy.x += move_x
             crashing_enemy.y += move_y
 
-            if (player_x < crashing_enemy.x + crashing_enemy.width and player_x + player_width > crashing_enemy.x and
+            if (player_x-25 < crashing_enemy.x + crashing_enemy.width and player_x-25 + player_width > crashing_enemy.x and
                     player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):
                 if i_frames_counter == i_frames:
                     player_hp -= 5
@@ -1062,7 +1059,8 @@ while True:
                 enemy.y += move_y
 
             # Check for collisions with the player
-            if (player_x < enemy.x + enemy.width and player_x + player_width > enemy.x and
+            Amogux, Amoguy = player_pos_on_screen
+            if (player_x-25 < enemy.x + enemy.width and player_x-25 + player_width > enemy.x and
                     player_y < enemy.y + enemy.height and player_y + player_height > enemy.y):
                 if i_frames_counter == i_frames:
                     player_hp -= 5
@@ -1105,7 +1103,7 @@ while True:
                 bulky.y += move_y
 
             # Check for collisions with the player
-            if (player_x < bulky.x + bulky.width and player_x + player_width > bulky.x and
+            if (player_x-25 < bulky.x + bulky.width and player_x-25 + player_width > bulky.x and
                     player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
                 if i_frames_counter == i_frames:
                     player_hp -= 5
@@ -1145,7 +1143,7 @@ while True:
             corrupty.y += move_y
 
             # Check for collisions with the player
-            if (player_x < corrupty.x + corrupty.width and player_x + player_width > corrupty.x and
+            if (player_x-25 < corrupty.x + corrupty.width and player_x-25 + player_width > corrupty.x and
                     player_y < corrupty.y + corrupty.height and player_y + player_height > corrupty.y):
                 if i_frames_counter == i_frames:
                     player_hp -= 5
