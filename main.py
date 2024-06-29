@@ -254,6 +254,7 @@ if os.path.exists(file_path):
         exp = int(lines[3].strip())
         player_level = int(lines[4].strip())
         corruption = lines[5].strip() == "True"
+        current_max_exp = int(lines[6].strip())
 
 def save():
     # Write data to the file
@@ -264,6 +265,7 @@ def save():
         file.write(f"{exp}\n")
         file.write(f"{player_level}\n")
         file.write(f"{corruption}\n")
+        file.write(f"{current_max_exp}\n")
 
 
 def draw_tiles(camera_offset_x, camera_offset_y):
@@ -1044,6 +1046,7 @@ while True:
             exp = 0
             player_level = 1
             corruption = 0
+            current_max_exp = 30
             save()
             sys.exit("You died...")
 
