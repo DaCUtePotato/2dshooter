@@ -148,6 +148,8 @@ bulky_spawned = False
 corrupty_spawned = False
 corruption = 0
 
+settings_open = False
+
 enemy_frames = []
 for i in range(1, 5):  # Assuming there are 4 enemy images named bat1.png, bat2.png, bat3.png and bat4.png
     enemy_original_frame = pygame.image.load(f"sprites/enemies/bat{i}.png").convert_alpha()
@@ -234,7 +236,7 @@ contrast = 0.5
 
 
 # Fonts
-menu_font = pygame.font.SysFont('Arial', 30)
+menu_font = pygame.font.SysFont('Avenir', 30)
 
 #save file
 # Define the file path
@@ -423,7 +425,7 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     current_fireball_cooldown = base_fireball_cooldown - cooldown_reduction  # Apply reduced cooldown
 
 def draw_kill_counter(kills):
-    font = pygame.font.Font(None, 24)
+    font = pygame.font.SysFont('Avenir', 15)
     kills_text = font.render(f"Kills: {kills}", True, RED)
     text_width, text_height = font.size(f"Kills: {kills}")
     text_x = (width - text_width) // 3
@@ -431,7 +433,7 @@ def draw_kill_counter(kills):
     screen.blit(kills_text, (text_x, text_y))
 
 def draw_coordinates(player_x, player_y):
-    font = pygame.font.Font(None, 24)
+    font = pygame.font.SysFont('Avenir', 15)
     coordinate_text = font.render(f"Coordinates: {int(player_x)}:{int(player_y)}", True, WHITE)
     text_width, text_height = font.size(f"Coordinates: {coordinate_text}")
     text_x = (width - text_width)
@@ -453,6 +455,7 @@ def level_up():
 
 # Function to draw experience bar
 def draw_exp_bar():
+    global menu_font
     max_exp = current_max_exp
     exp_bar_width = width - 20  # Define the width of the experience bar
     exp_bar_height = 20
@@ -461,7 +464,7 @@ def draw_exp_bar():
     pygame.draw.rect(screen, BLUE, (10, 10, exp_bar_width, exp_bar_height))  # Blue background
     pygame.draw.rect(screen, GREEN, (10, 10, exp_indicator_width, exp_bar_height))  # Green indicator
 
-    font = pygame.font.Font(None, 24)
+    font = pygame.font.SysFont('Avenir', 15)
     exp_text = font.render(f"EXP: {exp}/{max_exp}", True, WHITE)
     text_width, text_height = font.size(f"EXP: {exp}/{max_exp}")
     text_x = (width - text_width) // 2
@@ -519,8 +522,8 @@ def draw_hp_bar():
 
     pygame.draw.rect(screen, RED, (10, height - 30, hp_bar_width, hp_bar_height))  # Red background
     pygame.draw.rect(screen, GREEN, (10, height - 30, hp_indicator_width, hp_bar_height))  # Green indicator
-    font = pygame.font.Font(None, 36)
-    hp_text = font.render(f"{player_hp}/100 HP", True, WHITE)
+    font =pygame.font.SysFont('Avenir', 20, False)
+    hp_text = font.render(f"{player_hp}/100 HP", True, RED)
     screen.blit(hp_text, (220, height - 30))
 
 def handle_bullet_collisions(bullets, target_rect, action):
@@ -594,13 +597,13 @@ def open_main_settings():
         clock.tick(FPS)
 
 def open_settings():
-    global volume, brightness, contrast
+    global volume, brightness, contrast, settings_open
+    settings_open = True
     settings = [
         {"name": "Volume", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
         {"name": "Brightness", "value": brightness, "min": 0.0, "max": 1.0, "step": 0.1},
         {"name": "Contrast", "value": contrast, "min": 0.0, "max": 1.0, "step": 0.1},
     ]
-
     selected_index = 0
     settings_open = True
     while settings_open:
@@ -658,7 +661,7 @@ def quit_game():
     sys.exit()
 
 def open_menu():
-    global paused
+    global paused, settings_open
     options = [
         {"name": "Continue"},
         {"name": "Settings"},
@@ -675,7 +678,7 @@ def open_menu():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_ESCAPE and not settings_open:
                     menu_open = False
                 if event.key == pygame.K_w:
                     selected_index = (selected_index - 1) % len(options)
@@ -741,7 +744,7 @@ while main_menu:
         bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
 
     handle_bullet_collisions(bullets, play_button_rect, start_game)
-    handle_bullet_collisions(bullets, settings_button_rect, open_settings)
+    handle_bullet_collisions(bullets, settings_button_rect, open_main_settings)
     handle_bullet_collisions(bullets, quit_button_rect, quit_game)
 
     screen.blit(frames_down[current_frame], player_pos_on_screen)  # Always render the player looking down
@@ -1229,13 +1232,6 @@ while True:
         i_frames_counter += 1
     if exp >= current_max_exp:
         level_up()
-    # If game is paused, show pause menu
-    if paused and not show_upgrade_menu:
-        pause_text = menu_font.render("PAUSED", True, WHITE)
-        text_width, text_heights = menu_font.size("PAUSED")
-        text_x = (width - text_width) // 2
-        text_y = (height - text_heights) // 2
-        screen.blit(pause_text, (text_x, text_y))
     # If upgrade menu is shown, display upgrade options
     if show_upgrade_menu:
         if upgrades == 0:
