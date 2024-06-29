@@ -18,17 +18,18 @@ pygame.mouse.set_visible(False)
 fullscreen = False # Set Fullscreen to false by default
 volume = 0.5  # Set default volume
 
-if fullscreen:
-    # Set up the display in fullscreen mode
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    screen_width, screen_height = pygame.display.get_surface().get_size() # Get screen dimensions
-else:
-    # Set up the display in windowed mode
-    screen_width = 690  # Width of the window
-    screen_height = 690  # Height of the window
-    screen = pygame.display.set_mode((screen_width, screen_height))  # Setup window
+def set_screen_mode(fullscreen):
+    global screen, width, height
+    if fullscreen:
+        screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        width, height = pygame.display.get_surface().get_size()
+    else:
+        width, height = 690, 690
+        screen = pygame.display.set_mode((width, height))
 
-width, height = pygame.display.get_surface().get_size()  # Obtain dimensions of the game window
+# Set initial screen mode
+set_screen_mode(fullscreen)
+
 pygame.display.set_caption("Bullet Heaven")  # Set the title of the window
 FPS = 60  # Set FPS
 clock = pygame.time.Clock()  # Used to control frame rate
@@ -123,6 +124,8 @@ level_up_sound = pygame.mixer.Sound("sounds/level_up_normal.wav")
 gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
 explosion_sound = pygame.mixer.Sound("sounds/explosion.wav")
 explooosion_sound = pygame.mixer.Sound("sounds/explooosion.wav")
+bg_music_vol = 0.5
+
 
 # Regeneration
 active_regen_orbs = []  # List of active regeneration orbs
@@ -267,8 +270,10 @@ if os.path.exists(file_path):
 # Set background music based on corruption state. These are unaffected by volume
 if not corruption:
     music = pygame.mixer.Sound('sounds/background_music.mp3')
+    music.set_volume(bg_music_vol)
 else:
     music = pygame.mixer.Sound('sounds/corrupted.mp3')
+    music.set_volume(bg_music_vol)
 
 def save():
     # Write the current game state to the file
@@ -507,8 +512,8 @@ def spawn_enemy(player_x, player_y):
     global scaled_speed, scaled_hp
     # Calculate the boundaries for off-screen spawning
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
-    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
-    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))
 
     scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR
     scaled_hp = ENEMY_HP + kills * HP_SCALING_FACTOR
@@ -519,8 +524,8 @@ def spawn_enemy(player_x, player_y):
 # Function to spawn crashing enemies
 def spawn_crashing_enemy(player_x, player_y):
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
-    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
-    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))
 
     crashing_enemy = crashingEnemy(spawn_x, spawn_y, crashing_enemy_scaled_width, crashing_enemy_scaled_height, 10, ENEMY_SPEED)
     crashing_enemies.append(crashing_enemy)
@@ -528,8 +533,8 @@ def spawn_crashing_enemy(player_x, player_y):
 def spawn_bulky(player_x, player_y):
     global bulky_spawned
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
-    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
-    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))
     print("Spawned a Slime at", spawn_x, spawn_y)
     bulky = Bulky(spawn_x, spawn_y, bulky_scaled_width, bulky_scaled_height, 100, 0.7)
     bulkies.append(bulky)
@@ -538,8 +543,8 @@ def spawn_bulky(player_x, player_y):
 def spawn_corrupty(player_x, player_y):
     global corrupty_spawned, ENEMY_SPEED
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
-    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
-    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))
     print("Something happened at", spawn_x, spawn_y, "...")
     corrupty = Corrupty(spawn_x, spawn_y, corrupty_scaled_width, corrupty_scaled_height, 200, ENEMY_SPEED*1.75)  # Example values for width, height, hp, and speed
     corrupties.append(corrupty)
@@ -570,23 +575,23 @@ def start_game():
 
 
 def open_main_settings():
-    global volume, brightness, contrast
+    global volume, bg_music_vol, fullscreen, settings_open
     bullets.remove(bullet)
     settings = [
-        {"name": "Volume", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Brightness", "value": brightness, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Contrast", "value": contrast, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Sfx", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Background Music", "value": bg_music_vol, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Fullscreen", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
     ]
-
     selected_index = 0
     settings_open = True
+    initial_fullscreen = fullscreen  # Track the initial fullscreen value
+
     while settings_open:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 save()
                 pygame.quit()
                 sys.exit()
-
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     settings_open = False
@@ -601,8 +606,13 @@ def open_main_settings():
 
         # Update settings values
         volume = settings[0]["value"]
-        brightness = settings[1]["value"]
-        contrast = settings[2]["value"]
+        bg_music_vol = settings[1]["value"]
+        fullscreen = settings[2]["value"] == 1.0
+
+        # Update display mode only if fullscreen setting changed
+        if fullscreen != initial_fullscreen:
+            set_screen_mode(fullscreen)
+            initial_fullscreen = fullscreen  # Update the initial fullscreen value
 
         # Update volume for all sounds
         pickup_sound.set_volume(volume)
@@ -616,11 +626,10 @@ def open_main_settings():
         fireball_sound_5.set_volume(volume)
         fireball_sound_6.set_volume(volume)
         fireball_sound_7.set_volume(volume)
-        explosion_sound.set_volume(volume)
-        explooosion_sound.set_volume(volume)
+        music.set_volume(bg_music_vol)
 
         screen.fill(BLACK)
-        draw_tiles(0, 0)
+        draw_tiles(0, 0)  # Assuming draw_tiles is a function in your code
 
         for i, setting in enumerate(settings):
             color = YELLOW if i == selected_index else WHITE
@@ -628,7 +637,7 @@ def open_main_settings():
             screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
 
         pygame.display.flip()
-        clock.tick(FPS)
+        pygame.time.Clock().tick(FPS)
 
 # spawn explosion
 # Function to spawn explosion at given coordinates
@@ -723,14 +732,15 @@ def check_explosion_collisions(explosion_x, explosion_y):
 
 # Main settings handling function
 def open_settings():
-    global volume, brightness, contrast, settings_open
+    global volume, bg_music_vol, fullscreen, settings_open
     settings = [
-        {"name": "Volume", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Brightness", "value": brightness, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Contrast", "value": contrast, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Sfx", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Background Music", "value": bg_music_vol, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Fullscreen", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
     ]
     selected_index = 0
     settings_open = True
+    initial_fullscreen = fullscreen  # Track the initial fullscreen value
 
     while settings_open:
         for event in pygame.event.get():
@@ -752,8 +762,13 @@ def open_settings():
 
         # Update settings values
         volume = settings[0]["value"]
-        brightness = settings[1]["value"]
-        contrast = settings[2]["value"]
+        bg_music_vol = settings[1]["value"]
+        fullscreen = settings[2]["value"] == 1.0
+
+        # Update display mode only if fullscreen setting changed
+        if fullscreen != initial_fullscreen:
+            set_screen_mode(fullscreen)
+            initial_fullscreen = fullscreen  # Update the initial fullscreen value
 
         # Update volume for all sounds
         pickup_sound.set_volume(volume)
@@ -767,10 +782,10 @@ def open_settings():
         fireball_sound_5.set_volume(volume)
         fireball_sound_6.set_volume(volume)
         fireball_sound_7.set_volume(volume)
-        explosion_sound.set_volume(volume)
-        explooosion_sound.set_volume(volume)
+        music.set_volume(bg_music_vol)
+
         screen.fill(BLACK)
-        draw_tiles(0, 0)
+        draw_tiles(0, 0)  # Assuming draw_tiles is a function in your code
 
         for i, setting in enumerate(settings):
             color = YELLOW if i == selected_index else WHITE
@@ -778,7 +793,7 @@ def open_settings():
             screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
 
         pygame.display.flip()
-        clock.tick(FPS)
+        pygame.time.Clock().tick(FPS)
 
 
 def quit_game():
