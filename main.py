@@ -596,9 +596,9 @@ def open_main_settings():
         pygame.display.flip()
         clock.tick(FPS)
 
+# Main settings handling function
 def open_settings():
     global volume, brightness, contrast, settings_open
-    settings_open = True
     settings = [
         {"name": "Volume", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
         {"name": "Brightness", "value": brightness, "min": 0.0, "max": 1.0, "step": 0.1},
@@ -606,6 +606,7 @@ def open_settings():
     ]
     selected_index = 0
     settings_open = True
+
     while settings_open:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -660,6 +661,7 @@ def quit_game():
     pygame.quit()
     sys.exit()
 
+# Main menu handling function
 def open_menu():
     global paused, settings_open
     options = [
@@ -690,7 +692,7 @@ def open_menu():
                         menu_open = False
                     elif selected_index == 1:  # Settings
                         open_settings()
-                        menu_open = False
+                        settings_open = False  # Ensure the settings menu state is reset
                     elif selected_index == 2:  # Quit
                         save()
                         pygame.quit()
