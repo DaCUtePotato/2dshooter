@@ -917,7 +917,6 @@ def open_menu():
 
 music.play(-1)
 
-main_menu = True
 while main_menu:
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
@@ -965,6 +964,7 @@ while main_menu:
     screen.blit(cursor_image, cursor_pos)
     pygame.display.flip()
     clock.tick(FPS)
+
 show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
 while True:
     cursor_pos = pygame.mouse.get_pos()  # Get the current position of the mouse cursor
@@ -1101,169 +1101,156 @@ while True:
 
             if (player_x - 25 < crashing_enemy.x + crashing_enemy.width and player_x - 25 + player_width > crashing_enemy.x and
                     player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):  # Check for collisions with the player
-                if i_frames_counter == i_frames:# Check if invincibility frames counter has reached the limit
-                    player_hp -= 5  # Reduce player's HP by 5
-                    i_frames_counter = 0  # Reset invincibility frames counter
+                if i_frames_counter == i_frames:  # Check for invincibility frames
+                    player_hp -= 5
+                    i_frames_counter = 0
+            # Check for collisions with bullets
+            for bullet in bullets:
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
+                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
+                                         crashing_enemy.height)
+
+                if bullet_rect.colliderect(enemy_rect):
+                    crashing_enemy.hp -= BULLET_DAMAGE
+                    bullets.remove(bullet)
+
+                    if crashing_enemy.hp <= 0:
+                        crashing_enemies.remove(crashing_enemy)
+                        corruption = True
+                        kills = 0
+                        save()
+                        sys.exit("The corruption is spreading...")
+        for enemy in enemies:
+            # Calculate the center coordinates of the player
+            player_x_center = player_x + player_width / 2
+            player_y_center = player_y + player_height / 2
+
+            # Calculate the vertical and horizontal distance between the enemy and the player's center
+            distance_y = player_y_center - enemy.y
+            distance_x = player_x_center - enemy.x
+
+            # Calculate the angle between the player and the enemy
+            angle = math.atan2(distance_y, distance_x)
+            move_x = scaled_speed * math.cos(angle)
+            move_y = scaled_speed * math.sin(angle)
+
+            # Update enemy position
+            if not enemy.death_animation_playing:
+                enemy.x += move_x
+                enemy.y += move_y
+
+            # Check for collisions with the player
+            Amogux, Amoguy = player_pos_on_screen
+            if (player_x-25 < enemy.x + enemy.width and player_x-25 + player_width > enemy.x and
+                    player_y < enemy.y + enemy.height and player_y + player_height > enemy.y):
+                if i_frames_counter == i_frames:
+                    player_hp -= 5
+                    i_frames_counter = 0
 
             # Check for collisions with bullets
             for bullet in bullets:
-                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10,
-                                          10)  # Create a rectangle for the bullet
-                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
-                                         crashing_enemy.height)  # Create a rectangle for the crashing enemy
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
+                enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
 
-                if bullet_rect.colliderect(enemy_rect):  # Check if bullet collides with crashing enemy
-                    crashing_enemy.hp -= BULLET_DAMAGE  # Reduce enemy's HP by bullet damage
-                    bullets.remove(bullet)  # Remove the bullet from the bullets list
+                if bullet_rect.colliderect(enemy_rect):
+                    enemy.hp -= BULLET_DAMAGE
 
-                    if crashing_enemy.hp <= 0:  # Check if the enemy's HP is 0 or less
-                        crashing_enemies.remove(crashing_enemy)  # Remove the crashing enemy from the list
-                        corruption = True  # Set corruption flag to True
-                        kills = 0  # Reset kills counter
-                        save()  # Save the game state
-                        sys.exit("The corruption is spreading...")  # Exit the game with a message
+                    if enemy.hp <= 0:
+                        enemy.death_animation_playing = True  # Trigger death animation
+                        if upgrades <= 5:
+                            bullets.remove(bullet)
+                        break
+                    elif enemy.hp > 0:
+                        enemy.hit_animation_playing = True  # Trigger hit animation
+                        bullets.remove(bullet)
 
-            for enemy in enemies:
-                # Calculate the center coordinates of the player
-                player_x_center = player_x + player_width / 2
-                player_y_center = player_y + player_height / 2
+        for bulky in bulkies:
+            # Calculate the center coordinates of the player
+            player_x_center = player_x + player_width / 2
+            player_y_center = player_y + player_height / 2
 
-                # Calculate the vertical and horizontal distance between the enemy and the player's center
-                distance_y = player_y_center - enemy.y
-                distance_x = player_x_center - enemy.x
+            # Calculate the vertical and horizontal distance between the enemy and the player's center
+            distance_y = player_y_center - bulky.y
+            distance_x = player_x_center - bulky.x
 
-                # Calculate the angle between the player and the enemy
-                angle = math.atan2(distance_y, distance_x)
-                move_x = scaled_speed * math.cos(angle)
-                move_y = scaled_speed * math.sin(angle)
+            # Calculate the angle between the player and the enemy
+            angle = math.atan2(distance_y, distance_x)
+            move_x = bulky.speed * math.cos(angle)
+            move_y = bulky.speed * math.sin(angle)
 
-                # Update enemy position if death animation is not playing
-                if not enemy.death_animation_playing:
-                    enemy.x += move_x
-                    enemy.y += move_y
+            # Update enemy position
+            if not bulky.death_animation_playing:
+                bulky.x += move_x
+                bulky.y += move_y
 
-                # Check for collisions with the player
-                Amogux, Amoguy = player_pos_on_screen
-                if (player_x - 25 < enemy.x + enemy.width and player_x - 25 + player_width > enemy.x and
-                        player_y < enemy.y + enemy.height and player_y + player_height > enemy.y):
-                    if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
-                        player_hp -= 5  # Reduce player's HP by 5
-                        i_frames_counter = 0  # Reset invincibility frames counter
+            # Check for collisions with the player
+            if (player_x-25 < bulky.x + bulky.width and player_x-25 + player_width > bulky.x and
+                    player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
+                if i_frames_counter == i_frames:
+                    player_hp -= 5
+                    i_frames_counter = 0
 
-                # Check for collisions with bullets
-                for bullet in bullets:
-                    bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10,
-                                              10)  # Create a rectangle for the bullet
-                    enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width,
-                                             enemy.height)  # Create a rectangle for the enemy
+            # Check for collisions with bullets
+            for bullet in bullets:
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
+                bulky_rect = pygame.Rect(bulky.x, bulky.y, bulky.width, bulky.height)
 
-                    if bullet_rect.colliderect(enemy_rect):  # Check if bullet collides with the enemy
-                        enemy.hp -= BULLET_DAMAGE  # Reduce enemy's HP by bullet damage
+                if bullet_rect.colliderect(bulky_rect):
+                    bulky.hp -= BULLET_DAMAGE
 
-                        if enemy.hp <= 0:  # Check if the enemy's HP is 0 or less
-                            enemy.death_animation_playing = True  # Trigger death animation
-                            if upgrades <= 5:  # Check if upgrades are less than or equal to 5
-                                bullets.remove(bullet)  # Remove the bullet from the bullets list
-                            break
-                        elif enemy.hp > 0:  # Check if enemy is still alive
-                            enemy.hit_animation_playing = True  # Trigger hit animation
-                            bullets.remove(bullet)  # Remove the bullet from the bullets list
+                    if bulky.hp <= 0:
+                        kills += 1
+                        bulky.death_animation_playing = True
+                        value = random.randint(10, 50)
+                        active_big_exp_orbs.append(
+                            {'size': value * 2, 'x': bulky.x, 'y': bulky.y, 'value': value})
+                        bulkies.remove(bulky)
+                        if upgrades <= 5:
+                            bullets.remove(bullet)
+                        break
+                    elif bulky.hp > 0:
+                        bullets.remove(bullet)
+        for corrupty in corrupties:
+            # Calculate the center coordinates of the player
+            player_x_center = player_x + player_width / 2
+            player_y_center = player_y + player_height / 2
 
-            for bulky in bulkies:
-                # Calculate the center coordinates of the player
-                player_x_center = player_x + player_width / 2
-                player_y_center = player_y + player_height / 2
+            # Calculate the vertical and horizontal distance between the enemy and the player's center
+            distance_y = player_y_center - corrupty.y
+            distance_x = player_x_center - corrupty.x
 
-                # Calculate the vertical and horizontal distance between the bulky enemy and the player's center
-                distance_y = player_y_center - bulky.y
-                distance_x = player_x_center - bulky.x
+            # Calculate the angle between the player and the enemy
+            angle = math.atan2(distance_y, distance_x)
+            move_x = corrupty.speed * math.cos(angle)
+            move_y = corrupty.speed * math.sin(angle)
 
-                # Calculate the angle between the player and the bulky enemy
-                angle = math.atan2(distance_y, distance_x)
-                move_x = bulky.speed * math.cos(angle)
-                move_y = bulky.speed * math.sin(angle)
+            # Update enemy position
+            corrupty.x += move_x
+            corrupty.y += move_y
 
-                # Update bulky enemy position if death animation is not playing
-                if not bulky.death_animation_playing:
-                    bulky.x += move_x
-                    bulky.y += move_y
+            # Check for collisions with the player
+            if (player_x-25 < corrupty.x + corrupty.width and player_x-25 + player_width > corrupty.x and
+                    player_y < corrupty.y + corrupty.height and player_y + player_height > corrupty.y):
+                if i_frames_counter == i_frames:
+                    player_hp -= 5
+                    i_frames_counter = 0
 
-                # Check for collisions with the player
-                if (player_x - 25 < bulky.x + bulky.width and player_x - 25 + player_width > bulky.x and
-                        player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
-                    if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
-                        player_hp -= 5  # Reduce player's HP by 5
-                        i_frames_counter = 0  # Reset invincibility frames counter
+            # Check for collisions with bullets
+            for bullet in bullets:
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
+                corrupty_rect = pygame.Rect(corrupty.x, corrupty.y, corrupty.width, corrupty.height)
 
-                # Check for collisions with bullets
-                for bullet in bullets:
-                    bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10,
-                                              10)  # Create a rectangle for the bullet
-                    bulky_rect = pygame.Rect(bulky.x, bulky.y, bulky.width,
-                                             bulky.height)  # Create a rectangle for the bulky enemy
+                if bullet_rect.colliderect(corrupty_rect):
+                    corrupty.hp -= BULLET_DAMAGE
+                    bullets.remove(bullet)
 
-                    if bullet_rect.colliderect(bulky_rect):  # Check if bullet collides with the bulky enemy
-                        bulky.hp -= BULLET_DAMAGE  # Reduce bulky enemy's HP by bullet damage
-
-                        if bulky.hp <= 0:  # Check if the bulky enemy's HP is 0 or less
-                            kills += 1  # Increment kills counter
-                            bulky.death_animation_playing = True  # Trigger death animation
-                            value = random.randint(10, 50)  # Generate a random value for exp orb
-                            active_big_exp_orbs.append(
-                                {'size': value * 2, 'x': bulky.x, 'y': bulky.y,
-                                 'value': value})  # Add exp orb to active list
-                            bulkies.remove(bulky)  # Remove the bulky enemy from the list
-                            if upgrades <= 5:  # Check if upgrades are less than or equal to 5
-                                bullets.remove(bullet)  # Remove the bullet from the bullets list
-                            break
-                        elif bulky.hp > 0:  # Check if bulky enemy is still alive
-                            bullets.remove(bullet)  # Remove the bullet from the bullets list
-
-            for corrupty in corrupties:
-                # Calculate the center coordinates of the player
-                player_x_center = player_x + player_width / 2
-                player_y_center = player_y + player_height / 2
-
-                # Calculate the vertical and horizontal distance between the corrupty enemy and the player's center
-                distance_y = player_y_center - corrupty.y
-                distance_x = player_x_center - corrupty.x
-
-                # Calculate the angle between the player and the corrupty enemy
-                angle = math.atan2(distance_y, distance_x)
-                move_x = corrupty.speed * math.cos(angle)
-                move_y = corrupty.speed * math.sin(angle)
-
-                # Update corrupty enemy position
-                corrupty.x += move_x
-                corrupty.y += move_y
-
-                # Check for collisions with the player
-                if (player_x - 25 < corrupty.x + corrupty.width and player_x - 25 + player_width > corrupty.x and
-                        player_y < corrupty.y + corrupty.height and player_y + player_height > corrupty.y):
-                    if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
-                        player_hp -= 5  # Reduce player's HP by 5
-                        i_frames_counter = 0  # Reset invincibility frames counter
-
-                # Check for collisions with bullets
-                for bullet in bullets:
-                    bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10,
-                                              10)  # Create a rectangle for the bullet
-                    corrupty_rect = pygame.Rect(corrupty.x, corrupty.y, corrupty.width,
-                                                corrupty.height)  # Create a rectangle for the corrupty enemy
-
-                    if bullet_rect.colliderect(corrupty_rect):  # Check if bullet collides with the corrupty enemy
-                        corrupty.hp -= BULLET_DAMAGE  # Reduce corrupty enemy's HP by bullet damage
-                        bullets.remove(bullet)  # Remove the bullet from the bullets list
-
-                        if corrupty.hp <= 0:  # Check if the corrupty enemy's HP is 0 or less
-                            corrupties.remove(corrupty)  # Remove the corrupty enemy from the list
-                            active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y,
-                                                    'value': enemy_exp})  # Add exp orb to active list
-                            enemy_exp = random.randint(1, 5)  # Generate a random value for enemy exp
-                            print("You've freed us all!!")  # Print victory message
-                            show_victory_screen()  # Show victory screen
-                            kills += 1  # Increment kills counter
-
+                    if corrupty.hp <= 0:
+                        corrupties.remove(corrupty)
+                        active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
+                        enemy_exp = random.randint(1, 5)
+                        print("You've freed us all!!")
+                        show_victory_screen()
+                        kills += 1
         if player_hp <= 0:
             upgrades = 0
             kills = 0
