@@ -190,6 +190,14 @@ for i in range(1, 7):  # Assuming there are 6 bulky death frames named bulkydeat
     bulky_death_scaled_frame = pygame.transform.scale(bulky_death_original_frame, (bulky_death_scaled_width, bulky_death_scaled_height))
     bulky_death_frames.append(bulky_death_scaled_frame)
 
+corrupty_frames = []
+for i in range(1, 5):  # Assuming there are 4 bulky images named bulky1.png, bulky2.png, and bulky3.png
+    corrupty_original_frame = pygame.image.load(f"sprites/enemies/glitch{i}.png").convert_alpha()
+    corrupty_scaled_width = corrupty_original_frame.get_width() * 3  # Adjust the scaling factor as needed
+    corrupty_scaled_height = corrupty_original_frame.get_height() * 3
+    corrupty_scaled_frame = pygame.transform.scale(corrupty_original_frame, (corrupty_scaled_width, corrupty_scaled_height))
+    corrupty_frames.append(corrupty_scaled_frame)
+
 # Load experience orb image
 exp_image = pygame.image.load("sprites/exp.png")
 

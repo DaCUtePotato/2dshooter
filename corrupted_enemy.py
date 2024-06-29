@@ -6,5 +6,7 @@ class Corrupty:
         self.height = height
         self.hp = hp
         self.speed = speed
+        self.frame = 0
+        self.frame_count = 0
 
 corrupties = []
