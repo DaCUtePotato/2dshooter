@@ -511,21 +511,21 @@ def draw_exp_bar():
 
 # Function to spawn enemies
 def spawn_enemy(player_x, player_y):
-    global scaled_speed, scaled_hp
-    # Calculate the boundaries for off-screen spawning
+    global scaled_speed, scaled_hp  # Use global variables for scaled speed and hp
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
-    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))
-    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))  # Calculate spawn x position
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))  # Calculate spawn y position
 
-    scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR
-    scaled_hp = ENEMY_HP + kills * HP_SCALING_FACTOR
+    scaled_speed = ENEMY_SPEED + kills * SPEED_SCALING_FACTOR  # Scale enemy speed based on kills
+    scaled_hp = ENEMY_HP + kills * HP_SCALING_FACTOR  # Scale enemy hp based on kills
 
-    basic_enemy = Enemy(spawn_x, spawn_y, enemy_scaled_width, enemy_scaled_height, scaled_hp, scaled_speed)
-    enemies.append(basic_enemy)
+    basic_enemy = Enemy(spawn_x, spawn_y, enemy_scaled_width, enemy_scaled_height, scaled_hp, scaled_speed)  # Create new enemy
+    enemies.append(basic_enemy)  # Add enemy to the list
 
 # Function to spawn crashing enemies
 def spawn_crashing_enemy(player_x, player_y):
-    off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
+    # Same as spawn_enemy
+    off_screen_buffer = 10
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))
 
@@ -533,34 +533,36 @@ def spawn_crashing_enemy(player_x, player_y):
     crashing_enemies.append(crashing_enemy)
 
 def spawn_bulky(player_x, player_y):
+    # Same as spawn_enemy
     global bulky_spawned
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))
-    print("Spawned a Slime at", spawn_x, spawn_y)
+    print("Spawned a Slime at", spawn_x, spawn_y)  # Cool message in console
     bulky = Bulky(spawn_x, spawn_y, bulky_scaled_width, bulky_scaled_height, 100, 0.7)
     bulkies.append(bulky)
-    bulky_spawned = True
+    bulky_spawned = True  # Flag to ensure no more bulkies spawn
 
 def spawn_corrupty(player_x, player_y):
+    # Same as spawn_enemy
     global corrupty_spawned, ENEMY_SPEED
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(width // 2 + off_screen_buffer, width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(height // 2 + off_screen_buffer, height))
-    print("Something happened at", spawn_x, spawn_y, "...")
+    print("Something happened at", spawn_x, spawn_y, "...")  # Cool message in console
     corrupty = Corrupty(spawn_x, spawn_y, corrupty_scaled_width, corrupty_scaled_height, 200, ENEMY_SPEED*1.75)  # Example values for width, height, hp, and speed
     corrupties.append(corrupty)
-    corrupty_spawned = True
+    corrupty_spawned = True  # Flag to ensure no more bulkies spawn
 
 # Function to draw player's health bar
 def draw_hp_bar():
-    hp_bar_width = player_hp * 2
+    hp_bar_width = 200
     hp_bar_height = 20
     hp_indicator_width = int(player_hp / 100 * hp_bar_width)
 
     pygame.draw.rect(screen, RED, (10, height - 30, hp_bar_width, hp_bar_height))  # Red background
     pygame.draw.rect(screen, GREEN, (10, height - 30, hp_indicator_width, hp_bar_height))  # Green indicator
-    font =pygame.font.SysFont('Avenir', 20, False)
+    font = pygame.font.SysFont('Avenir', 20, False)
     hp_text = font.render(f"{player_hp}/100 HP", True, RED)
     screen.blit(hp_text, (220, height - 30))
 
