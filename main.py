@@ -812,6 +812,34 @@ def show_victory_screen():
         pygame.display.flip()
         clock.tick(FPS)
 
+def show_death_screen():
+    death_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 50)
+    death_text = death_font.render("Game Over!", True, RED)
+    sub_text = menu_font.render("Press ESC to Exit", True, WHITE)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                save()
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    save()
+                    pygame.quit()
+                    sys.exit()
+
+        screen.fill(BLACK)
+
+        text_rect = death_text.get_rect(center=(width // 2, height // 2))
+        sub_text_rect = sub_text.get_rect(center=(width // 2, height // 2 + 60))
+
+        screen.blit(death_text, text_rect)
+        screen.blit(sub_text, sub_text_rect)
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
 
 
 # Main menu handling function
@@ -1216,7 +1244,7 @@ while True:
             corruption = False
             current_max_exp = 30
             save()
-            sys.exit("You died...")
+            show_death_screen()
 
         # Check for collisions between player and exp orbs
         for exp_orb in active_exp_orbs:
