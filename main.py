@@ -146,7 +146,7 @@ BULLET_DAMAGE = 10.5
 
 bulky_spawned = False
 corrupty_spawned = False
-corruption = False
+corruption = 0
 
 enemy_frames = []
 for i in range(1, 5):  # Assuming there are 4 enemy images named bat1.png, bat2.png, bat3.png and bat4.png
@@ -265,7 +265,7 @@ def save():
 
 
 def draw_tiles(camera_offset_x, camera_offset_y):
-    tile_to_draw = scaled_corrupted_tile_image if corruption else scaled_tile_image
+    tile_to_draw = scaled_corrupted_tile_image if corruption != 0 else scaled_tile_image
     for y in range(-tile_y, height + tile_y, tile_y):
         for x in range(-tile_x, width + tile_x, tile_x):
             screen.blit(tile_to_draw, (x + camera_offset_x % tile_x - tile_x, y + camera_offset_y % tile_y - tile_y))
@@ -359,7 +359,7 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     global current_fireball_cooldown
     centered_x, centered_y = player_x+player_width//2-25, player_y+player_height//4
     mouseX, mouseY = pygame.mouse.get_pos()
-    angle = math.atan2(mouseY-height//2-player_height//4, mouseX-width//2-player_width//2)  # Use the center of the screen for angle calculation
+    angle = math.atan2(mouseY-height//2-player_height//4, mouseX-width//2-player_width//2+25)  # Use the center of the screen for angle calculation
     if upgrades >= 7:  # If the 7th upgrade is active, shoot upwards
         up = -math.pi / 2  # Angle for shooting upwards
         shoot_forwards(centered_x, centered_y, bullet_speed, up, bullets)
@@ -609,7 +609,7 @@ while main_menu:
             pygame.quit()
             sys.exit()
     if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
-        centered_x, centered_y = player_x + player_width // 2, player_y + player_height // 4
+        centered_x, centered_y = player_x + player_width // 2-25, player_y + player_height // 4
         mouse_x, mouse_y = pygame.mouse.get_pos()
         angle = math.atan2(mouse_y - centered_y, mouse_x - centered_x)
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
@@ -761,9 +761,9 @@ while True:
             spawn_enemy(player_x, player_y)
         if kills > 100 and random.randint(69, 70) == 69:
             spawn_crashing_enemy(player_x, player_y)
-        if kills >= 50 and not bulky_spawned and not corruption:
+        if kills >= 50 and not bulky_spawned and corruption == 0:
             spawn_bulky(player_x, player_y)
-        if kills >= 50 and corruption and not corrupty_spawned:
+        if kills >= 50 and corruption >= 1 and not corrupty_spawned:
             spawn_corrupty(player_x, player_y)
 
         # Update enemy positions and check for collisions with the player
@@ -799,12 +799,7 @@ while True:
 
                     if crashing_enemy.hp <= 0:
                         crashing_enemies.remove(crashing_enemy)
-                        upgrades = 0
-                        kills = 0
-                        player_hp = 100
-                        exp = 0
-                        player_level = 1
-                        corruption = True
+                        corruption += 1
                         save()
                         sys.exit("The corruption is spreading...")
         for enemy in enemies:
@@ -938,7 +933,7 @@ while True:
             player_hp = 100
             exp = 0
             player_level = 1
-            corruption = False
+            corruption = 0
             save()
             sys.exit("You died...")
 
