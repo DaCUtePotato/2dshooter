@@ -556,35 +556,37 @@ def spawn_corrupty(player_x, player_y):
 
 # Function to draw player's health bar
 def draw_hp_bar():
-    hp_bar_width = 200
-    hp_bar_height = 20
-    hp_indicator_width = int(player_hp / 100 * hp_bar_width)
+    # Draw player's health bar on the screen
+    hp_bar_width = 200  # Width of the health bar
+    hp_bar_height = 20  # Height of the health bar
+    hp_indicator_width = int(player_hp / 100 * hp_bar_width)  # Width of the health indicator
 
-    pygame.draw.rect(screen, RED, (10, height - 30, hp_bar_width, hp_bar_height))  # Red background
-    pygame.draw.rect(screen, GREEN, (10, height - 30, hp_indicator_width, hp_bar_height))  # Green indicator
-    font = pygame.font.SysFont('Avenir', 20, False)
-    hp_text = font.render(f"{player_hp}/100 HP", True, RED)
-    screen.blit(hp_text, (220, height - 30))
+    pygame.draw.rect(screen, RED, (10, height - 30, hp_bar_width, hp_bar_height))  # Draw red background for health bar
+    pygame.draw.rect(screen, GREEN, (10, height - 30, hp_indicator_width, hp_bar_height))  # Draw green indicator for health bar
+    font = pygame.font.SysFont('Avenir', 20, False)  # Define font
+    hp_text = font.render(f"{player_hp}/100 HP", True, RED)  # Render health text
+    screen.blit(hp_text, (220, height - 30))  # Draw health text
 
 def handle_bullet_collisions(bullets, target_rect, action):
+    # Check for bullet collisions with a target and perform an action if collision occurs
     for bullet in bullets:
-        bullet_rect = pygame.Rect(bullet['x'] - 10, bullet['y'] - 10, 20, 20)
-        if bullet_rect.colliderect(target_rect):
-            action()
+        bullet_rect = pygame.Rect(bullet['x'] - 10, bullet['y'] - 10, 20, 20)  # Create a rectangle for the bullet
+        if bullet_rect.colliderect(target_rect):  # Check for collision with the target
+            action()  # Perform the action if collision occurs
 
 def start_game():
-    global main_menu
-    main_menu = False
-    print("Starting Game...")
+    global main_menu  # Use global variable for main_menu
+    main_menu = False  # Disable main menu
+    print("Starting Game...")  # Print starting game message
 
 
 def open_main_settings():
-    global volume, bg_music_vol, fullscreen, settings_open
+    global volume, bg_music_vol, fullscreen, settings_open  # Use global variables for volume, bg_music_vol, fullscreen and settings_open
     bullets.remove(bullet)
     settings = [
-        {"name": "Sfx", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "SFX", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
         {"name": "Background Music", "value": bg_music_vol, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Fullscreen", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
+        {"name": "Fullscreen [BETA]", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
     ]
     selected_index = 0
     settings_open = True
