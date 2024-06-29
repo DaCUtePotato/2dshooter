@@ -1215,8 +1215,8 @@ while True:
 
     for crashing_enemy in crashing_enemies:
         crashing_enemy.frame_count += 1
-        if crashing_enemy.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
-            crashing_enemy.frame = (crashing_enemy.frame + 1) % len(corrupty_frames)
+        if crashing_enemy.frame_count % 5 == 0 and not paused and not show_upgrade_menu:
+            crashing_enemy.frame = (crashing_enemy.frame + 1) % len(crashing_enemy_frames)
 
         if crashing_enemy.x > player_x:
             # Enemy is coming from the left side of the screen, flip the sprite
