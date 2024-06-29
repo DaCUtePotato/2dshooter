@@ -346,7 +346,7 @@ def shoot_up_directional(player_x, player_y,bullet_speed, angle, bullets):
         'y': player_y,
         'dx': bullet_speed * math.cos(upright_angle),
         'dy': bullet_speed * math.sin(upright_angle),
-        'frame': 0  # Start animation frame
+        'frame': 0
     })
     # Shoot a bullet to the forward left direction of the player
     upleft_angle = angle - math.pi / 4  # Angle for upleft direction
@@ -355,34 +355,36 @@ def shoot_up_directional(player_x, player_y,bullet_speed, angle, bullets):
         'y': player_y,
         'dx': bullet_speed * math.cos(upleft_angle),
         'dy': bullet_speed * math.sin(upleft_angle),
-        'frame': 0  # Start animation frame
+        'frame': 0
     })
 
 def shoot_down_directional(player_x, player_y,bullet_speed, angle, bullets):
+    # Shoot a bullet to the backwards right direction of the player
     downright_angle = angle + 3 * math.pi / 4  # Angle for upright direction
     bullets.append({
         'x': player_x,
         'y': player_y,
         'dx': bullet_speed * math.cos(downright_angle),
         'dy': bullet_speed * math.sin(downright_angle),
-        'frame': 0  # Start animation frame
+        'frame': 0
     })
-    # Shoot fireball upleft
+    # Shoot a bullet to the backwards left direction of the player
     downleft_angle = angle - 3 * math.pi / 4  # Angle for upleft direction
     bullets.append({
         'x': player_x,
         'y': player_y,
         'dx': bullet_speed * math.cos(downleft_angle),
         'dy': bullet_speed * math.sin(downleft_angle),
-        'frame': 0  # Start animation frame
+        'frame': 0
     })
 
 def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     global current_fireball_cooldown
-    centered_x, centered_y = player_x+player_width//2-25, player_y+player_height//4
-    mouseX, mouseY = pygame.mouse.get_pos()
-    angle = math.atan2(mouseY-height//2-player_height//4, mouseX-width//2-player_width//2+25)  # Use the center of the screen for angle calculation
-    if upgrades >= 7:  # If the 7th upgrade is active, shoot upwards
+    centered_x, centered_y = player_x+player_width//2-25, player_y+player_height//4  # Center of player
+    mouseX, mouseY = pygame.mouse.get_pos()  # Get mouse position
+    angle = math.atan2(mouseY-height//2-player_height//4, mouseX-width//2-player_width//2+25)  # Use the center of the screen for calculating the angle of the fireball
+    if upgrades >= 7:  # If the 7th upgrade is active, shoot in all directions and automatically shoot upwards
+        fireball_sound_7.play()  # Play fireball sound 7
         up = -math.pi / 2  # Angle for shooting upwards
         shoot_forwards(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, up, bullets)
@@ -390,27 +392,26 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         shoot_left(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_up_directional(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_down_directional(centered_x, centered_y, bullet_speed, up, bullets)
-        fireball_sound_7.play()
 
-    if upgrades == 0:
+    if upgrades == 0:  # If no upgrade is active, shoot forwards
+        fireball_sound_1.play()  # Play fireball sound 1
         shoot_forwards(centered_x, centered_y, bullet_speed,angle, bullets)
-        fireball_sound_1.play()
-    elif upgrades == 1:
-        fireball_sound_2.play()
+    elif upgrades == 1:  # If 1st upgrade is active, shoot forwards and backwards
+        fireball_sound_2.play() # Same thing here...
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
-    elif upgrades == 2:
+    elif upgrades == 2:  # If 2nd upgrade is active, shoot forwards, backwards and right
         fireball_sound_3.play()
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_right(centered_x, centered_y, bullet_speed, angle, bullets)
-    elif upgrades == 3:
+    elif upgrades == 3:  # If 3rd upgrade is active, shoot forwards, backwards, right and left
         fireball_sound_4.play()
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_right(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_left(centered_x, centered_y, bullet_speed, angle, bullets)
-    elif upgrades == 4:
+    elif upgrades == 4:  # Etc, you get the idea
         fireball_sound_5.play()
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
@@ -429,11 +430,11 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     # Apply the reduced cooldown based on the upgrades
     cooldown_reduction = 0
     if upgrades == 1:
-        cooldown_reduction += cooldown_reduction_upgrade1
+        cooldown_reduction += cooldown_reduction_upgrade1  # Add cooldown reduction for upgrade 1
     if upgrades == 2:
-        cooldown_reduction += cooldown_reduction_upgrade2
+        cooldown_reduction += cooldown_reduction_upgrade2  # Add cooldown reduction for upgrade 2
     if upgrades == 3:
-        cooldown_reduction += cooldown_reduction_upgrade3
+        cooldown_reduction += cooldown_reduction_upgrade3  # etc, you get the idea
     if upgrades == 4:
         cooldown_reduction += cooldown_reduction_upgrade4
     if upgrades == 5:
@@ -442,14 +443,15 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         cooldown_reduction += cooldown_reduction_upgrade6
     if upgrades == 7:
         cooldown_reduction += cooldown_reduction_upgrade7
-    current_fireball_cooldown = base_fireball_cooldown - cooldown_reduction  # Apply reduced cooldown
+    current_fireball_cooldown = base_fireball_cooldown - cooldown_reduction  # Apply the reduced cooldown
 
 def draw_kill_counter(kills):
-    font = pygame.font.SysFont('Avenir', 15)
-    kills_text = font.render(f"Kills: {kills}", True, RED)
-    text_width, text_height = font.size(f"Kills: {kills}")
-    text_x = (width - text_width) // 3
-    text_y = 20
+    # Draw the kill counter on the screen
+    font = pygame.font.SysFont('Avenir', 15)  # Define font
+    kills_text = font.render(f"Kills: {kills}", True, RED)  # Render kill text
+    text_width, text_height = font.size(f"Kills: {kills}")  # Get text dimensions
+    text_x = (width - text_width) / 20  # Get text dimensions
+    text_y = 40
     screen.blit(kills_text, (text_x, text_y))
 
 def draw_explosion_cooldown(explosion_cooldown):
@@ -464,8 +466,8 @@ def draw_coordinates(player_x, player_y):
     font = pygame.font.SysFont('Avenir', 15)
     coordinate_text = font.render(f"Coordinates: {int(player_x)}:{int(player_y)}", True, WHITE)
     text_width, text_height = font.size(f"Coordinates: {coordinate_text}")
-    text_x = (width - text_width)
-    text_y = 20
+    text_x = (width - text_width) / 20  * 24
+    text_y = 40
     screen.blit(coordinate_text, (text_x, text_y))
 
 # level up function
