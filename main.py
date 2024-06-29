@@ -867,13 +867,13 @@ while True:
                        'y'] < player_y + height // 2]
 
         # Spawn new enemies randomly
-        if random.randint(0, 100) < 5:
+        if random.randint(0, 100) < 3:
             spawn_enemy(player_x, player_y)
-        if kills > 100 and random.randint(69, 70) == 69:
+        if kills > 100 and not corruption and random.randint(1, 100) == 69:
             spawn_crashing_enemy(player_x, player_y)
         if kills >= 50 and not bulky_spawned and corruption == 0:
             spawn_bulky(player_x, player_y)
-        if kills >= 50 and corruption >= 1 and not corrupty_spawned:
+        if kills >= 50 and corruption and not corrupty_spawned:
             spawn_corrupty(player_x, player_y)
 
         # Update enemy positions and check for collisions with the player
