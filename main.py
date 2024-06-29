@@ -117,6 +117,8 @@ levelling = False
 pickup_sound = pygame.mixer.Sound("sounds/exp.wav")
 level_up_sound = pygame.mixer.Sound("sounds/level_up_normal.wav")
 gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
+explosion_sound = pygame.mixer.Sound("sounds/explosion.wav")
+explooosion_sound = pygame.mixer.Sound("sounds/explooosion.wav")
 
 #Regeneration
 active_regen_orbs = []
@@ -609,6 +611,8 @@ def open_main_settings():
         fireball_sound_5.set_volume(volume)
         fireball_sound_6.set_volume(volume)
         fireball_sound_7.set_volume(volume)
+        explosion_sound.set_volume(volume)
+        explooosion_sound.set_volume(volume)
 
         screen.fill(BLACK)
         draw_tiles(0, 0)
@@ -625,6 +629,10 @@ def open_main_settings():
 # Function to spawn explosion at given coordinates
 def spawn_explosion(x, y, camera_offset_x, camera_offset_y):
     global explosion, explosion_x, explosion_y, explosion_frame_index, explosion_frame_duration, right_mouse_button_pressed, explosion_cooldown
+    if gambling_mode:
+        explooosion_sound.play()
+    else:
+        explosion_sound.play()
     right_mouse_button_pressed = False
     explosion = True
     explosion_x = x - camera_offset_x
@@ -754,7 +762,8 @@ def open_settings():
         fireball_sound_5.set_volume(volume)
         fireball_sound_6.set_volume(volume)
         fireball_sound_7.set_volume(volume)
-
+        explosion_sound.set_volume(volume)
+        explooosion_sound.set_volume(volume)
         screen.fill(BLACK)
         draw_tiles(0, 0)
 
