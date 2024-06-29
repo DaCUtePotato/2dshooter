@@ -505,12 +505,12 @@ def spawn_bulky(player_x, player_y):
     bulky_spawned = True
 
 def spawn_corrupty(player_x, player_y):
-    global corrupty_spawned
+    global corrupty_spawned, ENEMY_SPEED
     off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
     print("Something happened at", spawn_x, spawn_y, "...")
-    corrupty = Corrupty(spawn_x, spawn_y, 50, 50, 200, 0.85)  # Example values for width, height, hp, and speed
+    corrupty = Corrupty(spawn_x, spawn_y, 50, 50, 200, ENEMY_SPEED*1.75)  # Example values for width, height, hp, and speed
     corrupties.append(corrupty)
     corrupty_spawned = True
 
@@ -1206,7 +1206,16 @@ while True:
         pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
 
     for corrupty in corrupties:
-        pygame.draw.rect(screen, PURPLE, (corrupty.x + camera_offset_x, corrupty.y + camera_offset_y, corrupty.width, corrupty.height))
+        corrupty.frame_count += 1
+        if corrupty.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
+            corrupty.frame = (corrupty.frame + 1) % len(corrupty_frames)
+        if corrupty.x > player_x:
+            # Enemy is coming from the left side of the screen, flip the sprite
+            corrupty_image = pygame.transform.flip(corrupty_frames[corrupty.frame], True, False)
+        else:
+            # Enemy is coming from the right side of the screen, use the original sprite
+            corrupty_image = corrupty_frames[corrupty.frame]
+        screen.blit(corrupty_image, (corrupty.x + camera_offset_x, corrupty.y + camera_offset_y))
 
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity

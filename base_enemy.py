@@ -17,6 +17,5 @@ class Enemy:
         self.death_frame = 0
         self.death_frame_count = 0
         self.death_animation_playing = False
-
 exp = random.randint(1, 5)
 enemies = []
