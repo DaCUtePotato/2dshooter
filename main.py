@@ -67,12 +67,6 @@ scaling_factor = 2.77  # Define scaling factor
 niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor  # Setup scaling
 
 
-#explosion variables
-explosion_cooldown = 200
-EXPLOSION_IMAGES = ["sprites/explosion1.png", "sprites/explosion2.png", "sprites/explosion3.png", "sprites/explosion4.png", "sprites/explosion5.png",
-                    "sprites/explosion6.png", "sprites/explosion7.png", "sprites/explosion8.png"]
-EXPLOSION_DURATION = 200
-EXPLOSION_DAMAGE = 1000000
 
 # Animate sprites
 # Subsurface extracts the defined rectangle from the sprite sheet
@@ -156,6 +150,8 @@ bulky_spawned = False
 corrupty_spawned = False
 corruption = False
 settings_open = False
+right_mouse_button_pressed = False
+
 
 enemy_frames = []
 for i in range(1, 5):  # Assuming there are 4 enemy images named bat1.png, bat2.png, bat3.png and bat4.png
@@ -275,6 +271,8 @@ if not corruption:
     music = pygame.mixer.Sound('sounds/background_music.mp3')
 else:
     music = pygame.mixer.Sound('sounds/corrupted.mp3')
+
+explosion = False
 
 def save():
     # Write data to the file
@@ -454,6 +452,14 @@ def draw_kill_counter(kills):
     text_y = 20
     screen.blit(kills_text, (text_x, text_y))
 
+def draw_explosion_cooldown(explosion_cooldown):
+    font = pygame.font.SysFont('Avenir', 15)
+    text = font.render(f"Explosion Cooldown: {explosion_cooldown}", True, WHITE)
+    text_width, text_height = font.size(f"Explosion Cooldown: {explosion_cooldown}")
+    text_x = (width - text_width)
+    text_y =  height - 30
+    screen.blit(text, (text_x, text_y))
+
 def draw_coordinates(player_x, player_y):
     font = pygame.font.SysFont('Avenir', 15)
     coordinate_text = font.render(f"Coordinates: {int(player_x)}:{int(player_y)}", True, WHITE)
@@ -577,6 +583,7 @@ def open_main_settings():
                 save()
                 pygame.quit()
                 sys.exit()
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     settings_open = False
@@ -619,33 +626,87 @@ def open_main_settings():
         clock.tick(FPS)
 
 # spawn explosion
-# Define the spawn_explosion function
-# Function to spawn explosion
-def spawn_explosion():
-    global explosion_cooldown, EXPLOSION_DURATION, EXPLOSION_IMAGES, EXPLOSION_DAMAGE
-
-    mouseX, mouseY = pygame.mouse.get_pos()
-    explosion_cooldown = EXPLOSION_DURATION
-    radius = 1000
-
-    # Draw explosion animation
-    explosion_frames = [pygame.image.load(image) for image in EXPLOSION_IMAGES]
+# Function to spawn explosion at given coordinates
+def spawn_explosion(x, y, camera_offset_x, camera_offset_y):
+    global explosion, explosion_x, explosion_y, explosion_frame_index, explosion_frame_duration, right_mouse_button_pressed, explosion_cooldown
+    right_mouse_button_pressed = False
+    explosion = True
+    explosion_x = x - camera_offset_x
+    explosion_y = y - camera_offset_y
     explosion_frame_index = 0
+    explosion_frame_duration = 4  # Adjust as needed for animation speed
+    explosion_cooldown = 1000
 
-    while explosion_frame_index < len(explosion_frames):
-        screen.blit(explosion_frames[explosion_frame_index], (mouseX, mouseY))
-        pygame.display.flip()
-        pygame.time.wait(50)  # Adjust delay as needed for animation speed
-        explosion_frame_index += 1
+# Load explosion frames
+explosion_frames = []
+for i in range(1, 9):
+    filename = f'sprites/explosion{i}.png'
+    explosion_image = pygame.image.load(filename).convert_alpha()
+    explosion_image = pygame.transform.scale(explosion_image, (100, 100))  # Scale to 100x100 pixels
+    explosion_frames.append(explosion_image)
 
-    # Check for collision with enemies
-    explosion_rect = pygame.Rect(mouseX - radius, mouseY - radius, radius * 2, radius * 2)
+# Initialize explosion variables
+explosion = False
+explosion_x = 0
+explosion_y = 0
+explosion_frame_index = 0
+explosion_frame_duration = 4
+explosion_cooldown = 1000
+EXPLOSION_DAMAGE = 1000
+explosion_radius = 50  # Adjust this based on the size of your explosion
 
+# Check for collisions with the explosion
+def check_explosion_collisions(explosion_x, explosion_y):
+    global enemy_exp, corruption, kills
+    explosion_rect = pygame.Rect(explosion_x - explosion_radius, explosion_y - explosion_radius,
+                                 explosion_radius * 2, explosion_radius * 2)
+
+    # Check collision with enemies
     for enemy in enemies:
         enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
-
         if explosion_rect.colliderect(enemy_rect):
             enemy.hp -= EXPLOSION_DAMAGE
+            if enemy.hp <= 0:
+                enemies.remove(enemy)
+                kills += 1
+                active_exp_orbs.append(
+                    {'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
+                enemy_exp = random.randint(1, 5)
+
+
+    # Check collision with bulkies
+    for bulky in bulkies:
+        bulky_rect = pygame.Rect(bulky.x, bulky.y, bulky.width, bulky.height)
+        if explosion_rect.colliderect(bulky_rect):
+            bulky.hp -= EXPLOSION_DAMAGE
+            if bulky.hp <= 0:
+                kills += 1
+                bulky.death_animation_playing = True
+                bulkies.remove(bulky)
+
+    # Check collision with corrupties
+    for corrupty in corrupties:
+        corrupty_rect = pygame.Rect(corrupty.x, corrupty.y, corrupty.width, corrupty.height)
+        if explosion_rect.colliderect(corrupty_rect):
+            corrupty.hp -= EXPLOSION_DAMAGE
+            if corrupty.hp <= 0:
+                corrupties.remove(corrupty)
+                kills += 1
+                active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
+                enemy_exp = random.randint(1, 5)
+                print("You've freed us all!")
+
+    # Check collision with crashing_enemies
+    for crashing_enemy in crashing_enemies:
+        crashing_enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width, crashing_enemy.height)
+        if explosion_rect.colliderect(crashing_enemy_rect):
+            crashing_enemy.hp -= EXPLOSION_DAMAGE
+            if crashing_enemy.hp <= 0:
+                kills += 1
+                crashing_enemies.remove(crashing_enemy)
+                corruption = True
+                save()
+                sys.exit("The corruption is spreading...")
 
 
 
@@ -772,6 +833,9 @@ while main_menu:
             save()
             pygame.quit()
             sys.exit()
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 3:  # Right mouse button
+                right_mouse_button_pressed = False
     if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
         centered_x, centered_y = player_x + player_width // 2-25, player_y + player_height // 4
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -890,6 +954,17 @@ while True:
         player_y += move_y
         center_x = player_x + player_width / 2
         center_y = player_y + player_height / 4
+
+        # Calculate camera offset
+        camera_offset_x = width // 2 - player_x
+        camera_offset_y = height // 2 - player_y
+
+        # Check for right mouse button press
+        if pygame.mouse.get_pressed()[2] and not paused and not show_upgrade_menu and explosion_cooldown <= 0:
+            if not right_mouse_button_pressed:
+                right_mouse_button_pressed = True
+                cursor_x, cursor_y = pygame.mouse.get_pos()
+                spawn_explosion(cursor_x, cursor_y, camera_offset_x, camera_offset_y)
         # Decrease the current fireball cooldown
         if current_fireball_cooldown > 0:
             current_fireball_cooldown -= 1
@@ -906,9 +981,6 @@ while True:
 
         if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and upgrades!=7 and current_fireball_cooldown==0:
             shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
-
-        if pygame.mouse.get_pressed()[2] and paused is False and not show_upgrade_menu and explosion_cooldown <= 0:
-            spawn_explosion()
 
         # Update bullet positions and animate
         for bullet in bullets:
@@ -1137,10 +1209,6 @@ while True:
                 # Remove the exp orb from the active list
                 active_regen_orbs.remove(regen_orb)
 
-    # Calculate camera offset
-    camera_offset_x = width // 2 - player_x
-    camera_offset_y = height // 2 - player_y
-
     # Draw elements
     screen.fill(BLACK)  # Clear the screen
     draw_tiles(camera_offset_x, camera_offset_y)
@@ -1305,10 +1373,27 @@ while True:
         # Draw the rotated bullet image at the bullet's position
         screen.blit(rotated_bullet_image, (
             bullet['x'] - rotated_bullet_image.get_width() / 2 + camera_offset_x, bullet['y'] - rotated_bullet_image.get_height() / 2 + camera_offset_y))
+    if explosion:
+        if explosion_frame_index < len(explosion_frames):
+            screen.blit(explosion_frames[explosion_frame_index],
+                        (explosion_x - 50 + camera_offset_x, explosion_y - 50 + camera_offset_y))
+            explosion_frame_duration -= 1
+            if explosion_frame_duration <= 0:
+                explosion_frame_index += 1
+                explosion_frame_duration = 4  # Reset frame duration
+            # Check for collisions with the explosion
+            check_explosion_collisions(explosion_x, explosion_y)
+        else:
+            explosion = False  # End explosion animation
+
+    if explosion_cooldown > 0 and not paused and not show_upgrade_menu:
+        explosion_cooldown -= 1
+
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
     draw_kill_counter(kills)
     draw_coordinates(player_x, player_y)
+    draw_explosion_cooldown(explosion_cooldown)
     if rendering == "right":
         screen.blit(frames_right[current_frame], (player_pos_on_screen))  # Draw the current frame of player sprite
     if rendering == "up":
@@ -1371,8 +1456,6 @@ while True:
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(out_of_upgrades_text, (text_x, text_y))
-    explosion_cooldown -= 1
-    print(explosion_cooldown)
     screen.blit(cursor_image, cursor_pos)
     # Update the display
     pygame.display.flip()
