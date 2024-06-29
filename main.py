@@ -790,8 +790,6 @@ def open_menu():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE and not settings_open:
-                    menu_open = False
                 if event.key == pygame.K_w:
                     selected_index = (selected_index - 1) % len(options)
                 if event.key == pygame.K_s:
@@ -997,7 +995,7 @@ while True:
             spawn_enemy(player_x, player_y)
         if kills > 100 and not corruption and random.randint(69, 70) == 69:
             spawn_crashing_enemy(player_x, player_y)
-        if kills >= 50 and not bulky_spawned and corruption == 0:
+        if kills >= 50 and not bulky_spawned and not corruption:
             spawn_bulky(player_x, player_y)
         if kills >= 50 and corruption and not corrupty_spawned:
             spawn_corrupty(player_x, player_y)
@@ -1171,7 +1169,7 @@ while True:
             player_hp = 100
             exp = 0
             player_level = 1
-            corruption = 0
+            corruption = False
             current_max_exp = 30
             save()
             sys.exit("You died...")
