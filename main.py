@@ -127,7 +127,6 @@ levelling = False
 pickup_sound = pygame.mixer.Sound("sounds/exp.wav")
 level_up_sound = pygame.mixer.Sound("sounds/level_up_normal.wav")
 gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
-pygame.mixer.music.load('sounds/background_music.mp3')
 
 #Regeneration
 active_regen_orbs = []
@@ -155,8 +154,7 @@ BULLET_DAMAGE = 10.5
 
 bulky_spawned = False
 corrupty_spawned = False
-corruption = 0
-
+corruption = False
 settings_open = False
 
 enemy_frames = []
@@ -272,6 +270,11 @@ if os.path.exists(file_path):
         player_level = int(lines[4].strip())
         corruption = lines[5].strip() == "True"
         current_max_exp = int(lines[6].strip())
+
+if not corruption:
+    music = pygame.mixer.Sound('sounds/background_music.mp3')
+else:
+    music = pygame.mixer.Sound('sounds/corrupted.mp3')
 
 def save():
     # Write data to the file
@@ -759,7 +762,7 @@ def open_menu():
         pygame.display.flip()
         clock.tick(60)
 
-pygame.mixer.music.play(-1)
+music.play(-1)
 
 main_menu = True
 while main_menu:
