@@ -5,6 +5,7 @@ import random
 from base_enemy import Enemy, enemies
 from crashing_enemy import crashingEnemy, crashing_enemies
 from bulky_enemy import Bulky, bulkies
+from corrupted_enemy import Corrupty, corrupties
 import os
 
 # Initialize pygame
@@ -34,9 +35,11 @@ main_menu = True  # Enables main menu
 
 # Load and scale images
 tile_image = pygame.image.load('sprites/tile.png')
+corrupted_tile_image = pygame.image.load('sprites/corrupted_tile.png')  # Load corrupted tile image
 tile_x = 1011
 tile_y = 624
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_x, tile_y))
+scaled_corrupted_tile_image = pygame.transform.scale(corrupted_tile_image, (tile_x, tile_y))  # Scale corrupted tile image
 cursor_image = pygame.image.load("sprites/cursor.png")
 title_image = pygame.image.load("sprites/title.png")
 play_button_image = pygame.image.load('sprites/play.png')
@@ -85,6 +88,7 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
+PURPLE = (128, 0, 128)
 
 # Player attributes
 player_x = width // 2
@@ -141,6 +145,8 @@ HP_SCALING_FACTOR = 0.01     # Increase in HP per kill
 BULLET_DAMAGE = 10.5
 
 bulky_spawned = False
+corrupty_spawned = False
+corruption = False
 
 enemy_frames = []
 for i in range(1, 5):  # Assuming there are 4 enemy images named bat1.png, bat2.png, bat3.png and bat4.png
@@ -237,6 +243,7 @@ if os.path.exists(file_path):
         player_hp = int(lines[2].strip())
         exp = int(lines[3].strip())
         player_level = int(lines[4].strip())
+        corruption = lines[5].strip() == "True"
 
 def save():
     # Write data to the file
@@ -246,12 +253,14 @@ def save():
         file.write(f"{player_hp}\n")
         file.write(f"{exp}\n")
         file.write(f"{player_level}\n")
+        file.write(f"{corruption}\n")
 
 
 def draw_tiles(camera_offset_x, camera_offset_y):
+    tile_to_draw = scaled_corrupted_tile_image if corruption else scaled_tile_image
     for y in range(-tile_y, height + tile_y, tile_y):
         for x in range(-tile_x, width + tile_x, tile_x):
-            screen.blit(scaled_tile_image, (x + camera_offset_x % tile_x - tile_x, y + camera_offset_y % tile_y - tile_y))
+            screen.blit(tile_to_draw, (x + camera_offset_x % tile_x - tile_x, y + camera_offset_y % tile_y - tile_y))
 
 def animate_bullet(bullet):
     bullet['frame'] += 1
@@ -484,6 +493,16 @@ def spawn_bulky(player_x, player_y):
     bulkies.append(bulky)
     bulky_spawned = True
 
+def spawn_corrupty(player_x, player_y):
+    global corrupty_spawned
+    off_screen_buffer = 10  # Distance outside the screen to ensure spawning off-screen
+    spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
+    spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
+    print("Something happened at", spawn_x, spawn_y, "...")
+    corrupty = Corrupty(spawn_x, spawn_y, 50, 50, 200, 0.85)  # Example values for width, height, hp, and speed
+    corrupties.append(corrupty)
+    corrupty_spawned = True
+
 # Function to draw player's health bar
 def draw_hp_bar():
     hp_bar_width = player_hp * 2
@@ -668,9 +687,6 @@ while True:
                 elif event.key == pygame.K_RETURN:
                     show_upgrade_menu = False
                     paused = False
-
-
-
     if not paused and not show_upgrade_menu:  # Only update game state if not paused and upgrade menu is not shown
         # Update player input and game state
         player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)
@@ -735,10 +751,12 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 5:
             spawn_enemy(player_x, player_y)
-        if kills > 100 and random.randint(0, 10000) == 69:
+        if kills > 100 and random.randint(69, 70) == 69:
             spawn_crashing_enemy(player_x, player_y)
-        if kills == 50 and not bulky_spawned:
+        if kills >= 50 and not bulky_spawned and not corruption:
             spawn_bulky(player_x, player_y)
+        if kills >= 50 and corruption and not corrupty_spawned:
+            spawn_corrupty(player_x, player_y)
 
         # Update enemy positions and check for collisions with the player
         for crashing_enemy in crashing_enemies:
@@ -761,7 +779,6 @@ while True:
                 if i_frames_counter == i_frames:
                     player_hp -= 5
                     i_frames_counter = 0
-
             # Check for collisions with bullets
             for bullet in bullets:
                 bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
@@ -774,9 +791,14 @@ while True:
 
                     if crashing_enemy.hp <= 0:
                         crashing_enemies.remove(crashing_enemy)
+                        upgrades = 0
+                        kills = 0
+                        player_hp = 100
+                        exp = 0
+                        player_level = 1
+                        corruption = True
                         save()
                         sys.exit("The corruption is spreading...")
-
         for enemy in enemies:
             # Calculate the center coordinates of the player
             player_x_center = player_x + player_width / 2
@@ -831,8 +853,8 @@ while True:
 
             # Calculate the angle between the player and the enemy
             angle = math.atan2(distance_y, distance_x)
-            move_x = 0.5 * math.cos(angle)
-            move_y = 0.5 * math.sin(angle)
+            move_x = bulky.speed * math.cos(angle)
+            move_y = bulky.speed * math.sin(angle)
 
             # Update enemy position
             if not bulky.death_animation_playing:
@@ -861,13 +883,54 @@ while True:
                         break
                     elif bulky.hp > 0:
                         bullets.remove(bullet)
+        for corrupty in corrupties:
+            # Calculate the center coordinates of the player
+            player_x_center = player_x + player_width / 2
+            player_y_center = player_y + player_height / 2
 
+            # Calculate the vertical and horizontal distance between the enemy and the player's center
+            distance_y = player_y_center - corrupty.y
+            distance_x = player_x_center - corrupty.x
+
+            # Calculate the angle between the player and the enemy
+            angle = math.atan2(distance_y, distance_x)
+            move_x = corrupty.speed * math.cos(angle)
+            move_y = corrupty.speed * math.sin(angle)
+
+            # Update enemy position
+            corrupty.x += move_x
+            corrupty.y += move_y
+
+            # Check for collisions with the player
+            if (player_x < corrupty.x + corrupty.width and player_x + player_width > corrupty.x and
+                    player_y < corrupty.y + corrupty.height and player_y + player_height > corrupty.y):
+                if i_frames_counter == i_frames:
+                    player_hp -= 5
+                    i_frames_counter = 0
+
+            # Check for collisions with bullets
+            for bullet in bullets:
+                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
+                corrupty_rect = pygame.Rect(corrupty.x, corrupty.y, corrupty.width, corrupty.height)
+
+                if bullet_rect.colliderect(corrupty_rect):
+                    corrupty.hp -= BULLET_DAMAGE
+                    bullets.remove(bullet)
+
+                    if corrupty.hp <= 0:
+                        corrupties.remove(corrupty)
+                        active_exp_orbs.append(
+                            {'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
+                        enemy_exp = random.randint(1, 5)
+                        print("You've freed us all!!")
+                        kills += 1
         if player_hp <= 0:
             upgrades = 0
             kills = 0
             player_hp = 100
             exp = 0
             player_level = 1
+            corruption = False
             save()
             sys.exit("You died...")
 
@@ -955,7 +1018,7 @@ while True:
                 active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
                 enemy_exp = random.randint(1, 5)
                 kills += 1
-                if random.randint(0, 100) == 69:
+                if random.randint(1, 100) == 69:
                     active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
                     print("A wild regen orb spawned!!!!!")
             else:
@@ -985,11 +1048,9 @@ while True:
                     enemy_image = enemy_frames[enemy.frame]
 
             screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
-
     # Remove enemies marked for removal after the loop
     for enemy in enemies_to_remove:
         enemies.remove(enemy)
-
     bulkies_to_remove = []
     for bulky in bulkies:
         if bulky.death_animation_playing:
@@ -999,7 +1060,7 @@ while True:
 
             if bulky.death_frame >= len(bulky_death_frames) - 1:  # Ensure the death animation has completed
                 bulkies_to_remove.append(bulky)
-                active_exp_orbs.append({'size': enemy_exp, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
+                active_exp_orbs.append({'size': enemy_exp / 3, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
                 enemy_exp = random.randint(10, 50)
                 kills += 1
 
@@ -1028,6 +1089,12 @@ while True:
     for bulky in bulkies_to_remove:
         bulkies.remove(bulky)
 
+    for crashing_enemy in crashing_enemies:
+        pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
+
+    for corrupty in corrupties:
+        pygame.draw.rect(screen, PURPLE, (corrupty.x + camera_offset_x, corrupty.y + camera_offset_y, corrupty.width, corrupty.height))
+
     for bullet in bullets:
         # Calculate angle of rotation based on bullet's velocity
         angle = math.atan2(-bullet['dy'], bullet['dx'])  # Use negative y-velocity to account for inverted y-axis
@@ -1038,7 +1105,6 @@ while True:
         # Draw the rotated bullet image at the bullet's position
         screen.blit(rotated_bullet_image, (
             bullet['x'] - rotated_bullet_image.get_width() / 2 + camera_offset_x, bullet['y'] - rotated_bullet_image.get_height() / 2 + camera_offset_y))
-
     draw_hp_bar()  # Draw the player's HP bar
     draw_exp_bar()  # Draw the experience bar
     draw_kill_counter(kills)
@@ -1055,7 +1121,6 @@ while True:
         i_frames_counter += 1
     if exp >= current_max_exp:
         level_up()
-
     # If game is paused, show pause menu
     if paused and not show_upgrade_menu:
         pause_text = menu_font.render("PAUSED", True, WHITE)
@@ -1063,7 +1128,6 @@ while True:
         text_x = (width - text_width) // 2
         text_y = (height - text_heights) // 2
         screen.blit(pause_text, (text_x, text_y))
-
     # If upgrade menu is shown, display upgrade options
     if show_upgrade_menu:
         if upgrades == 0:
@@ -1115,7 +1179,6 @@ while True:
             text_y = (height - text_height) // 2 + 50
             screen.blit(out_of_upgrades_text, (text_x, text_y))
     screen.blit(cursor_image, cursor_pos)
-
     # Update the display
     pygame.display.flip()
     pygame.time.Clock().tick(FPS)
