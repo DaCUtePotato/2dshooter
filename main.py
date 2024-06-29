@@ -66,6 +66,14 @@ frame_width, frame_height = 24, 30  # Setup size of each sprite
 scaling_factor = 2.77  # Define scaling factor
 niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor  # Setup scaling
 
+
+#explosion variables
+explosion_cooldown = 200
+EXPLOSION_IMAGES = ["sprites/explosion1.png", "sprites/explosion2.png", "sprites/explosion3.png", "sprites/explosion4.png", "sprites/explosion5.png",
+                    "sprites/explosion6.png", "sprites/explosion7.png", "sprites/explosion8.png"]
+EXPLOSION_DURATION = 200
+EXPLOSION_DAMAGE = 1000000
+
 # Animate sprites
 # Subsurface extracts the defined rectangle from the sprite sheet
 # Then it gets scaled to the defined height and width
@@ -119,6 +127,7 @@ levelling = False
 pickup_sound = pygame.mixer.Sound("sounds/exp.wav")
 level_up_sound = pygame.mixer.Sound("sounds/level_up_normal.wav")
 gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
+pygame.mixer.music.load('sounds/background_music.mp3')
 
 #Regeneration
 active_regen_orbs = []
@@ -606,6 +615,37 @@ def open_main_settings():
         pygame.display.flip()
         clock.tick(FPS)
 
+# spawn explosion
+# Define the spawn_explosion function
+# Function to spawn explosion
+def spawn_explosion():
+    global explosion_cooldown, EXPLOSION_DURATION, EXPLOSION_IMAGES, EXPLOSION_DAMAGE
+
+    mouseX, mouseY = pygame.mouse.get_pos()
+    explosion_cooldown = EXPLOSION_DURATION
+    radius = 1000
+
+    # Draw explosion animation
+    explosion_frames = [pygame.image.load(image) for image in EXPLOSION_IMAGES]
+    explosion_frame_index = 0
+
+    while explosion_frame_index < len(explosion_frames):
+        screen.blit(explosion_frames[explosion_frame_index], (mouseX, mouseY))
+        pygame.display.flip()
+        pygame.time.wait(50)  # Adjust delay as needed for animation speed
+        explosion_frame_index += 1
+
+    # Check for collision with enemies
+    explosion_rect = pygame.Rect(mouseX - radius, mouseY - radius, radius * 2, radius * 2)
+
+    for enemy in enemies:
+        enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
+
+        if explosion_rect.colliderect(enemy_rect):
+            enemy.hp -= EXPLOSION_DAMAGE
+
+
+
 # Main settings handling function
 def open_settings():
     global volume, brightness, contrast, settings_open
@@ -718,6 +758,8 @@ def open_menu():
 
         pygame.display.flip()
         clock.tick(60)
+
+pygame.mixer.music.play(-1)
 
 main_menu = True
 while main_menu:
@@ -861,6 +903,9 @@ while True:
 
         if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and upgrades!=7 and current_fireball_cooldown==0:
             shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
+
+        if pygame.mouse.get_pressed()[2] and paused is False and not show_upgrade_menu and explosion_cooldown <= 0:
+            spawn_explosion()
 
         # Update bullet positions and animate
         for bullet in bullets:
@@ -1323,6 +1368,8 @@ while True:
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(out_of_upgrades_text, (text_x, text_y))
+    explosion_cooldown -= 1
+    print(explosion_cooldown)
     screen.blit(cursor_image, cursor_pos)
     # Update the display
     pygame.display.flip()
