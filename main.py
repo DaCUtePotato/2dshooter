@@ -1526,49 +1526,49 @@ while True:
         level_up()
     # If upgrade menu is shown, display upgrade options
     if show_upgrade_menu:
-        if upgrades == 0:
-            upgrade_text1 = menu_font.render("1. Fireball shoots in opposite direction", True, WHITE)
-            text_width, text_height = menu_font.size("1. Fireball shoots in opposite direction")
-            text_x = (width - text_width) // 2
-            text_y = (height - text_height) // 2 + 50
-            screen.blit(upgrade_text1, (text_x, text_y))
-        elif upgrades == 1:
+        if upgrades == 0: # if player doesn't have any upgrades yet and receives the first one, say "Fireball shoots in opposite direction" on-screen
+            upgrade_text1 = menu_font.render("1. Fireball shoots in opposite direction", True, WHITE) #declare what to say
+            text_width, text_height = menu_font.size("1. Fireball shoots in opposite direction") #declare how big the text is
+            text_x = (width - text_width) // 2 #declare x position
+            text_y = (height - text_height) // 2 + 50 #declare y position
+            screen.blit(upgrade_text1, (text_x, text_y)) #put it on-screen-
+        elif upgrades == 1: #if player has 1 upgrade and is going to the second one, say "Fireball shoots in the right direction" on-screen
             upgrade_text2 = menu_font.render("2. Fireball shoots in the right direction", True, WHITE)
             text_width, text_height = menu_font.size("2. Fireball shoots in the right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text2, (text_x, text_y))
-        elif upgrades == 2:
+        elif upgrades == 2: #if player has 2 upgrades and is going to the third one, say "Fireball shoots in the left direction" on-screen
             upgrade_text3 = menu_font.render("3. Fireball shoots in the left direction", True, WHITE)
             text_width, text_height = menu_font.size("3. Fireball shoots in the left direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text3, (text_x, text_y))
-        elif upgrades == 3:
+        elif upgrades == 3: #if player has 3 upgrades and is going to the fourth one, say "Fireball shoots in the top left and right direction" on-screen
             upgrade_text4 = menu_font.render("4. Fireball shoots in the top left and right direction", True, WHITE)
             text_width, text_height = menu_font.size("4. Fireball shoots in the top left and right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text4, (text_x, text_y))
-        elif upgrades == 4:
+        elif upgrades == 4: #if player has 4 upgrades and is going to the fifth one, say "Fireball shoots in the bottom left and right direction" on-screen
             upgrade_text5 = menu_font.render("5. Fireball shoots in the bottom left and right direction", True, WHITE)
             text_width, text_height = menu_font.size("5. Fireball shoots in the bottom left and right direction")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text5, (text_x, text_y))
-        elif upgrades == 5:
+        elif upgrades == 5: #if player has 5 upgrades and goes to the 6th one, say "Fireball goes through enemies" on-screen
             upgrade_text6 = menu_font.render("6. Fireball goes through enemies", True, WHITE)
             text_width, text_height = menu_font.size("6. Fireball goes through enemies")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text6, (text_x, text_y))
-        elif upgrades == 6:
+        elif upgrades == 6: #if player has 6 upgrades and is going to the seventh, say "automode" on-screen
             upgrade_text7 = menu_font.render("7. Automode", True, WHITE)
             text_width, text_height = menu_font.size("7. Automode")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text7, (text_x, text_y))
-        elif upgrades >= 7:
+        elif upgrades >= 7: # if player has more upgrades than 7 say "So um funny story, I'm out of upgrade ideas..."
             out_of_upgrades_text = menu_font.render("So um funny story, I'm out of upgrade ideas...", True, WHITE)
             text_width, text_height = menu_font.size("So um funny story, I'm out of upgrade ideas...")
             text_x = (width - text_width) // 2
