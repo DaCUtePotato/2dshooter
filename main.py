@@ -699,9 +699,9 @@ def check_explosion_collisions(explosion_x, explosion_y):
             if bulky.hp <= 0:
                 kills += 1
                 bulky.death_animation_playing = True
-                value = random.randint(10, 30)
+                value = random.randint(10, 50)
                 active_big_exp_orbs.append(
-                    {'size': value * 5, 'x': bulky.x, 'y': bulky.y, 'value': value})
+                    {'size': value * 2, 'x': bulky.x, 'y': bulky.y, 'value': value})
                 bulkies.remove(bulky)
 
     # Check collision with corrupties
@@ -1210,9 +1210,9 @@ while True:
                     if bulky.hp <= 0:
                         kills += 1
                         bulky.death_animation_playing = True
-                        value = random.randint(10, 30)
+                        value = random.randint(10, 50)
                         active_big_exp_orbs.append(
-                            {'size': value * 5, 'x': bulky.x, 'y': bulky.y, 'value': value})
+                            {'size': value * 2, 'x': bulky.x, 'y': bulky.y, 'value': value})
                         bulkies.remove(bulky)
                         if upgrades <= 5:
                             bullets.remove(bullet)
