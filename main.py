@@ -17,7 +17,7 @@ pygame.mouse.set_visible(False)
 
 fullscreen = False # Set Fullscreen to false by default
 volume = 0.5  # Set default volume
-
+width, height = 690, 690
 def set_screen_mode(fullscreen):
     global screen, width, height
     if fullscreen:
@@ -51,6 +51,7 @@ title_scaled_width = title_image.get_width() / 2
 title_scaled_height = title_image.get_height() / 2
 scaled_title_image = pygame.transform.scale(title_image, (title_scaled_width, title_scaled_height))
 exp_image = pygame.image.load("sprites/exp.png")
+big_exp_image = pygame.image.load("sprites/bigORB.png")
 regen_image = pygame.image.load("sprites/regen_orb.png")
 
 # Positions of play, settings and quit button
@@ -113,6 +114,7 @@ kills = 0  # Kill count
 exp = 0  # Player experience points
 enemy_exp = random.randint(1, 5)  # Amount of Experience points dropped by enemies
 active_exp_orbs = []  # List of active experience orbs
+active_big_exp_orbs = []
 current_max_exp = 30  # Experience required for next level
 player_level = 1  # Current player level (by default)
 exp_increase_per_level = 5  # Experience increase per level
@@ -697,6 +699,9 @@ def check_explosion_collisions(explosion_x, explosion_y):
             if bulky.hp <= 0:
                 kills += 1
                 bulky.death_animation_playing = True
+                value = random.randint(10, 30)
+                active_big_exp_orbs.append(
+                    {'size': value * 5, 'x': bulky.x, 'y': bulky.y, 'value': value})
                 bulkies.remove(bulky)
 
     # Check collision with corrupties
@@ -1203,7 +1208,12 @@ while True:
                     bulky.hp -= BULLET_DAMAGE
 
                     if bulky.hp <= 0:
-                        bulky.death_animation_playing = True  # Trigger death animation
+                        kills += 1
+                        bulky.death_animation_playing = True
+                        value = random.randint(10, 30)
+                        active_big_exp_orbs.append(
+                            {'size': value * 5, 'x': bulky.x, 'y': bulky.y, 'value': value})
+                        bulkies.remove(bulky)
                         if upgrades <= 5:
                             bullets.remove(bullet)
                         break
@@ -1276,6 +1286,20 @@ while True:
                 exp += orb_exp
                 # Remove the exp orb from the active list
                 active_exp_orbs.remove(exp_orb)
+        for big_exp_orb in active_big_exp_orbs:
+            orb_center_x = big_exp_orb['x']
+            orb_center_y = big_exp_orb['y']
+            orb_radius = big_exp_orb['size']
+            orb_exp = big_exp_orb['value']  # Extract the exp value associated with the orb
+
+            # Check for collisions with the player
+            if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
+                    player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
+                pickup_sound.play()
+                # Player gains exp equal to the amount associated with the exp orb
+                exp += orb_exp
+                # Remove the exp orb from the active list
+                active_big_exp_orbs.remove(big_exp_orb)
 
         for regen_orb in active_regen_orbs:
             orb_center_x = regen_orb['x']
@@ -1303,6 +1327,17 @@ while True:
         # Calculate the top-left corner of the image so it's centered on the orb's position
         image_x = exp_orb['x'] - scaled_exp_image.get_width() // 2 + camera_offset_x
         image_y = exp_orb['y'] - scaled_exp_image.get_height() // 2 + camera_offset_y
+
+        # Draw the scaled image
+        screen.blit(scaled_exp_image, (image_x, image_y))
+
+    for big_exp_orb in active_big_exp_orbs:
+        # Resize the exp_image based on the orb's size
+        scaled_exp_image = pygame.transform.scale(big_exp_image, (big_exp_orb['size'], big_exp_orb['size']))
+
+        # Calculate the top-left corner of the image so it's centered on the orb's position
+        image_x = big_exp_orb['x'] - scaled_exp_image.get_width() // 2 + camera_offset_x
+        image_y = big_exp_orb['y'] - scaled_exp_image.get_height() // 2 + camera_offset_y
 
         # Draw the scaled image
         screen.blit(scaled_exp_image, (image_x, image_y))
