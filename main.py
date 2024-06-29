@@ -814,9 +814,9 @@ def show_victory_screen():
 
 def show_death_screen():
     death_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 50)
-    death_text = death_font.render("Game Over!", True, RED)
-    sub_text = menu_font.render("Press ESC to Exit", True, WHITE)
-
+    sub_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 20)
+    death_text = death_font.render("YOU DIED", True, RED)
+    sub_text = sub_font.render("Press ESC to Exit", True, WHITE)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -832,7 +832,7 @@ def show_death_screen():
         screen.fill(BLACK)
 
         text_rect = death_text.get_rect(center=(width // 2, height // 2))
-        sub_text_rect = sub_text.get_rect(center=(width // 2, height // 2 + 60))
+        sub_text_rect = sub_text.get_rect(center=(width // 2, height // 2 + 45))
 
         screen.blit(death_text, text_rect)
         screen.blit(sub_text, sub_text_rect)
