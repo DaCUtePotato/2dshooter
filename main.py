@@ -179,8 +179,8 @@ for i in range(1, 6):  # Assuming there are 5 death frames named batdeath1.png, 
 bulky_frames = []
 for i in range(1, 17):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
     bulky_original_frame = pygame.image.load(f"sprites/enemies/slime{i}.png").convert_alpha()
-    bulky_scaled_width = bulky_original_frame.get_width() * 3  # Adjust the scaling factor as needed
-    bulky_scaled_height = bulky_original_frame.get_height() * 3
+    bulky_scaled_width = bulky_original_frame.get_width() * 5  # Adjust the scaling factor as needed
+    bulky_scaled_height = bulky_original_frame.get_height() * 5
     bulky_scaled_frame = pygame.transform.scale(bulky_original_frame, (bulky_scaled_width, bulky_scaled_height))
     bulky_frames.append(bulky_scaled_frame)
 
