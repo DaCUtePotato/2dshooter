@@ -195,10 +195,18 @@ for i in range(1, 7):  # Assuming there are 6 bulky death frames named bulkydeat
 corrupty_frames = []
 for i in range(1, 5):  # Assuming there are 4 bulky images named glitch1.png, glitch2.png, and glitch3.png
     corrupty_original_frame = pygame.image.load(f"sprites/enemies/glitch{i}.png").convert_alpha()
-    corrupty_scaled_width = corrupty_original_frame.get_width() * 3  # Adjust the scaling factor as needed
-    corrupty_scaled_height = corrupty_original_frame.get_height() * 3
+    corrupty_scaled_width = corrupty_original_frame.get_width() / 7
+    corrupty_scaled_height = corrupty_original_frame.get_height() / 7
     corrupty_scaled_frame = pygame.transform.scale(corrupty_original_frame, (corrupty_scaled_width, corrupty_scaled_height))
     corrupty_frames.append(corrupty_scaled_frame)
+
+crashing_enemy_frames = []
+for i in range(1, 9):  # Assuming there are 4 bulky images named glitch1.png, glitch2.png, and glitch3.png
+    crashing_enemy_original_frame = pygame.image.load(f"sprites/enemies/skull{i}.png").convert_alpha()
+    crashing_enemy_scaled_width = crashing_enemy_original_frame.get_width() * 3 # Adjust the scaling factor as needed
+    crashing_enemy_scaled_height = crashing_enemy_original_frame.get_height() * 3
+    crashing_enemy_scaled_frame = pygame.transform.scale(crashing_enemy_original_frame, (crashing_enemy_scaled_width, crashing_enemy_scaled_height))
+    crashing_enemy_frames.append(crashing_enemy_scaled_frame)
 
 # Load experience orb image
 exp_image = pygame.image.load("sprites/exp.png")
@@ -493,7 +501,7 @@ def spawn_crashing_enemy(player_x, player_y):
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
 
-    crashing_enemy = crashingEnemy(spawn_x, spawn_y, 20, 20, 10, ENEMY_SPEED)
+    crashing_enemy = crashingEnemy(spawn_x, spawn_y, crashing_enemy_scaled_width, crashing_enemy_scaled_height, 10, ENEMY_SPEED)
     crashing_enemies.append(crashing_enemy)
 
 def spawn_bulky(player_x, player_y):
@@ -512,7 +520,7 @@ def spawn_corrupty(player_x, player_y):
     spawn_x = player_x + random.choice([-1, 1]) * (random.randint(screen_width // 2 + off_screen_buffer, screen_width))
     spawn_y = player_y + random.choice([-1, 1]) * (random.randint(screen_height // 2 + off_screen_buffer, screen_height))
     print("Something happened at", spawn_x, spawn_y, "...")
-    corrupty = Corrupty(spawn_x, spawn_y, 50, 50, 200, ENEMY_SPEED*1.75)  # Example values for width, height, hp, and speed
+    corrupty = Corrupty(spawn_x, spawn_y, corrupty_scaled_width, corrupty_scaled_height, 200, ENEMY_SPEED*1.75)  # Example values for width, height, hp, and speed
     corrupties.append(corrupty)
     corrupty_spawned = True
 
@@ -871,7 +879,7 @@ while True:
         # Spawn new enemies randomly
         if random.randint(0, 100) < 3:
             spawn_enemy(player_x, player_y)
-        if kills > 100 and not corruption and random.randint(1, 100) == 69:
+        if kills > 100 and not corruption and random.randint(69, 70) == 69:
             spawn_crashing_enemy(player_x, player_y)
         if kills >= 50 and not bulky_spawned and corruption == 0:
             spawn_bulky(player_x, player_y)
@@ -1206,7 +1214,21 @@ while True:
         bulkies.remove(bulky)
 
     for crashing_enemy in crashing_enemies:
-        pygame.draw.rect(screen, BLUE, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y, crashing_enemy.width, crashing_enemy.height))
+        crashing_enemy.frame_count += 1
+        if crashing_enemy.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
+            crashing_enemy.frame = (crashing_enemy.frame + 1) % len(corrupty_frames)
+
+        if crashing_enemy.x > player_x:
+            # Enemy is coming from the left side of the screen, flip the sprite
+            crashing_enemy_image = pygame.transform.flip(crashing_enemy_frames[crashing_enemy.frame], True, False)
+        else:
+            # Enemy is coming from the right side of the screen, use the original sprite
+            crashing_enemy_image = crashing_enemy_frames[crashing_enemy.frame]
+
+        # Scale the image to the size defined by corrupty.height and corrupty.width
+        crashing_enemy_image = pygame.transform.scale(crashing_enemy_image, (crashing_enemy.width, crashing_enemy.height))
+
+        screen.blit(crashing_enemy_image, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y))
 
     for corrupty in corrupties:
         corrupty.frame_count += 1
