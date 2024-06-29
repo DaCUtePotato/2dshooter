@@ -16,30 +16,31 @@ pygame.mixer.init()
 pygame.mouse.set_visible(False)
 
 fullscreen = False # Set Fullscreen to false by default
-menu_font = pygame.font.Font(None, 36)  # Setup default font
 volume = 0.5  # Set default volume
 
 if fullscreen:
+    # Set up the display in fullscreen mode
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    screen_width, screen_height = pygame.display.get_surface().get_size()
+    screen_width, screen_height = pygame.display.get_surface().get_size() # Get screen dimensions
 else:
+    # Set up the display in windowed mode
     screen_width = 690  # Width of the window
     screen_height = 690  # Height of the window
     screen = pygame.display.set_mode((screen_width, screen_height))  # Setup window
 
-width, height = pygame.display.get_surface().get_size() # Obtain dimensions of the game window
-pygame.display.set_caption("2D Shooter")  # Set "title" of the window
+width, height = pygame.display.get_surface().get_size()  # Obtain dimensions of the game window
+pygame.display.set_caption("Bullet Heaven")  # Set the title of the window
 FPS = 60  # Set FPS
 clock = pygame.time.Clock()  # Used to control frame rate
 main_menu = True  # Enables main menu
 
 # Load and scale images
 tile_image = pygame.image.load('sprites/tile.png')
-corrupted_tile_image = pygame.image.load('sprites/corrupted_tile.png')  # Load corrupted tile image
+corrupted_tile_image = pygame.image.load('sprites/corrupted_tile.png')
 tile_x = 1011
 tile_y = 624
 scaled_tile_image = pygame.transform.scale(tile_image, (tile_x, tile_y))
-scaled_corrupted_tile_image = pygame.transform.scale(corrupted_tile_image, (tile_x, tile_y))  # Scale corrupted tile image
+scaled_corrupted_tile_image = pygame.transform.scale(corrupted_tile_image, (tile_x, tile_y))
 cursor_image = pygame.image.load("sprites/cursor.png")
 title_image = pygame.image.load("sprites/title.png")
 play_button_image = pygame.image.load('sprites/play.png')
@@ -48,12 +49,17 @@ quit_button_image = pygame.image.load('sprites/quit.png')
 title_scaled_width = title_image.get_width() / 2
 title_scaled_height = title_image.get_height() / 2
 scaled_title_image = pygame.transform.scale(title_image, (title_scaled_width, title_scaled_height))
+exp_image = pygame.image.load("sprites/exp.png")
+regen_image = pygame.image.load("sprites/regen_orb.png")
 
 # Positions of play, settings and quit button
 title_rect = scaled_title_image.get_rect(center=(width / 2, height / 4))
 play_button_rect = play_button_image.get_rect(center=(width / 4, height / 2))
-settings_button_rect = settings_button_image.get_rect(center=(width // 2, height-height/ 5))
+settings_button_rect = settings_button_image.get_rect(center=(width / 2, height - height / 5))
 quit_button_rect = quit_button_image.get_rect(center=(3 * width / 4, height / 2))
+
+
+
 
 # Load sprite sheet for the character walking. Convert alpha is used for performance optimization
 sprite_sheet_right = pygame.image.load('sprites/Niko_right.png').convert_alpha()
@@ -62,11 +68,9 @@ sprite_sheet_down = pygame.image.load('sprites/Niko_down.png').convert_alpha()
 sprite_sheet_left = pygame.image.load('sprites/Niko_left.png').convert_alpha()
 
 # Sprite setup
-frame_width, frame_height = 24, 30  # Setup size of each sprite
-scaling_factor = 2.77  # Define scaling factor
-niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor  # Setup scaling
-
-
+frame_width, frame_height = 24, 30  # Width and height of each sprite frame
+scaling_factor = 2.77  # Scaling factor for sprite
+niko_scaling_width, niko_scaling_height = frame_width * scaling_factor, frame_height * scaling_factor  # Scaled dimensions of sprite
 
 # Animate sprites
 # Subsurface extracts the defined rectangle from the sprite sheet
@@ -75,13 +79,13 @@ frames_up = [pygame.transform.scale(sprite_sheet_up.subsurface(pygame.Rect(frame
 frames_right = [pygame.transform.scale(sprite_sheet_right.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 frames_down = [pygame.transform.scale(sprite_sheet_down.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
 frames_left = [pygame.transform.scale(sprite_sheet_left.subsurface(pygame.Rect(frame_width * i, 0, frame_width, frame_height)), (niko_scaling_width, niko_scaling_height)) for i in range(3)]
+rendering = "down"  # Make sure the sprite spawns facing down
 
 # Used to track frames
-current_frame = 0
-frame_count = 0
+current_frame = 0  # Current frame index for animation
+frame_count = 0  # Frame counter for animation timing
 
-# Make sure the sprite spawns facing down
-rendering = "down"
+
 
 # Colors
 BLACK = (0, 0, 0)
@@ -93,131 +97,128 @@ YELLOW = (255, 255, 0)
 PURPLE = (128, 0, 128)
 
 # Player attributes
-player_x = width // 2
-player_y = height // 2
-player_pos_on_screen = width//2-25, height//2
-player_speed = 5
-player_height = int(niko_scaling_height)
-player_width = int(niko_scaling_width)
-player_hp = 100
-i_frames_counter = 0
-i_frames = 10
-kills = 0
+player_x = width // 2  # Initial player x position
+player_y = height // 2  # Initial player y position
+player_pos_on_screen = width//2-25, height//2  # Player position on screen
+player_speed = 5  # Player movement speed
+player_height = int(niko_scaling_height)  # Player height
+player_width = int(niko_scaling_width)  # Player width
+player_hp = 100  # Player health points
+i_frames_counter = 0  # Invincibility frames counter
+i_frames = 10  # Number of invincibility frames
+kills = 0  # Kill count
 
 # Experience system
-gambling_mode = False
-exp = 0
-enemy_exp = random.randint(1, 5)
-active_exp_orbs = []
-current_max_exp = 30
-max_level = 10000  # for ending
-player_level = 1  # keeping track of the player's current level
-exp_increase_per_level = 5
-levelling = False
+exp = 0  # Player experience points
+enemy_exp = random.randint(1, 5)  # Amount of Experience points dropped by enemies
+active_exp_orbs = []  # List of active experience orbs
+current_max_exp = 30  # Experience required for next level
+player_level = 1  # Current player level (by default)
+exp_increase_per_level = 5  # Experience increase per level
+
+# Load some more sounds
 pickup_sound = pygame.mixer.Sound("sounds/exp.wav")
+pickup_sound_regen = pygame.mixer.Sound("sounds/pickup_regen.wav")
 level_up_sound = pygame.mixer.Sound("sounds/level_up_normal.wav")
 gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
 explosion_sound = pygame.mixer.Sound("sounds/explosion.wav")
 explooosion_sound = pygame.mixer.Sound("sounds/explooosion.wav")
 
-#Regeneration
-active_regen_orbs = []
-regen_amount = 30
-pickup_sound_regen = pygame.mixer.Sound("sounds/pickup_regen.wav")
-regen_orb_size = 15
+# Regeneration
+active_regen_orbs = []  # List of active regeneration orbs
+regen_amount = 30  # Amount of health regenerated by orbs
+regen_orb_size = 15  # Size of regeneration orbs
 
 # Bullet attributes
-bullets = []
-bullet_speed = 10
-bullet_frames = []
-for i in range(1, 6):  # Assume there are five fireball images named fireball1.png to fireball5.png
-    bullet_original_frame = pygame.image.load(f"sprites/fireball{i}.png").convert_alpha()
-    bullet_scaled_width = bullet_original_frame.get_width() * 2
-    bullet_scaled_height = bullet_original_frame.get_height() * 2
-    bullet_scaled_frame = pygame.transform.scale(bullet_original_frame, (bullet_scaled_width, bullet_scaled_height))
-    bullet_frames.append(bullet_scaled_frame)
+bullets = []  # List of active bullets
+bullet_speed = 10  # Bullet speed
+bullet_frames = []  # List of bullet frames for animation
+BULLET_DAMAGE = 10.5  # Default amount of damage the bullet does
 
+for i in range(1, 6):  # There are five fireball images named fireball1.png through fireball5.png
+    bullet_original_frame = pygame.image.load(f"sprites/fireball{i}.png").convert_alpha()  # Load bullet frame
+    bullet_scaled_width = bullet_original_frame.get_width() * 2   # Scale bullet width
+    bullet_scaled_height = bullet_original_frame.get_height() * 2  # Scale bullet height
+    bullet_scaled_frame = pygame.transform.scale(bullet_original_frame, (bullet_scaled_width, bullet_scaled_height))  # Scale bullet frame
+    bullet_frames.append(bullet_scaled_frame)  # Add scaled bullet frame to list
 
-ENEMY_SPEED = 0.75  # Adjust this value as needed
-ENEMY_HP = 10
+ENEMY_SPEED = 0.75  # Base enemy speed
+ENEMY_HP = 10  # Base enemy health points
 SPEED_SCALING_FACTOR = 0.005  # Increase in speed per kill
 HP_SCALING_FACTOR = 0.01     # Increase in HP per kill
-BULLET_DAMAGE = 10.5
 
+# Some flags for checking things
+gambling_mode = False  # Gambling mode flag (false by default)
 bulky_spawned = False
 corrupty_spawned = False
 corruption = False
 settings_open = False
 right_mouse_button_pressed = False
+paused = False
+explosion = False
 
-
+# Load base enemy frames
 enemy_frames = []
-for i in range(1, 5):  # Assuming there are 4 enemy images named bat1.png, bat2.png, bat3.png and bat4.png
-    enemy_original_frame = pygame.image.load(f"sprites/enemies/bat{i}.png").convert_alpha()
-    enemy_scaled_width = enemy_original_frame.get_width() * 2.5  # Adjust the scaling factor as needed
-    enemy_scaled_height = enemy_original_frame.get_height() * 2.5
-    enemy_scaled_frame = pygame.transform.scale(enemy_original_frame, (enemy_scaled_width, enemy_scaled_height))
-    enemy_frames.append(enemy_scaled_frame)
+for i in range(1, 5):  # There are 4 enemy images named bat1.png to bat4.png
+    enemy_original_frame = pygame.image.load(f"sprites/enemies/bat{i}.png").convert_alpha()  # Load enemy frame
+    enemy_scaled_width = enemy_original_frame.get_width() * 2.5  # Scale enemy width
+    enemy_scaled_height = enemy_original_frame.get_height() * 2.5  # Scale enemy height
+    enemy_scaled_frame = pygame.transform.scale(enemy_original_frame, (enemy_scaled_width, enemy_scaled_height))  # Scale enemy frame
+    enemy_frames.append(enemy_scaled_frame)  # Add scaled enemy frame to list
 
-# Load hit animation frames
+# Load base enemy hit frames
 hit_enemy_frames = []
-for i in range(1, 6):  # Assuming there are 5 hit frames named bathit1.png, bathit2.png ...
-    hit_enemy_original_frame = pygame.image.load(f"sprites/enemies/bathit{i}.png").convert_alpha()
-    hit_enemy_scaled_width = hit_enemy_original_frame.get_width() * 2.5
-    hit_enemy_scaled_height = hit_enemy_original_frame.get_height() * 2.5
-    hit_enemy_scaled_frame = pygame.transform.scale(hit_enemy_original_frame, (hit_enemy_scaled_width, hit_enemy_scaled_height))
-    hit_enemy_frames.append(hit_enemy_scaled_frame)
+for i in range(1, 6):  # There are 5 enemy hit images named bathit1.png to bathit5.png
+    hit_enemy_original_frame = pygame.image.load(f"sprites/enemies/bathit{i}.png").convert_alpha()  # Load enemy hit frame
+    hit_enemy_scaled_width = hit_enemy_original_frame.get_width() * 2.5  # Scale enemy hit frame width
+    hit_enemy_scaled_height = hit_enemy_original_frame.get_height() * 2.5  # Scale enemy hit frame height
+    hit_enemy_scaled_frame = pygame.transform.scale(hit_enemy_original_frame, (hit_enemy_scaled_width, hit_enemy_scaled_height))  # Scale enemy hit frame
+    hit_enemy_frames.append(hit_enemy_scaled_frame)  # Add scaled enemy hit frame to list
 
-# Load death animation frames
+# Load base enemy death frames
 death_enemy_frames = []
-for i in range(1, 6):  # Assuming there are 5 death frames named batdeath1.png, batdeath2.png ...
-    death_enemy_original_frame = pygame.image.load(f"sprites/enemies/batdeath{i}.png").convert_alpha()
-    death_enemy_scaled_width = death_enemy_original_frame.get_width() * 2.5
-    death_enemy_scaled_height = death_enemy_original_frame.get_height() * 2.5
-    death_enemy_scaled_frame = pygame.transform.scale(death_enemy_original_frame, (death_enemy_scaled_width, death_enemy_scaled_height))
-    death_enemy_frames.append(death_enemy_scaled_frame)
+for i in range(1, 6):  # Assuming there are 5 enemy death images named batdeath1.png to batdeath5.png
+    death_enemy_original_frame = pygame.image.load(f"sprites/enemies/batdeath{i}.png").convert_alpha()  # Load enemy death frame
+    death_enemy_scaled_width = death_enemy_original_frame.get_width() * 2.5  # Scale enemy death frame width
+    death_enemy_scaled_height = death_enemy_original_frame.get_height() * 2.5  # Scale enemy death frame height
+    death_enemy_scaled_frame = pygame.transform.scale(death_enemy_original_frame, (death_enemy_scaled_width, death_enemy_scaled_height))  # Scale enemy death frame
+    death_enemy_frames.append(death_enemy_scaled_frame)  # Add scaled enemy death frame to list
 
+# Load bulky enemy frames
 bulky_frames = []
-for i in range(1, 17):  # Assuming there are 3 bulky images named bulky1.png, bulky2.png, and bulky3.png
-    bulky_original_frame = pygame.image.load(f"sprites/enemies/slime{i}.png").convert_alpha()
-    bulky_scaled_width = bulky_original_frame.get_width() * 5  # Adjust the scaling factor as needed
-    bulky_scaled_height = bulky_original_frame.get_height() * 5
-    bulky_scaled_frame = pygame.transform.scale(bulky_original_frame, (bulky_scaled_width, bulky_scaled_height))
-    bulky_frames.append(bulky_scaled_frame)
+for i in range(1, 17):  # There are 17 bulky images named slime1.png to slime17.png
+    bulky_original_frame = pygame.image.load(f"sprites/enemies/slime{i}.png").convert_alpha()  # Load bulky frame
+    bulky_scaled_width = bulky_original_frame.get_width() * 5  # Scale bulky width
+    bulky_scaled_height = bulky_original_frame.get_height() * 5  # Scale bulky height
+    bulky_scaled_frame = pygame.transform.scale(bulky_original_frame, (bulky_scaled_width, bulky_scaled_height))  # Scale bulky frame
+    bulky_frames.append(bulky_scaled_frame)  # Add scaled bulky frame to list
 
 bulky_death_frames = []
-for i in range(1, 7):  # Assuming there are 6 bulky death frames named bulkydeath1.png, bulkydeath2.png ...
-    bulky_death_original_frame = pygame.image.load(f"sprites/enemies/slimedeath{i}.png").convert_alpha()
-    bulky_death_scaled_width = bulky_death_original_frame.get_width() * 3
-    bulky_death_scaled_height = bulky_death_original_frame.get_height() * 3
-    bulky_death_scaled_frame = pygame.transform.scale(bulky_death_original_frame, (bulky_death_scaled_width, bulky_death_scaled_height))
-    bulky_death_frames.append(bulky_death_scaled_frame)
+for i in range(1, 7):  # There are 6 bulky death images named slimedeath1.png to slimedeath6.png
+    bulky_death_original_frame = pygame.image.load(f"sprites/enemies/slimedeath{i}.png").convert_alpha()  # Load bulky death frame
+    bulky_death_scaled_width = bulky_death_original_frame.get_width() * 3  # Scale bulky death frame width
+    bulky_death_scaled_height = bulky_death_original_frame.get_height() * 3  # Scale bulky death frame height
+    bulky_death_scaled_frame = pygame.transform.scale(bulky_death_original_frame, (bulky_death_scaled_width, bulky_death_scaled_height))  # Scale bulky death frame
+    bulky_death_frames.append(bulky_death_scaled_frame) # Add scaled bulky death frame to list
 
 corrupty_frames = []
-for i in range(1, 5):  # Assuming there are 4 bulky images named glitch1.png, glitch2.png, and glitch3.png
-    corrupty_original_frame = pygame.image.load(f"sprites/enemies/glitch{i}.png").convert_alpha()
-    corrupty_scaled_width = corrupty_original_frame.get_width() / 7
-    corrupty_scaled_height = corrupty_original_frame.get_height() / 7
-    corrupty_scaled_frame = pygame.transform.scale(corrupty_original_frame, (corrupty_scaled_width, corrupty_scaled_height))
-    corrupty_frames.append(corrupty_scaled_frame)
+for i in range(1, 5):  # There are 4 corrupty images named glitch1.png to glitch4.png
+    corrupty_original_frame = pygame.image.load(f"sprites/enemies/glitch{i}.png").convert_alpha()  # Load corrupty frame
+    corrupty_scaled_width = corrupty_original_frame.get_width() / 7  # Scale corrupty width
+    corrupty_scaled_height = corrupty_original_frame.get_height() / 7  # Scale corrupty height
+    corrupty_scaled_frame = pygame.transform.scale(corrupty_original_frame, (corrupty_scaled_width, corrupty_scaled_height))  # Scale corrupty frame
+    corrupty_frames.append(corrupty_scaled_frame)  # Add scaled corrupty frame to list
 
 crashing_enemy_frames = []
-for i in range(1, 9):  # Assuming there are 4 bulky images named glitch1.png, glitch2.png, and glitch3.png
-    crashing_enemy_original_frame = pygame.image.load(f"sprites/enemies/skull{i}.png").convert_alpha()
-    crashing_enemy_scaled_width = crashing_enemy_original_frame.get_width() * 3 # Adjust the scaling factor as needed
-    crashing_enemy_scaled_height = crashing_enemy_original_frame.get_height() * 3
-    crashing_enemy_scaled_frame = pygame.transform.scale(crashing_enemy_original_frame, (crashing_enemy_scaled_width, crashing_enemy_scaled_height))
-    crashing_enemy_frames.append(crashing_enemy_scaled_frame)
+for i in range(1, 9):  # There are 8 crashing enemy images named skull1.png to skull8.png
+    crashing_enemy_original_frame = pygame.image.load(f"sprites/enemies/skull{i}.png").convert_alpha()  # Load crashing enemy frame
+    crashing_enemy_scaled_width = crashing_enemy_original_frame.get_width() * 3  # Scale crashing enemy width
+    crashing_enemy_scaled_height = crashing_enemy_original_frame.get_height() * 3  # Scale crashing enemy height
+    crashing_enemy_scaled_frame = pygame.transform.scale(crashing_enemy_original_frame, (crashing_enemy_scaled_width, crashing_enemy_scaled_height))  # Scale crashing enemy frame
+    crashing_enemy_frames.append(crashing_enemy_scaled_frame)  # Add scaled crashing enemy frame to list
 
-# Load experience orb image
-exp_image = pygame.image.load("sprites/exp.png")
 
-# Load regen orb image
-regen_image = pygame.image.load("sprites/regen_orb.png")
-
-paused = False
-
-# Fireball variables
+# Load fireball sounds
 fireball_sound_1 = pygame.mixer.Sound("sounds/fireball1.wav")
 fireball_sound_2 = pygame.mixer.Sound("sounds/fireball2.wav")
 fireball_sound_3 = pygame.mixer.Sound("sounds/fireball3.wav")
@@ -225,32 +226,30 @@ fireball_sound_4 = pygame.mixer.Sound("sounds/fireball4.wav")
 fireball_sound_5 = pygame.mixer.Sound("sounds/fireball5.wav")
 fireball_sound_6 = pygame.mixer.Sound("sounds/fireball6.wav")
 fireball_sound_7 = pygame.mixer.Sound("sounds/fireball7.wav")
-base_fireball_cooldown = 50
-current_fireball_cooldown = 0
-upgrades = 0
+
+base_fireball_cooldown = 50  # Base cooldown for fireball
+current_fireball_cooldown = 0  # Current cooldown for fireball
+upgrades = 0  # Number of upgrades (by default)
 
 cooldown_reduction_upgrade1 = 10  # Cooldown reduction Upgrade 1
 cooldown_reduction_upgrade2 = 5  # Cooldown reduction Upgrade 2
 cooldown_reduction_upgrade3 = 10  # Cooldown reduction Upgrade 3
-cooldown_reduction_upgrade4 = 5  # Same here
+cooldown_reduction_upgrade4 = 5  # etc etc
 cooldown_reduction_upgrade5 = 5
 cooldown_reduction_upgrade6 = -40
 cooldown_reduction_upgrade7 = 10
 
 # Settings
-# Define some settings
 volume = 0.5
+# Brightness and contrast don't actually have a function currently
 brightness = 0.5
 contrast = 0.5
-
 
 # Fonts
 menu_font = pygame.font.SysFont('Avenir', 30)
 
-#save file
-# Define the file path
-documents_path = os.path.expanduser("~/")
-file_path = os.path.join(documents_path, "savefile.bulletheaven")
+documents_path = os.path.expanduser("~/")  # Define the file path to home directory
+file_path = os.path.join(documents_path, "savefile.bulletheaven")  # Path to save file
 
 # Check if the file exists
 if os.path.exists(file_path):
@@ -265,15 +264,14 @@ if os.path.exists(file_path):
         corruption = lines[5].strip() == "True"
         current_max_exp = int(lines[6].strip())
 
+# Set background music based on corruption state. These are unaffected by volume
 if not corruption:
     music = pygame.mixer.Sound('sounds/background_music.mp3')
 else:
     music = pygame.mixer.Sound('sounds/corrupted.mp3')
 
-explosion = False
-
 def save():
-    # Write data to the file
+    # Write the current game state to the file
     with open(file_path, "w") as file:
         file.write(f"{upgrades}\n")
         file.write(f"{kills}\n")
@@ -285,59 +283,63 @@ def save():
 
 
 def draw_tiles(camera_offset_x, camera_offset_y):
+    # Draw background tiles, choosing corrupted or normal based on corruption state
     tile_to_draw = scaled_corrupted_tile_image if corruption != 0 else scaled_tile_image
     for y in range(-tile_y, height + tile_y, tile_y):
         for x in range(-tile_x, width + tile_x, tile_x):
             screen.blit(tile_to_draw, (x + camera_offset_x % tile_x - tile_x, y + camera_offset_y % tile_y - tile_y))
 
 def animate_bullet(bullet):
+    # Update bullet frame for animation
     bullet['frame'] += 1
-    if bullet['frame'] >= len(bullet_frames):
+    if bullet['frame'] >= len(bullet_frames):  # Loop back to the first frame if at the end
         bullet['frame'] = 0
-    return bullet_frames[bullet['frame']]
+    return bullet_frames[bullet['frame']]  # Return the current frame of the bullet
 
 def shoot_forwards(player_x, player_y,bullet_speed,angle, bullets):
+    # Shoot a bullet forwards from the player
     bullets.append({
-        'x': player_x,
-        'y': player_y,
-        'dx': bullet_speed * math.cos(angle),
-        'dy': bullet_speed * math.sin(angle),
-        'frame': 0  # Start animation frame
+        'x': player_x,  # Starting x position
+        'y': player_y,  # Starting y position
+        'dx': bullet_speed * math.cos(angle),  # Change in x based on speed and angle
+        'dy': bullet_speed * math.sin(angle),  # Change in y based on speed and angle
+        'frame': 0  # Start with the first frame of the bullet animation
     })
 def shoot_backwards(player_x, player_y,bullet_speed, angle, bullets):
-    # Shoot fireball in the opposite direction
+    # Shoot a bullet backwards from the player
     backwards_angle = angle + math.pi  # Calculate opposite angle
     bullets.append({
-        'x': player_x,
+        'x': player_x,  # Same here etc
         'y': player_y,
         'dx': bullet_speed * math.cos(backwards_angle),
         'dy': bullet_speed * math.sin(backwards_angle),
-        'frame': 0  # Start animation frame
+        'frame': 0
     })
 
 def shoot_right(player_x, player_y,bullet_speed, angle, bullets):
-    # Shoot fireball to the right
+    # Shoot a bullet to the right of the player
     right_angle = angle + math.pi / 2  # Angle for right direction
     bullets.append({
         'x': player_x,
         'y': player_y,
         'dx': bullet_speed * math.cos(right_angle),
         'dy': bullet_speed * math.sin(right_angle),
-        'frame': 0  # Start animation frame
+        'frame': 0
     })
 
 def shoot_left(player_x, player_y,bullet_speed, angle, bullets):
-    # Shoot fireball to the left
+    # Shoot a bullet to the left of the player
     left_angle = angle - math.pi / 2  # Angle for left direction
     bullets.append({
         'x': player_x,
         'y': player_y,
         'dx': bullet_speed * math.cos(left_angle),
         'dy': bullet_speed * math.sin(left_angle),
-        'frame': 0  # Start animation frame
+        'frame': 0
     })
 
 def shoot_up_directional(player_x, player_y,bullet_speed, angle, bullets):
+    # Shoot a bullet to the forward right direction of the player
     upright_angle = angle + math.pi / 4  # Angle for upright direction
     bullets.append({
         'x': player_x,
@@ -346,7 +348,7 @@ def shoot_up_directional(player_x, player_y,bullet_speed, angle, bullets):
         'dy': bullet_speed * math.sin(upright_angle),
         'frame': 0  # Start animation frame
     })
-    # Shoot fireball upleft
+    # Shoot a bullet to the forward left direction of the player
     upleft_angle = angle - math.pi / 4  # Angle for upleft direction
     bullets.append({
         'x': player_x,
@@ -415,7 +417,7 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
         shoot_right(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_left(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_up_directional(centered_x, centered_y, bullet_speed, angle, bullets)
-    elif upgrades == 5 or upgrades==6:
+    elif upgrades == 5 or upgrades == 6:
         fireball_sound_6.play()
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
@@ -825,10 +827,8 @@ def show_death_screen():
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    save()
                     pygame.quit()
                     sys.exit()
-
         screen.fill(BLACK)
 
         text_rect = death_text.get_rect(center=(width // 2, height // 2))
@@ -962,7 +962,7 @@ while True:
                     upgrades=1  # Apply the first fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==1:
+                elif event.key == pygame.K_RETURN and upgrades == 1:
                     upgrades=2  # Apply the second fireball upgrade
                     show_upgrade_menu = False
                     paused = False  # Unpause the game after selecting the upgrade
