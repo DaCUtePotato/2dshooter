@@ -1209,12 +1209,17 @@ while True:
         corrupty.frame_count += 1
         if corrupty.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
             corrupty.frame = (corrupty.frame + 1) % len(corrupty_frames)
+
         if corrupty.x > player_x:
             # Enemy is coming from the left side of the screen, flip the sprite
             corrupty_image = pygame.transform.flip(corrupty_frames[corrupty.frame], True, False)
         else:
             # Enemy is coming from the right side of the screen, use the original sprite
             corrupty_image = corrupty_frames[corrupty.frame]
+
+        # Scale the image to the size defined by corrupty.height and corrupty.width
+        corrupty_image = pygame.transform.scale(corrupty_image, (corrupty.width, corrupty.height))
+
         screen.blit(corrupty_image, (corrupty.x + camera_offset_x, corrupty.y + camera_offset_y))
 
     for bullet in bullets:
