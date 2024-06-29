@@ -961,159 +961,143 @@ while main_menu:
     screen.blit(cursor_image, cursor_pos)
     pygame.display.flip()
     clock.tick(FPS)
-# Game loop
 show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
 while True:
-    cursor_pos = pygame.mouse.get_pos()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            save()
-            pygame.quit()
-            sys.exit()
+    cursor_pos = pygame.mouse.get_pos()  # Get the current position of the mouse cursor
+    for event in pygame.event.get():  # Event loop to handle different events
+        if event.type == pygame.QUIT:  # If the event is a quit event
+            save()  # Save the game state
+            pygame.quit()  # Quit pygame
+            sys.exit()  # Exit the program
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+        if event.type == pygame.KEYDOWN:  # If a key is pressed
+            if event.key == pygame.K_ESCAPE:  # If the key pressed is ESC
                 paused = not paused  # Toggle pause state
-                open_menu()
+                open_menu()  # Open the game menu
 
-            if event.key == pygame.K_g:
-                gambling_mode = True
-                print("You are now gambling!!")
+            if event.key == pygame.K_g:  # If the key pressed is G
+                gambling_mode = True  # Enable gambling mode
+                print("You are now gambling!!")  # Print gambling mode message
 
             if show_upgrade_menu:  # Handle upgrade selection
-                if event.key == pygame.K_RETURN and upgrades==0:
-                    upgrades=1  # Apply the first fireball upgrade
-                    show_upgrade_menu = False
+                if event.key == pygame.K_RETURN and upgrades == 0:  # If Enter is pressed and no upgrades are applied
+                    upgrades = 1  # Apply the first fireball upgrade
+                    show_upgrade_menu = False  # Hide upgrade menu
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades == 1:
-                    upgrades=2  # Apply the second fireball upgrade
-                    show_upgrade_menu = False
+                elif event.key == pygame.K_RETURN and upgrades == 1:  # If Enter is pressed and first upgrade is applied
+                    upgrades = 2  # Apply the second fireball upgrade
+                    show_upgrade_menu = False  # Hide upgrade menu
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==2:
-                    upgrades=3  # Apply the third fireball upgrade
-                    show_upgrade_menu = False
+                elif event.key == pygame.K_RETURN and upgrades == 2:  # If Enter is pressed and second upgrade is applied
+                    upgrades = 3  # Apply the third fireball upgrade
+                    show_upgrade_menu = False  # Hide upgrade menu
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==3:
-                    upgrades=4  # Apply the third fireball upgrade
-                    show_upgrade_menu = False
+                elif event.key == pygame.K_RETURN and upgrades == 3:  # If Enter is pressed and third upgrade is applied
+                    upgrades = 4  # Apply the fourth fireball upgrade
+                    show_upgrade_menu = False  # Hide upgrade menu
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==4:
-                    upgrades=5  # Apply the third fireball upgrade
-                    show_upgrade_menu = False
+                elif event.key == pygame.K_RETURN and upgrades == 4:  # If Enter is pressed and fourth upgrade is applied
+                    upgrades = 5  # Apply the fifth fireball upgrade
+                    show_upgrade_menu = False  # Hide upgrade menu
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==5:
-                    upgrades=6  # Apply the sixth fireball upgrade
-                    show_upgrade_menu = False
+                elif event.key == pygame.K_RETURN and upgrades == 5:  # If Enter is pressed and fifth upgrade is applied
+                    upgrades = 6  # Apply the sixth fireball upgrade
+                    show_upgrade_menu = False  # Hide upgrade menu
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades==6:
-                    upgrades=7  # Apply the sixth fireball upgrade
-                    show_upgrade_menu = False
+                elif event.key == pygame.K_RETURN and upgrades == 6:  # If Enter is pressed and sixth upgrade is applied
+                    upgrades = 7  # Apply the seventh fireball upgrade
+                    show_upgrade_menu = False  # Hide upgrade menu
                     paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN:
-                    show_upgrade_menu = False
-                    paused = False
+                elif event.key == pygame.K_RETURN:  # If Enter is pressed but no specific upgrade is targeted
+                    show_upgrade_menu = False  # Hide upgrade menu
+                    paused = False  # Unpause the game
+
     if not paused and not show_upgrade_menu:  # Only update game state if not paused and upgrade menu is not shown
-        # Update player input and game state
-        player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)
-        keys = pygame.key.get_pressed()
+        player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)  # Define player rectangle
+        keys = pygame.key.get_pressed()  # Get the state of all keyboard keys
 
-        # Calculate movement vector
-        move_x, move_y = 0, 0
-        if keys[pygame.K_a]:
-            move_x -= player_speed
-            rendering = "left"
-        if keys[pygame.K_d]:
-            move_x += player_speed
-            rendering = "right"
-        if keys[pygame.K_w]:
-            move_y -= player_speed
-            rendering = "up"
-        if keys[pygame.K_s]:
-            move_y += player_speed
-            rendering = "down"
+        move_x, move_y = 0, 0  # Initialize movement vector
+        if keys[pygame.K_a]:  # If A key is pressed
+            move_x -= player_speed  # Move player left
+            rendering = "left"  # Set rendering direction to left
+        if keys[pygame.K_d]:  # If D key is pressed
+            move_x += player_speed  # Move player right
+            rendering = "right"  # Set rendering direction to right
+        if keys[pygame.K_w]:  # If W key is pressed
+            move_y -= player_speed  # Move player up
+            rendering = "up"  # Set rendering direction to up
+        if keys[pygame.K_s]:  # If S key is pressed
+            move_y += player_speed  # Move player down
+            rendering = "down"  # Set rendering direction to down
 
-        # Normalize the movement vector to prevent faster diagonal movement
-        if move_x != 0 and move_y != 0:
+        if move_x != 0 and move_y != 0:  # Normalize the movement vector to prevent faster diagonal movement
             move_x *= math.sqrt(0.5)
             move_y *= math.sqrt(0.5)
 
-        # Update player position
-        player_x += move_x
-        player_y += move_y
-        center_x = player_x + player_width / 2
-        center_y = player_y + player_height / 4
+        player_x += move_x  # Update player x position
+        player_y += move_y  # Update player y position
+        center_x = player_x + player_width / 2  # Calculate player center x position
+        center_y = player_y + player_height / 4  # Calculate player center y position
 
-        # Calculate camera offset
-        camera_offset_x = width // 2 - player_x
-        camera_offset_y = height // 2 - player_y
+        camera_offset_x = width // 2 - player_x  # Calculate camera offset x
+        camera_offset_y = height // 2 - player_y  # Calculate camera offset y
 
-        # Check for right mouse button press
-        if pygame.mouse.get_pressed()[2] and not paused and not show_upgrade_menu and explosion_cooldown <= 0:
+        if pygame.mouse.get_pressed()[2] and not paused and not show_upgrade_menu and explosion_cooldown <= 0:  # Check for right mouse button press
             if not right_mouse_button_pressed:
                 right_mouse_button_pressed = True
                 cursor_x, cursor_y = pygame.mouse.get_pos()
-                spawn_explosion(cursor_x, cursor_y, camera_offset_x, camera_offset_y)
-        # Decrease the current fireball cooldown
-        if current_fireball_cooldown > 0:
+                spawn_explosion(cursor_x, cursor_y, camera_offset_x, camera_offset_y)  # Spawn an explosion at the cursor position
+
+        if current_fireball_cooldown > 0:  # Decrease the current fireball cooldown
             current_fireball_cooldown -= 1
 
-        # Automatically shoot fireballs if the 7th upgrade is active
-        if upgrades==7 and current_fireball_cooldown == 0:
+        if upgrades == 7 and current_fireball_cooldown == 0:  # Automatically shoot fireballs if the 7th upgrade is active
             shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
 
-        # Update frame count and current frame if the player is moving
-        if move_x != 0 or move_y != 0:
+        if move_x != 0 or move_y != 0:  # Update frame count and current frame if the player is moving
             frame_count += 1
             if frame_count % 2 == 0:  # Adjust frame rate of animation here
                 current_frame = (current_frame + 1) % 3  # Assuming each direction has 3 frames
 
-        if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and upgrades!=7 and current_fireball_cooldown==0:
-            shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
+        if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and upgrades != 7 and current_fireball_cooldown == 0:  # Check for left mouse button press
+            shoot_base_fireball(player_x, player_y, bullets, bullet_speed)  # Shoot a fireball
 
-        # Update bullet positions and animate
-        for bullet in bullets:
+        for bullet in bullets:  # Update bullet positions and animate
             bullet['x'] += bullet['dx']
             bullet['y'] += bullet['dy']
             bullet_image = animate_bullet(bullet)  # Animate bullet
             angle = math.atan2(-bullet['dy'], bullet['dx'])  # Calculate angle for rotation
-            rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
-            screen.blit(rotated_bullet_image, (bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
+            rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))  # Rotate bullet image
+            screen.blit(rotated_bullet_image, (bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))  # Draw bullet
 
-        # Filter bullets that go off-screen
-        bullets = [bullet for bullet in bullets if
+        bullets = [bullet for bullet in bullets if  # Filter bullets that go off-screen
                    player_x - width // 2 < bullet['x'] < player_x + width // 2 and player_y - height // 2 < bullet[
                        'y'] < player_y + height // 2]
 
-        # Spawn new enemies randomly
-        if random.randint(0, 100) < 3:
+        if random.randint(0, 100) < 3:  # Spawn new enemies randomly
             spawn_enemy(player_x, player_y)
-        if kills > 100 and not corruption and random.randint(69, 70) == 69:
+        if kills > 100 and not corruption and random.randint(69, 70) == 69:  # Spawn crashing enemy under certain conditions
             spawn_crashing_enemy(player_x, player_y)
-        if kills >= 50 and not bulky_spawned and not corruption:
+        if kills >= 50 and not bulky_spawned and not corruption:  # Spawn bulky enemy under certain conditions
             spawn_bulky(player_x, player_y)
-        if kills >= 50 and corruption and not corrupty_spawned:
+        if kills >= 50 and corruption and not corrupty_spawned:  # Spawn corrupty enemy under certain conditions
             spawn_corrupty(player_x, player_y)
 
-        # Update enemy positions and check for collisions with the player
-        for crashing_enemy in crashing_enemies:
+        for crashing_enemy in crashing_enemies:  # Update enemy positions and check for collisions with the player
             fak_x, fak_y = player_pos_on_screen
-            distance_y, distance_x = fak_y- crashing_enemy.y, fak_x-crashing_enemy.x  # Calculate the vertical distance between player and enemy
-            #distance_x = player_x - crashing_enemy.x  # Calculate the horizontal distance between player and enemy
+            distance_y, distance_x = fak_y - crashing_enemy.y, fak_x - crashing_enemy.x  # Calculate the vertical and horizontal distance between player and enemy
 
-            # Calculate the angle between the player and the enemy
-            angle = math.atan2(distance_y, distance_x)
+            angle = math.atan2(distance_y, distance_x)  # Calculate the angle between the player and the enemy
 
-            # Calculate the movement components based on the angle and enemy speed
-            move_x = ENEMY_SPEED * math.cos(angle)
+            move_x = ENEMY_SPEED * math.cos(angle)  # Calculate the movement components based on the angle and enemy speed
             move_y = ENEMY_SPEED * math.sin(angle)
 
-            # Update enemy position
-            crashing_enemy.x += move_x
+            crashing_enemy.x += move_x  # Update enemy position
             crashing_enemy.y += move_y
 
-            if (player_x-25 < crashing_enemy.x + crashing_enemy.width and player_x-25 + player_width > crashing_enemy.x and
-                    player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):
-                if i_frames_counter == i_frames:
+            if (player_x - 25 < crashing_enemy.x + crashing_enemy.width and player_x - 25 + player_width > crashing_enemy.x and
+                    player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):  # Check for collisions with the player
+                if i_frames_counter == i_frames:  # Check for invincibility frames
                     player_hp -= 5
                     i_frames_counter = 0
             # Check for collisions with bullets
