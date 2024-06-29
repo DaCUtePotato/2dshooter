@@ -535,9 +535,66 @@ def start_game():
     print("Starting Game...")
 
 
-def open_settings():
+def open_main_settings():
     global volume, brightness, contrast
     bullets.remove(bullet)
+    settings = [
+        {"name": "Volume", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Brightness", "value": brightness, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "Contrast", "value": contrast, "min": 0.0, "max": 1.0, "step": 0.1},
+    ]
+
+    selected_index = 0
+    settings_open = True
+    while settings_open:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                save()
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    settings_open = False
+                if event.key == pygame.K_w:
+                    selected_index = (selected_index - 1) % len(settings)
+                if event.key == pygame.K_s:
+                    selected_index = (selected_index + 1) % len(settings)
+                if event.key == pygame.K_d:
+                    settings[selected_index]["value"] = min(settings[selected_index]["value"] + settings[selected_index]["step"], settings[selected_index]["max"])
+                if event.key == pygame.K_a:
+                    settings[selected_index]["value"] = max(settings[selected_index]["value"] - settings[selected_index]["step"], settings[selected_index]["min"])
+
+        # Update settings values
+        volume = settings[0]["value"]
+        brightness = settings[1]["value"]
+        contrast = settings[2]["value"]
+
+        # Update volume for all sounds
+        pickup_sound.set_volume(volume)
+        level_up_sound.set_volume(volume)
+        gambling_sound.set_volume(volume)
+        pickup_sound_regen.set_volume(volume)
+        fireball_sound_1.set_volume(volume)
+        fireball_sound_2.set_volume(volume)
+        fireball_sound_3.set_volume(volume)
+        fireball_sound_4.set_volume(volume)
+        fireball_sound_5.set_volume(volume)
+        fireball_sound_6.set_volume(volume)
+        fireball_sound_7.set_volume(volume)
+
+        screen.fill(BLACK)
+        draw_tiles(0, 0)
+
+        for i, setting in enumerate(settings):
+            color = YELLOW if i == selected_index else WHITE
+            setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
+            screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+def open_settings():
+    global volume, brightness, contrast
     settings = [
         {"name": "Volume", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
         {"name": "Brightness", "value": brightness, "min": 0.0, "max": 1.0, "step": 0.1},
@@ -600,6 +657,53 @@ def quit_game():
     pygame.quit()
     sys.exit()
 
+def open_menu():
+    global paused
+    options = [
+        {"name": "Continue"},
+        {"name": "Settings"},
+        {"name": "Quit"},
+    ]
+
+    selected_index = 0
+    menu_open = True
+
+    while menu_open:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                save()
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    menu_open = False
+                if event.key == pygame.K_w:
+                    selected_index = (selected_index - 1) % len(options)
+                if event.key == pygame.K_s:
+                    selected_index = (selected_index + 1) % len(options)
+                if event.key == pygame.K_RETURN:
+                    if selected_index == 0:  # Continue
+                        paused = False
+                        menu_open = False
+                    elif selected_index == 1:  # Settings
+                        open_settings()
+                        menu_open = False
+                    elif selected_index == 2:  # Quit
+                        save()
+                        pygame.quit()
+                        sys.exit()
+
+        screen.fill((0, 0, 0))
+        draw_tiles(0, 0)
+
+        for i, option in enumerate(options):
+            color = (255, 255, 0) if i == selected_index else (255, 255, 255)
+            option_text = menu_font.render(option["name"], True, color)
+            screen.blit(option_text, (width // 2 - option_text.get_width() // 2, height // 2 - 50 + i * 40))
+
+        pygame.display.flip()
+        clock.tick(60)
+
 main_menu = True
 while main_menu:
     cursor_pos = pygame.mouse.get_pos()
@@ -658,6 +762,7 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 paused = not paused  # Toggle pause state
+                open_menu()
 
             if event.key == pygame.K_g:
                 gambling_mode = True
