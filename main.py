@@ -1035,6 +1035,7 @@ while True:
                     if crashing_enemy.hp <= 0:
                         crashing_enemies.remove(crashing_enemy)
                         corruption = True
+                        kills = 0
                         save()
                         sys.exit("The corruption is spreading...")
         for enemy in enemies:
