@@ -366,7 +366,8 @@ def shoot_up_directional(player_x, player_y,bullet_speed, angle, bullets):
     })
 
 def shoot_down_directional(player_x, player_y,bullet_speed, angle, bullets):
-    downright_angle = angle + 3 * math.pi / 4  # Angle for upright direction
+    # Shoot a bullet to the backwards right direction of the player
+    downright_angle = angle + 3 * math.pi / 4  # Angle for downright direction
     bullets.append({
         'x': player_x,
         'y': player_y,
@@ -374,8 +375,8 @@ def shoot_down_directional(player_x, player_y,bullet_speed, angle, bullets):
         'dy': bullet_speed * math.sin(downright_angle),
         'frame': 0  # Start animation frame
     })
-    # Shoot fireball upleft
-    downleft_angle = angle - 3 * math.pi / 4  # Angle for upleft direction
+    # Shoot a bullet to the backwards left direction of the player
+    downleft_angle = angle - 3 * math.pi / 4  # Angle for downleft direction
     bullets.append({
         'x': player_x,
         'y': player_y,
@@ -385,39 +386,39 @@ def shoot_down_directional(player_x, player_y,bullet_speed, angle, bullets):
     })
 
 def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
-    global current_fireball_cooldown
-    centered_x, centered_y = player_x+player_width//2-25, player_y+player_height//4
-    mouseX, mouseY = pygame.mouse.get_pos()
-    angle = math.atan2(mouseY-height//2-player_height//4, mouseX-width//2-player_width//2+25)  # Use the center of the screen for angle calculation
-    if upgrades >= 7:  # If the 7th upgrade is active, shoot upwards
-        up = -math.pi / 2  # Angle for shooting upwards
+    global current_fireball_cooldown # Use global variable for cooldown
+    centered_x, centered_y = player_x+player_width//2-25, player_y+player_height//4  # Center of player
+    mouseX, mouseY = pygame.mouse.get_pos()  # Get mouse position
+    angle = math.atan2(mouseY-height//2-player_height//4, mouseX-width//2-player_width//2+25)  # Use the center of the screen for angle calculation of the fireball
+    if upgrades >= 7:  # If the 7th upgrade is active, shoot in all directions
+        up = -math.pi / 2  # Angle for automatically aiming upwards
         shoot_forwards(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_right(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_left(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_up_directional(centered_x, centered_y, bullet_speed, up, bullets)
         shoot_down_directional(centered_x, centered_y, bullet_speed, up, bullets)
-        fireball_sound_7.play()
+        fireball_sound_7.play()  # Play fireball sound 7
 
-    if upgrades == 0:
+    if upgrades == 0:  # If no upgrade is active, shoot forwards
+        fireball_sound_1.play()  # Play fireball sound 1
         shoot_forwards(centered_x, centered_y, bullet_speed,angle, bullets)
-        fireball_sound_1.play()
-    elif upgrades == 1:
+    elif upgrades == 1:  # If the 1st upgrade is active, shoot forwards and backwards
         fireball_sound_2.play()
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
-    elif upgrades == 2:
-        fireball_sound_3.play()
+    elif upgrades == 2:  # If the 2nd upgrade is active, shoot forwards, backwards and right
+        fireball_sound_3.play()  # Play fireball sound 2
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_right(centered_x, centered_y, bullet_speed, angle, bullets)
-    elif upgrades == 3:
+    elif upgrades == 3:  # If the 3rd upgrade is active, shoot forwards, backwards, right and to the left
         fireball_sound_4.play()
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_right(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_left(centered_x, centered_y, bullet_speed, angle, bullets)
-    elif upgrades == 4:
+    elif upgrades == 4:  # etc. you get the idea
         fireball_sound_5.play()
         shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
         shoot_backwards(centered_x, centered_y, bullet_speed, angle, bullets)
@@ -436,13 +437,13 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     # Apply the reduced cooldown based on the upgrades
     cooldown_reduction = 0
     if upgrades == 1:
-        cooldown_reduction += cooldown_reduction_upgrade1
+        cooldown_reduction += cooldown_reduction_upgrade1  # Add cooldown reduction for upgrade 1
     if upgrades == 2:
-        cooldown_reduction += cooldown_reduction_upgrade2
+        cooldown_reduction += cooldown_reduction_upgrade2  # Add cooldown reduction for upgrade 2
     if upgrades == 3:
-        cooldown_reduction += cooldown_reduction_upgrade3
+        cooldown_reduction += cooldown_reduction_upgrade3  # Add cooldown reduction for upgrade 3
     if upgrades == 4:
-        cooldown_reduction += cooldown_reduction_upgrade4
+        cooldown_reduction += cooldown_reduction_upgrade4  # etc. you get the idea
     if upgrades == 5:
         cooldown_reduction += cooldown_reduction_upgrade5
     if upgrades == 6:
@@ -452,59 +453,61 @@ def shoot_base_fireball(player_x, player_y, bullets, bullet_speed):
     current_fireball_cooldown = base_fireball_cooldown - cooldown_reduction  # Apply reduced cooldown
 
 def draw_kill_counter(kills):
-    font = pygame.font.SysFont('Avenir', 15)
-    kills_text = font.render(f"Kills: {kills}", True, RED)
-    text_width, text_height = font.size(f"Kills: {kills}")
-    text_x = (width - text_width) // 3
-    text_y = 20
-    screen.blit(kills_text, (text_x, text_y))
+    # Draw the kill counter on the screen
+    font = pygame.font.SysFont('Avenir', 15)  # Define font
+    kills_text = font.render(f"Kills: {kills}", True, RED)  # Render kill text
+    text_width, text_height = font.size(f"Kills: {kills}")  # Get text dimensions
+    text_x = (width - text_width) / 20  # Calculate x position
+    text_y = 40  # Set y position
+    screen.blit(kills_text, (text_x, text_y))  # Draw kill counter
 
 def draw_explosion_cooldown(explosion_cooldown):
-    font = pygame.font.SysFont('Avenir', 15)
+    # Draw the explosion cooldown on the screen
+    font = pygame.font.SysFont('Avenir', 15)  # Same here as with draw_kill_counter
     text = font.render(f"Explosion Cooldown: {explosion_cooldown}", True, WHITE)
     text_width, text_height = font.size(f"Explosion Cooldown: {explosion_cooldown}")
     text_x = (width - text_width)
-    text_y =  height - 30
+    text_y = height - 30
     screen.blit(text, (text_x, text_y))
 
 def draw_coordinates(player_x, player_y):
-    font = pygame.font.SysFont('Avenir', 15)
+    # Draw the player's coordinates on the screen
+    font = pygame.font.SysFont('Avenir', 15)  # Same here as with draw_kill_counter
     coordinate_text = font.render(f"Coordinates: {int(player_x)}:{int(player_y)}", True, WHITE)
     text_width, text_height = font.size(f"Coordinates: {coordinate_text}")
-    text_x = (width - text_width)
-    text_y = 20
+    text_x = (width - text_width) / 20 * 24
+    text_y = 40
     screen.blit(coordinate_text, (text_x, text_y))
 
 # level up function
 def level_up():
     global player_level, exp, current_max_exp, paused, show_upgrade_menu  # Declare global variables
-    player_level += 1
+    player_level += 1  # Increase player level
     exp -= current_max_exp  # Subtract current max exp from player's exp
     current_max_exp = int(current_max_exp * 1.3)  # Increase current max exp exponentially for the next level
-    paused = True
+    paused = True  # Pause the game
     show_upgrade_menu = True  # Show the upgrade menu
     if gambling_mode:
-        gambling_sound.play()
-    elif gambling_mode == False:
-        level_up_sound.play()
+        gambling_sound.play()  # Play gambling sound if gambling mode is active
+    else:
+        level_up_sound.play()  # Play level up sound if not in gambling mode
 
 # Function to draw experience bar
 def draw_exp_bar():
-    global menu_font
-    max_exp = current_max_exp
+    max_exp = current_max_exp  # Maximum experience for current level
     exp_bar_width = width - 20  # Define the width of the experience bar
-    exp_bar_height = 20
+    exp_bar_height = 20  # Define the height of the experience bar
     exp_indicator_width = int(exp / max_exp * exp_bar_width)  # Calculate the width of the experience indicator
 
     pygame.draw.rect(screen, BLUE, (10, 10, exp_bar_width, exp_bar_height))  # Blue background
     pygame.draw.rect(screen, GREEN, (10, 10, exp_indicator_width, exp_bar_height))  # Green indicator
 
-    font = pygame.font.SysFont('Avenir', 15)
-    exp_text = font.render(f"EXP: {exp}/{max_exp}", True, WHITE)
-    text_width, text_height = font.size(f"EXP: {exp}/{max_exp}")
-    text_x = (width - text_width) // 2
-    text_y = exp_bar_height + 20
-    screen.blit(exp_text, (text_x, text_y))
+    font = pygame.font.SysFont('Avenir', 15)  # Define font
+    exp_text = font.render(f"EXP: {exp}/{max_exp}", True, WHITE)  # Render exp text
+    text_width, text_height = font.size(f"EXP: {exp}/{max_exp}")  # Get text dimensions
+    text_x = (width - text_width) // 2  # Calculate x position
+    text_y = exp_bar_height + 20  # Set y position
+    screen.blit(exp_text, (text_x, text_y))  # Draw exp text
 
 # Function to spawn enemies
 def spawn_enemy(player_x, player_y):
@@ -1556,19 +1559,19 @@ while True:
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text5, (text_x, text_y))
-        elif upgrades == 5: #if player has 5 upgrades and goes to the 6th one, say "Fireball goes through enemies" on-screen
+        elif upgrades == 5: # If player has 5 upgrades and goes to the 6th one, say "Fireball goes through enemies" on-screen
             upgrade_text6 = menu_font.render("6. Fireball goes through enemies", True, WHITE)
             text_width, text_height = menu_font.size("6. Fireball goes through enemies")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text6, (text_x, text_y))
-        elif upgrades == 6: #if player has 6 upgrades and is going to the seventh, say "automode" on-screen
+        elif upgrades == 6: # If player has 6 upgrades and is going to the seventh, say "Automode" on-screen
             upgrade_text7 = menu_font.render("7. Automode", True, WHITE)
             text_width, text_height = menu_font.size("7. Automode")
             text_x = (width - text_width) // 2
             text_y = (height - text_height) // 2 + 50
             screen.blit(upgrade_text7, (text_x, text_y))
-        elif upgrades >= 7: # if player has more upgrades than 7 say "So um funny story, I'm out of upgrade ideas..."
+        elif upgrades >= 7: # If player has more upgrades than 7 say "So um funny story, I'm out of upgrade ideas..."
             out_of_upgrades_text = menu_font.render("So um funny story, I'm out of upgrade ideas...", True, WHITE)
             text_width, text_height = menu_font.size("So um funny story, I'm out of upgrade ideas...")
             text_x = (width - text_width) // 2
