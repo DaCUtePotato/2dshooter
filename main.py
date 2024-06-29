@@ -648,7 +648,7 @@ explosion_y = 0
 explosion_frame_index = 0
 explosion_frame_duration = 4
 explosion_cooldown = 1000
-EXPLOSION_DAMAGE = 1000
+EXPLOSION_DAMAGE = 25
 explosion_radius = 50  # Adjust this based on the size of your explosion
 
 # Check for collisions with the explosion
@@ -689,7 +689,6 @@ def check_explosion_collisions(explosion_x, explosion_y):
                 corrupties.remove(corrupty)
                 kills += 1
                 active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
-                enemy_exp = random.randint(1, 5)
                 print("You've freed us all!")
 
     # Check collision with crashing_enemies
@@ -701,6 +700,7 @@ def check_explosion_collisions(explosion_x, explosion_y):
                 kills += 1
                 crashing_enemies.remove(crashing_enemy)
                 corruption = True
+                kills = 0
                 save()
                 sys.exit("The corruption is spreading...")
 
@@ -1160,8 +1160,7 @@ while True:
 
                     if corrupty.hp <= 0:
                         corrupties.remove(corrupty)
-                        active_exp_orbs.append(
-                            {'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
+                        active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         print("You've freed us all!!")
                         kills += 1
@@ -1171,7 +1170,7 @@ while True:
             player_hp = 100
             exp = 0
             player_level = 1
-            corruption = 0
+            corruption = False
             current_max_exp = 30
             save()
             sys.exit("You died...")
@@ -1298,8 +1297,8 @@ while True:
 
             if bulky.death_frame >= len(bulky_death_frames) - 1:  # Ensure the death animation has completed
                 bulkies_to_remove.append(bulky)
-                active_exp_orbs.append({'size': enemy_exp / 3, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
-                enemy_exp = random.randint(10, 50)
+                active_exp_orbs.append({'size': enemy_exp * 2, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
+                enemy_exp = random.randint(30, 50)
                 kills += 1
 
             else:
