@@ -689,7 +689,9 @@ def check_explosion_collisions(explosion_x, explosion_y):
                 corrupties.remove(corrupty)
                 kills += 1
                 active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
+                enemy_exp = random.randint(1, 5)
                 print("You've freed us all!")
+                show_victory_screen()
 
     # Check collision with crashing_enemies
     for crashing_enemy in crashing_enemies:
@@ -770,6 +772,37 @@ def quit_game():
     save()
     pygame.quit()
     sys.exit()
+
+
+def show_victory_screen():
+    victory_font = pygame.font.SysFont('Avenir', 50)
+    victory_text = victory_font.render("Victory!", True, YELLOW)
+    sub_text = menu_font.render("Press ESC to Exit", True, WHITE)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                save()
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    save()
+                    pygame.quit()
+                    sys.exit()
+
+        screen.fill(BLACK)
+        draw_tiles(0, 0)
+
+        text_rect = victory_text.get_rect(center=(width // 2, height // 2))
+        sub_text_rect = sub_text.get_rect(center=(width // 2, height // 2 + 60))
+
+        screen.blit(victory_text, text_rect)
+        screen.blit(sub_text, sub_text_rect)
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
 
 # Main menu handling function
 def open_menu():
@@ -1162,6 +1195,7 @@ while True:
                         active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
                         enemy_exp = random.randint(1, 5)
                         print("You've freed us all!!")
+                        show_victory_screen()
                         kills += 1
         if player_hp <= 0:
             upgrades = 0
