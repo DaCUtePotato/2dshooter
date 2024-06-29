@@ -450,56 +450,57 @@ def draw_kill_counter(kills):
     font = pygame.font.SysFont('Avenir', 15)  # Define font
     kills_text = font.render(f"Kills: {kills}", True, RED)  # Render kill text
     text_width, text_height = font.size(f"Kills: {kills}")  # Get text dimensions
-    text_x = (width - text_width) / 20  # Get text dimensions
-    text_y = 40
-    screen.blit(kills_text, (text_x, text_y))
+    text_x = (width - text_width) / 20  # Calculate x position
+    text_y = 40  # Set y position
+    screen.blit(kills_text, (text_x, text_y))  # Draw kill counter
 
 def draw_explosion_cooldown(explosion_cooldown):
-    font = pygame.font.SysFont('Avenir', 15)
-    text = font.render(f"Explosion Cooldown: {explosion_cooldown}", True, WHITE)
-    text_width, text_height = font.size(f"Explosion Cooldown: {explosion_cooldown}")
-    text_x = (width - text_width)
-    text_y =  height - 30
-    screen.blit(text, (text_x, text_y))
+    # Draw the explosion cooldown on the screen
+    font = pygame.font.SysFont('Avenir', 15)  # Define font
+    text = font.render(f"Explosion Cooldown: {explosion_cooldown}", True, WHITE)  # Render cooldown text
+    text_width, text_height = font.size(f"Explosion Cooldown: {explosion_cooldown}")  # Get text dimensions
+    text_x = (width - text_width)  # Calculate x position
+    text_y = height - 30  # Set y position
+    screen.blit(text, (text_x, text_y))  # Draw explosion cooldown
 
 def draw_coordinates(player_x, player_y):
-    font = pygame.font.SysFont('Avenir', 15)
-    coordinate_text = font.render(f"Coordinates: {int(player_x)}:{int(player_y)}", True, WHITE)
-    text_width, text_height = font.size(f"Coordinates: {coordinate_text}")
-    text_x = (width - text_width) / 20  * 24
-    text_y = 40
-    screen.blit(coordinate_text, (text_x, text_y))
+    # Draw the player's coordinates on the screen
+    font = pygame.font.SysFont('Avenir', 15)  # Define font
+    coordinate_text = font.render(f"Coordinates: {int(player_x)}:{int(player_y)}", True, WHITE)  # Render coordinates text
+    text_width, text_height = font.size(f"Coordinates: {coordinate_text}")  # Get text dimensions
+    text_x = (width - text_width) / 20 * 24  # Calculate x position
+    text_y = 40  # Set y position
+    screen.blit(coordinate_text, (text_x, text_y))  # Draw coordinates
 
 # level up function
 def level_up():
     global player_level, exp, current_max_exp, paused, show_upgrade_menu  # Declare global variables
-    player_level += 1
+    player_level += 1 # Increase player level
     exp -= current_max_exp  # Subtract current max exp from player's exp
     current_max_exp = int(current_max_exp * 1.3)  # Increase current max exp exponentially for the next level
-    paused = True
+    paused = True  # Pause the game
     show_upgrade_menu = True  # Show the upgrade menu
     if gambling_mode:
-        gambling_sound.play()
-    elif gambling_mode == False:
-        level_up_sound.play()
+        gambling_sound.play()  # Play gambling sound if gambling mode is active
+    else:
+        level_up_sound.play()  # Play level up sound if not in gambling mode
 
 # Function to draw experience bar
 def draw_exp_bar():
-    global menu_font
-    max_exp = current_max_exp
+    max_exp = current_max_exp  # Maximum experience for current level
     exp_bar_width = width - 20  # Define the width of the experience bar
-    exp_bar_height = 20
+    exp_bar_height = 20  # Define the height of the experience bar
     exp_indicator_width = int(exp / max_exp * exp_bar_width)  # Calculate the width of the experience indicator
 
     pygame.draw.rect(screen, BLUE, (10, 10, exp_bar_width, exp_bar_height))  # Blue background
     pygame.draw.rect(screen, GREEN, (10, 10, exp_indicator_width, exp_bar_height))  # Green indicator
 
-    font = pygame.font.SysFont('Avenir', 15)
-    exp_text = font.render(f"EXP: {exp}/{max_exp}", True, WHITE)
-    text_width, text_height = font.size(f"EXP: {exp}/{max_exp}")
-    text_x = (width - text_width) // 2
-    text_y = exp_bar_height + 20
-    screen.blit(exp_text, (text_x, text_y))
+    font = pygame.font.SysFont('Avenir', 15)  # Define font
+    exp_text = font.render(f"EXP: {exp}/{max_exp}", True, WHITE)  # Render exp text
+    text_width, text_height = font.size(f"EXP: {exp}/{max_exp}")  # Get text dimensions
+    text_x = (width - text_width) / 2  # Calculate x position
+    text_y = exp_bar_height + 20   # Set y position
+    screen.blit(exp_text, (text_x, text_y))  # Draw exp text
 
 # Function to spawn enemies
 def spawn_enemy(player_x, player_y):
