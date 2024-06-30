@@ -109,6 +109,8 @@ player_hp = 100  # Player health points
 i_frames_counter = 0  # Invincibility frames counter
 i_frames = 10  # Number of invincibility frames
 kills = 0  # Kill count
+speed_scaling_factor = 1.3
+dmg_scaling_factor = 1.3
 
 # Experience system
 exp = 0  # Player experience points
@@ -154,10 +156,10 @@ ENEMY_HP = 10  # Base enemy health points
 
 # Difficulty settings mapping
 difficulty_levels = [
-    {"name": "Easy", "hp_scaling_factor": 0.01, "speed_scaling_factor": 0.0025},
-    {"name": "Medium", "hp_scaling_factor": 0.0143, "speed_scaling_factor": 0.005},
-    {"name": "Hard", "hp_scaling_factor": 0.02, "speed_scaling_factor": 0.01},
-    {"name": "Ultra Hard", "hp_scaling_factor": 0.05, "speed_scaling_factor": 0.02}
+    {"name": "Easy", "hp_scaling_factor_enemies": 0.01, "speed_scaling_factor_enemies": 0.0025, "speed_scaling_factor_player" : 1.5, "dmg_scaling_factor_player" : 1.5},
+    {"name": "Medium", "hp_scaling_factor_enemies": 0.0143, "speed_scaling_factor_enemies": 0.005, "speed_scaling_factor_player":1.3, "dmg_scaling_factor_player":1.3},
+    {"name": "Hard", "hp_scaling_factor_enemies": 0.02, "speed_scaling_factor_enemies": 0.01, "speed_scaling_factor_player": 1.2, "dmg_scaling_factor_player": 1.2},
+    {"name": "Ultra Hard", "hp_scaling_factor_enemies": 0.05, "speed_scaling_factor_enemies": 0.02, "speed_scaling_factor_player": 1.1, "dmg_scaling_factor_player":1.1}
 ]
 SPEED_SCALING_FACTOR = 0.005  # Increase in speed per kill
 HP_SCALING_FACTOR = 0.01     # Increase in HP per kill
@@ -472,11 +474,14 @@ def draw_coordinates(player_x, player_y):
 
 # level up function
 def level_up():
-    global player_level, exp, current_max_exp, paused, show_upgrade_menu  # Declare global variables
+    global player_level, exp, current_max_exp, paused, show_upgrade_menu, player_speed, BULLET_DAMAGE, speed_scaling_factor, dmg_scaling_factor  # Declare global variables
     player_level += 1  # Increase player level
     exp -= current_max_exp  # Subtract current max exp from player's exp
     current_max_exp = int(current_max_exp * 1.3)  # Increase current max exp exponentially for the next level
     paused = True  # Pause the game
+    if upgrades >= 7:
+        player_speed = int(player_speed*speed_scaling_factor)
+        BULLET_DAMAGE = int(BULLET_DAMAGE*dmg_scaling_factor)
     show_upgrade_menu = True  # Show the upgrade menu
     if gambling_mode:
         gambling_sound.play()  # Play gambling sound if gambling mode is active
@@ -1167,8 +1172,8 @@ def game_loop():
                 text_y = (height - text_height) // 2 + 50
                 screen.blit(upgrade_text7, (text_x, text_y))
             elif upgrades >= 7:  # If player has more upgrades than 7 say "So um funny story, I'm out of upgrade ideas..."
-                out_of_upgrades_text = menu_font.render("So um funny story, I'm out of upgrade ideas...", True, WHITE)
-                text_width, text_height = menu_font.size("So um funny story, I'm out of upgrade ideas...")
+                out_of_upgrades_text = menu_font.render("U now mor quik and mor dmg", True, WHITE)
+                text_width, text_height = menu_font.size("U now mor quik and mor dmg")
                 text_x = (width - text_width) // 2
                 text_y = (height - text_height) // 2 + 50
                 screen.blit(out_of_upgrades_text, (text_x, text_y))
@@ -1186,10 +1191,12 @@ def start_game():
 
 # Update the set_difficulty function to adjust the scaling factors based on the selected difficulty level
 def set_difficulty(index):
-    global HP_SCALING_FACTOR, SPEED_SCALING_FACTOR
+    global HP_SCALING_FACTOR, SPEED_SCALING_FACTOR, dmg_scaling_factor, speed_scaling_factor
     difficulty = difficulty_levels[index]
-    HP_SCALING_FACTOR = difficulty["hp_scaling_factor"]
-    SPEED_SCALING_FACTOR = difficulty["speed_scaling_factor"]
+    HP_SCALING_FACTOR = difficulty["hp_scaling_factor_enemies"]
+    SPEED_SCALING_FACTOR = difficulty["speed_scaling_factor_enemies"]
+    dmg_scaling_factor = difficulty["dmg_scaling_factor_player"]
+    speed_scaling_factor = difficulty["speed_scaling_factor_player"]
 
 def open_settings():
     global volume, bg_music_vol, fullscreen, settings_open, current_difficulty_index
@@ -1438,6 +1445,9 @@ def show_death_screen():
                     player_x = width // 2  # Initial player x position
                     player_y = height // 2  # Initial player y position
                     enemies = []
+                    active_big_exp_orbs = []
+                    active_exp_orbs = []
+                    active_regen_orbs = []
                     bulkies = []
                     corrupties = []
                     crashing_enemies = []
