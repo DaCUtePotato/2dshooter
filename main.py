@@ -786,7 +786,6 @@ def show_victory_screen():
                     running = False
 
         screen.fill(BLACK)
-        draw_tiles(0, 0)
 
         text_rect = victory_text.get_rect(center=(width // 2, height // 2))
         sub_text_rect = sub_text.get_rect(center=(width // 2, height // 2 + 60))
@@ -1060,7 +1059,7 @@ while True:
 
         if random.randint(0, 100) < 3:  # Spawn new enemies randomly
             spawn_enemy(player_x, player_y)
-        if kills > 100 and not corruption and random.randint(69, 70) == 69:  # Spawn crashing enemy under certain conditions
+        if kills > 100 and not corruption and random.randint(1, 100) == 69:  # Spawn crashing enemy under certain conditions
             spawn_crashing_enemy(player_x, player_y)
         if kills >= 50 and not bulky_spawned and not corruption:  # Spawn bulky enemy under certain conditions
             spawn_bulky(player_x, player_y)
