@@ -266,13 +266,6 @@ menu_font = pygame.font.SysFont('Avenir', 30)
 
 documents_path = os.path.expanduser("~/")  # Define the file path to home directory
 file_path = os.path.join(documents_path, "savefile.bulletheaven")  # Path to save file
-# Set background music based on corruption state. These are unaffected by volume
-if not corruption:
-    music = pygame.mixer.Sound('sounds/background_music.mp3')
-    music.set_volume(bg_music_vol)
-else:
-    music = pygame.mixer.Sound('sounds/corrupted.mp3')
-    music.set_volume(bg_music_vol)
 
 def save():
     # Write the current game state to the file
@@ -575,10 +568,621 @@ def handle_bullet_collisions(bullets, target_rect, action):
             if target_rect == settings_button_rect:
                 bullets.remove(bullet)
 
+def game_loop():
+    global gaming, paused, cursor_pos, event, show_upgrade_menu, upgrades, player_x, player_y, explosion_x, explosion_y, explosion_image, explosion_frames, explosion_radius, explosion_cooldown, right_mouse_button_pressed, current_fireball_cooldown, current_frame, gambling_mode, gambling_sound, bullets, frame_count, corruption, rendering, kills, beaten, player_hp, i_frames_counter, enemy_exp, exp, player_level, current_max_exp, camera_offset_x, camera_offset_y, bullet_image, explosion, explosion_frame_duration, explosion_frame_index
+    show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
+    gaming = True
+    while gaming:
+        cursor_pos = pygame.mouse.get_pos()  # Get the current position of the mouse cursor
+        for event in pygame.event.get():  # Event loop to handle different events
+            if event.type == pygame.QUIT:  # If the event is a quit event
+                save()  # Save the game state
+                pygame.quit()  # Quit pygame
+                sys.exit()  # Exit the program
+
+            if event.type == pygame.KEYDOWN:  # If a key is pressed
+                if event.key == pygame.K_ESCAPE:  # If the key pressed is ESC
+                    paused = not paused  # Toggle pause state
+                    open_menu()  # Open the game menu
+
+                if event.key == pygame.K_g:  # If the key pressed is G
+                    gambling_mode = True  # Enable gambling mode
+                    print("You are now gambling!!")  # Print gambling mode message
+
+                if show_upgrade_menu:  # Handle upgrade selection
+                    if event.key == pygame.K_RETURN and upgrades == 0:  # If Enter is pressed and no upgrades are applied
+                        upgrades = 1  # Apply the first fireball upgrade
+                        show_upgrade_menu = False  # Hide upgrade menu
+                        paused = False  # Unpause the game after selecting the upgrade
+                    elif event.key == pygame.K_RETURN and upgrades == 1:  # If Enter is pressed and first upgrade is applied
+                        upgrades = 2  # Apply the second fireball upgrade
+                        show_upgrade_menu = False  # Hide upgrade menu
+                        paused = False  # Unpause the game after selecting the upgrade
+                    elif event.key == pygame.K_RETURN and upgrades == 2:  # If Enter is pressed and second upgrade is applied
+                        upgrades = 3  # Apply the third fireball upgrade
+                        show_upgrade_menu = False  # Hide upgrade menu
+                        paused = False  # Unpause the game after selecting the upgrade
+                    elif event.key == pygame.K_RETURN and upgrades == 3:  # If Enter is pressed and third upgrade is applied
+                        upgrades = 4  # Apply the fourth fireball upgrade
+                        show_upgrade_menu = False  # Hide upgrade menu
+                        paused = False  # Unpause the game after selecting the upgrade
+                    elif event.key == pygame.K_RETURN and upgrades == 4:  # If Enter is pressed and fourth upgrade is applied
+                        upgrades = 5  # Apply the fifth fireball upgrade
+                        show_upgrade_menu = False  # Hide upgrade menu
+                        paused = False  # Unpause the game after selecting the upgrade
+                    elif event.key == pygame.K_RETURN and upgrades == 5:  # If Enter is pressed and fifth upgrade is applied
+                        upgrades = 6  # Apply the sixth fireball upgrade
+                        show_upgrade_menu = False  # Hide upgrade menu
+                        paused = False  # Unpause the game after selecting the upgrade
+                    elif event.key == pygame.K_RETURN and upgrades == 6:  # If Enter is pressed and sixth upgrade is applied
+                        upgrades = 7  # Apply the seventh fireball upgrade
+                        show_upgrade_menu = False  # Hide upgrade menu
+                        paused = False  # Unpause the game after selecting the upgrade
+                    elif event.key == pygame.K_RETURN:  # If Enter is pressed but no specific upgrade is targeted
+                        show_upgrade_menu = False  # Hide upgrade menu
+                        paused = False  # Unpause the game
+
+        if not paused and not show_upgrade_menu:  # Only update game state if not paused and upgrade menu is not shown
+            player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)  # Define player rectangle
+            keys = pygame.key.get_pressed()  # Get the state of all keyboard keys
+
+            move_x, move_y = 0, 0  # Initialize movement vector
+            if keys[pygame.K_a]:  # If A key is pressed
+                move_x -= player_speed  # Move player left
+                rendering = "left"  # Set rendering direction to left
+            if keys[pygame.K_d]:  # If D key is pressed
+                move_x += player_speed  # Move player right
+                rendering = "right"  # Set rendering direction to right
+            if keys[pygame.K_w]:  # If W key is pressed
+                move_y -= player_speed  # Move player up
+                rendering = "up"  # Set rendering direction to up
+            if keys[pygame.K_s]:  # If S key is pressed
+                move_y += player_speed  # Move player down
+                rendering = "down"  # Set rendering direction to down
+
+            if move_x != 0 and move_y != 0:  # Normalize the movement vector to prevent faster diagonal movement
+                move_x *= math.sqrt(0.5)
+                move_y *= math.sqrt(0.5)
+
+            player_x += move_x  # Update player x position
+            player_y += move_y  # Update player y position
+            center_x = player_x + player_width / 2  # Calculate player center x position
+            center_y = player_y + player_height / 4  # Calculate player center y position
+
+            camera_offset_x = width // 2 - player_x  # Calculate camera offset x
+            camera_offset_y = height // 2 - player_y  # Calculate camera offset y
+
+            if pygame.mouse.get_pressed()[2] and not paused and not show_upgrade_menu and explosion_cooldown <= 0:  # Check for right mouse button press
+                if not right_mouse_button_pressed:
+                    right_mouse_button_pressed = True
+                    cursor_x, cursor_y = pygame.mouse.get_pos()
+                    spawn_explosion(cursor_x, cursor_y, camera_offset_x, camera_offset_y)  # Spawn an explosion at the cursor position
+
+            if current_fireball_cooldown > 0:  # Decrease the current fireball cooldown
+                current_fireball_cooldown -= 1
+
+            if upgrades == 7 and current_fireball_cooldown == 0:  # Automatically shoot fireballs if the 7th upgrade is active
+                shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
+
+            if move_x != 0 or move_y != 0:  # Update frame count and current frame if the player is moving
+                frame_count += 1
+                if frame_count % 2 == 0:  # Adjust frame rate of animation here
+                    current_frame = (current_frame + 1) % 3  # Assuming each direction has 3 frames
+
+            if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and upgrades != 7 and current_fireball_cooldown == 0:  # Check for left mouse button press
+                shoot_base_fireball(player_x, player_y, bullets, bullet_speed)  # Shoot a fireball
+
+            for bullet in bullets:  # Update bullet positions and animate
+                bullet['x'] += bullet['dx']
+                bullet['y'] += bullet['dy']
+                bullet_image = animate_bullet(bullet)  # Animate bullet
+                angle = math.atan2(-bullet['dy'], bullet['dx'])  # Calculate angle for rotation
+                rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))  # Rotate bullet image
+                screen.blit(rotated_bullet_image, (bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))  # Draw bullet
+
+            bullets = [bullet for bullet in bullets if  # Filter bullets that go off-screen
+                       player_x - width // 2 < bullet['x'] < player_x + width // 2 and player_y - height // 2 < bullet[
+                           'y'] < player_y + height // 2]
+
+            if random.randint(0, 100) < 3:  # Spawn new enemies randomly
+                spawn_enemy(player_x, player_y)
+            if kills > 100 and not corruption and random.randint(1, 100) == 69:  # Spawn crashing enemy under certain conditions
+                spawn_crashing_enemy(player_x, player_y)
+            if kills >= 50 and not bulky_spawned and not corruption:  # Spawn bulky enemy under certain conditions
+                spawn_bulky(player_x, player_y)
+            if kills >= 50 and corruption and not corrupty_spawned and beaten == False:  # Spawn corrupty enemy under certain conditions
+                spawn_corrupty(player_x, player_y)
+
+            for crashing_enemy in crashing_enemies:  # Update enemy positions and check for collisions with the player
+                fak_x, fak_y = player_pos_on_screen
+                distance_y, distance_x = fak_y - crashing_enemy.y, fak_x - crashing_enemy.x  # Calculate the vertical and horizontal distance between player and enemy
+
+                angle = math.atan2(distance_y, distance_x)  # Calculate the angle between the player and the enemy
+
+                move_x = ENEMY_SPEED * math.cos(angle)  # Calculate the movement components based on the angle and enemy speed
+                move_y = ENEMY_SPEED * math.sin(angle)
+
+                crashing_enemy.x += move_x  # Update enemy position
+                crashing_enemy.y += move_y
+
+                if (player_x - 25 < crashing_enemy.x + crashing_enemy.width and player_x - 25 + player_width > crashing_enemy.x and
+                        player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):  # Check for collisions with the player
+                    if i_frames_counter == i_frames:  # Check for invincibility frames
+                        player_hp -= 5
+                        i_frames_counter = 0
+                # Check for collisions with bullets
+                for bullet in bullets:
+                    bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
+                    enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
+                                             crashing_enemy.height)  # Create a rectangle for the crashing enemy
+
+                    if bullet_rect.colliderect(enemy_rect):  # Check if bullet collides with crashing enemy
+                        crashing_enemy.hp -= BULLET_DAMAGE  # Reduce enemy's HP by bullet damage
+                        bullets.remove(bullet)  # Remove the bullet from the bullets list
+
+                        if crashing_enemy.hp <= 0:  # Check if the enemy's HP is 0 or less
+                            crashing_enemies.remove(crashing_enemy)  # Remove the crashing enemy from the list
+                            corruption = True  # Set corruption flag to True
+                            kills = 0  # Reset kills counter
+                            save()  # Save the game state
+                            sys.exit("The corruption is spreading...")  # Exit the game with a message
+            for enemy in enemies:
+                # Calculate the center coordinates of the player
+                player_x_center = player_x + player_width / 2
+                player_y_center = player_y + player_height / 2
+
+                # Calculate the vertical and horizontal distance between the enemy and the player's center
+                distance_y = player_y_center - enemy.y
+                distance_x = player_x_center - enemy.x
+
+                # Calculate the angle between the player and the enemy
+                angle = math.atan2(distance_y, distance_x)
+                move_x = scaled_speed * math.cos(angle)
+                move_y = scaled_speed * math.sin(angle)
+
+                # Update enemy position if death animation is not playing
+                if not enemy.death_animation_playing:
+                    enemy.x += move_x
+                    enemy.y += move_y
+
+                # Check for collisions with the player
+                Amogux, Amoguy = player_pos_on_screen
+                if (player_x-25 < enemy.x + enemy.width and player_x-25 + player_width > enemy.x and
+                        player_y < enemy.y + enemy.height and player_y + player_height > enemy.y):
+                    if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
+                        player_hp -= 5  # Reduce player's HP by 5
+                        i_frames_counter = 0  # Reset invincibility frames counter
+
+                # Check for collisions with bullets
+                for bullet in bullets:
+                    bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)  # Create a rectangle for the bullet
+                    enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)  # Create a rectangle for the enemy
+
+                    if bullet_rect.colliderect(enemy_rect):  # Check if bullet collides with the enemy
+                        enemy.hp -= BULLET_DAMAGE  # Reduce enemy's HP by bullet damage
+
+                        if enemy.hp <= 0:  # Check if the enemy's HP is 0 or less
+                            enemy.death_animation_playing = True  # Trigger death animation
+                            if upgrades <= 5:  # Check if upgrades are less than or equal to 5
+                                bullets.remove(bullet)  # Remove the bullet from the bullets list
+                            break
+                        elif enemy.hp > 0:  # Check if enemy is still alive
+                            enemy.hit_animation_playing = True  # Trigger hit animation
+                            bullets.remove(bullet)  # Remove the bullet from the bullets list
+
+            for bulky in bulkies:
+                # Calculate the center coordinates of the player
+                player_x_center = player_x + player_width / 2
+                player_y_center = player_y + player_height / 2
+
+                # Calculate the vertical and horizontal distance between the enemy and the player's center
+                distance_y = player_y_center - bulky.y
+                distance_x = player_x_center - bulky.x
+
+                # Calculate the angle between the player and the enemy
+                angle = math.atan2(distance_y, distance_x)
+                move_x = bulky.speed * math.cos(angle)
+                move_y = bulky.speed * math.sin(angle)
+
+                # Update bulky enemy position if death animation is not playing
+                if not bulky.death_animation_playing:
+                    bulky.x += move_x
+                    bulky.y += move_y
+
+                # Check for collisions with the player
+                if (player_x-25 < bulky.x + bulky.width and player_x-25 + player_width > bulky.x and
+                        player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
+                    if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
+                        player_hp -= 5  # Reduce player's HP by 5
+                        i_frames_counter = 0  # Reset invincibility frames counter
+
+                # Check for collisions with bullets
+                for bullet in bullets:
+                    bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)  # Create a rectangle for the bullet
+                    bulky_rect = pygame.Rect(bulky.x, bulky.y, bulky.width, bulky.height)  # Create a rectangle for the bulky enemy
+
+                    if bullet_rect.colliderect(bulky_rect):  # Check if bullet collides with the bulky enemy
+                        bulky.hp -= BULLET_DAMAGE  # Reduce bulky enemy's HP by bullet damage
+
+                        if bulky.hp <= 0:  # Check if the bulky enemy's HP is 0 or less
+                            kills += 1  # Increase kills count
+                            bulky.death_animation_playing = True  # Trigger death animation
+                            value = random.randint(10, 50)  # Generate a random value for exp orb
+                            active_big_exp_orbs.append(
+                                {'size': value * 2, 'x': bulky.x, 'y': bulky.y, 'value': value})  # Add exp orb to active list
+                            bulkies.remove(bulky) # Remove the bulky enemy from the list
+                            if upgrades <= 5:  # Check if upgrades are less than or equal to 5
+                                bullets.remove(bullet)  # Remove the bullet from the bullets list
+                            break
+                        elif bulky.hp > 0:  # Check if bulky enemy is still alive
+                            bullets.remove(bullet)  # Remove the bullet from the bullets list
+            for corrupty in corrupties:
+                # Calculate the center coordinates of the player
+                player_x_center = player_x + player_width / 2
+                player_y_center = player_y + player_height / 2
+
+                # Calculate the vertical and horizontal distance between the enemy and the player's center
+                distance_y = player_y_center - corrupty.y
+                distance_x = player_x_center - corrupty.x
+
+                # Calculate the angle between the player and the enemy
+                angle = math.atan2(distance_y, distance_x)
+                move_x = corrupty.speed * math.cos(angle)
+                move_y = corrupty.speed * math.sin(angle)
+
+                # Update enemy position
+                corrupty.x += move_x
+                corrupty.y += move_y
+
+                # Check for collisions with the player
+                if (player_x-25 < corrupty.x + corrupty.width and player_x-25 + player_width > corrupty.x and
+                        player_y < corrupty.y + corrupty.height and player_y + player_height > corrupty.y):
+                    if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
+                        player_hp -= 5  # Reduce player's HP by 5
+                        i_frames_counter = 0  # Reset invincibility frames counter
+
+                # Check for collisions with bullets
+                for bullet in bullets:
+                    bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)  # Create a rectangle for the bullet
+                    corrupty_rect = pygame.Rect(corrupty.x, corrupty.y, corrupty.width, corrupty.height)  # Create a rectangle for the corrupty enemy
+
+                    if bullet_rect.colliderect(corrupty_rect):  # Check if bullet collides with the corrupty enemy
+                        corrupty.hp -= BULLET_DAMAGE  # Reduce corrupty enemy's HP by bullet damage
+                        bullets.remove(bullet)  # Remove the bullet from the bullets list
+
+                        if corrupty.hp <= 0:
+                            corrupties.remove(corrupty)  # Remove the corrupty enemy from the list
+                            active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})  # Add exp orb to active list
+                            enemy_exp = random.randint(1, 5)  # Generate a random value for enemy exp
+                            beaten = True
+                            show_victory_screen()  # Show victory screen
+                            save()  # Save the game state
+                            break
+            if player_hp <= 0:
+                upgrades = 0
+                kills = 0
+                player_hp = 100
+                exp = 0
+                player_level = 1
+                corruption = False
+                current_max_exp = 30
+                save()
+                show_death_screen()
+                gaming = False
+
+            # Check for collisions between player and exp orbs
+            for exp_orb in active_exp_orbs:
+                orb_center_x = exp_orb['x']
+                orb_center_y = exp_orb['y']
+                orb_radius = exp_orb['size']
+                orb_exp = exp_orb['value']  # Extract the exp value associated with the orb
+
+                # Check for collisions with the player
+                if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
+                        player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
+                    pickup_sound.play()
+                    # Player gains exp equal to the amount associated with the exp orb
+                    exp += orb_exp
+                    # Remove the exp orb from the active list
+                    active_exp_orbs.remove(exp_orb)
+            for big_exp_orb in active_big_exp_orbs:
+                orb_center_x = big_exp_orb['x']
+                orb_center_y = big_exp_orb['y']
+                orb_radius = big_exp_orb['size']
+                orb_exp = big_exp_orb['value']  # Extract the exp value associated with the orb
+
+                # Check for collisions with the player
+                if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
+                        player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
+                    pickup_sound.play()
+                    # Player gains exp equal to the amount associated with the exp orb
+                    exp += orb_exp
+                    # Remove the exp orb from the active list
+                    active_big_exp_orbs.remove(big_exp_orb)
+
+            for regen_orb in active_regen_orbs:
+                orb_center_x = regen_orb['x']
+                orb_center_y = regen_orb['y']
+                orb_radius = regen_orb['size']
+                orb_value = regen_orb['value']  # Extract the exp value associated with the orb
+
+                # Check for collisions with the player
+                if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
+                        player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
+                    pickup_sound_regen.play()
+                    # Player gains exp equal to the amount associated with the exp orb
+                    player_hp += orb_value
+                    # Remove the exp orb from the active list
+                    active_regen_orbs.remove(regen_orb)
+
+        # Draw elements
+        screen.fill(BLACK)  # Clear the screen
+        draw_tiles(camera_offset_x, camera_offset_y)
+
+        for exp_orb in active_exp_orbs:
+            # Resize the exp_image based on the orb's size
+            scaled_exp_image = pygame.transform.scale(exp_image, (exp_orb['size'], exp_orb['size']))
+
+            # Calculate the top-left corner of the image so it's centered on the orb's position
+            image_x = exp_orb['x'] - scaled_exp_image.get_width() // 2 + camera_offset_x
+            image_y = exp_orb['y'] - scaled_exp_image.get_height() // 2 + camera_offset_y
+
+            # Draw the scaled image
+            screen.blit(scaled_exp_image, (image_x, image_y))
+
+        for big_exp_orb in active_big_exp_orbs:
+            # Resize the exp_image based on the orb's size
+            scaled_exp_image = pygame.transform.scale(big_exp_image, (big_exp_orb['size'], big_exp_orb['size']))
+
+            # Calculate the top-left corner of the image so it's centered on the orb's position
+            image_x = big_exp_orb['x'] - scaled_exp_image.get_width() // 2 + camera_offset_x
+            image_y = big_exp_orb['y'] - scaled_exp_image.get_height() // 2 + camera_offset_y
+
+            # Draw the scaled image
+            screen.blit(scaled_exp_image, (image_x, image_y))
+
+        for regen_orb in active_regen_orbs:
+            # Resize the exp_image based on the orb's size
+            scaled_regen_image = pygame.transform.scale(regen_image, (regen_orb_size * 2, regen_orb_size * 2))
+
+            # Calculate the top-left corner of the image so it's centered on the orb's position
+            image_x = regen_orb['x'] - scaled_regen_image.get_width() // 2 + camera_offset_x
+            image_y = regen_orb['y'] - scaled_regen_image.get_height() // 2 + camera_offset_y
+
+            # Draw the scaled image
+            screen.blit(scaled_regen_image, (image_x, image_y))
+
+        enemies_to_remove = []
+        for enemy in enemies:
+            if enemy.hit_animation_playing and not enemy.death_animation_playing:
+                enemy.hit_frame_count += 1
+                if enemy.hit_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
+                    enemy.hit_frame = enemy.hit_frame + 1
+
+                # Check if hit animation duration is over
+                if enemy.hit_frame >= len(hit_enemy_frames):
+                    enemy.hit_animation_playing = False
+                    enemy.hit_frame_count = 0
+
+            elif enemy.death_animation_playing:
+                enemy.death_frame_count += 1
+                if enemy.death_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
+                    enemy.death_frame = enemy.death_frame + 1
+
+                # Check if death animation duration is over
+                if enemy.death_frame >= len(death_enemy_frames):  # Ensure the death animation has completed
+                    enemies_to_remove.append(enemy)
+                    active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
+                    enemy_exp = random.randint(1, 5)
+                    kills += 1
+                    if random.randint(1, 100) == 69:
+                        active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
+                        print("A wild regen orb spawned!!!!!")
+                else:
+                    # Display the current frame of the death animation
+                    enemy_image = death_enemy_frames[enemy.death_frame]
+                    if enemy.x > player_x:
+                        enemy_image = pygame.transform.flip(enemy_image, True, False)
+                    screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
+                    continue  # Skip the rest of the loop to ensure no other animation is played
+
+            else:
+                enemy.frame_count += 1
+                if enemy.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
+                    enemy.frame = (enemy.frame + 1) % len(enemy_frames)
+
+            # Choose the appropriate frame to display if not in death animation
+            if not enemy.death_animation_playing:
+                if enemy.hit_animation_playing:
+                    if enemy.x > player_x:
+                        enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
+                    else:
+                        enemy_image = hit_enemy_frames[enemy.hit_frame]
+                else:
+                    if enemy.x > player_x:
+                        enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
+                    else:
+                        enemy_image = enemy_frames[enemy.frame]
+
+                screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
+        # Remove enemies marked for removal after the loop
+        for enemy in enemies_to_remove:
+            enemies.remove(enemy)
+        bulkies_to_remove = []
+        for bulky in bulkies:
+            if bulky.death_animation_playing:
+                bulky.death_frame_count += 1
+                if bulky.death_frame_count % 4 == 0 and not paused and not show_upgrade_menu:
+                    bulky.death_frame = bulky.death_frame + 1
+
+                if bulky.death_frame >= len(bulky_death_frames) - 1:  # Ensure the death animation has completed
+                    bulkies_to_remove.append(bulky)
+                    active_exp_orbs.append({'size': enemy_exp * 2, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
+                    enemy_exp = random.randint(30, 50)
+                    kills += 1
+
+                else:
+                    # Display the current frame of the death animation
+                    bulky_image = bulky_death_frames[bulky.death_frame]
+                    if bulky.x > player_x:
+                        bulky_image = pygame.transform.flip(bulky_image, True, False)
+                    screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
+                    continue  # Skip the rest of the loop to ensure no other animation is played
+            else:
+                # Animate and draw bulky enemy
+                bulky.frame_count += 1
+                if bulky.frame_count % 10 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of animation here
+                    bulky.frame = (bulky.frame + 1) % len(bulky_frames)
+
+                if bulky.x > player_x:
+                    # Enemy is coming from the left side of the screen, flip the sprite
+                    bulky_image = pygame.transform.flip(bulky_frames[bulky.frame], True, False)
+                else:
+                    # Enemy is coming from the right side of the screen, use the original sprite
+                    bulky_image = bulky_frames[bulky.frame]
+
+                screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
+
+        for bulky in bulkies_to_remove:
+            bulkies.remove(bulky)
+
+        for crashing_enemy in crashing_enemies:
+            crashing_enemy.frame_count += 1
+            if crashing_enemy.frame_count % 5 == 0 and not paused and not show_upgrade_menu:
+                crashing_enemy.frame = (crashing_enemy.frame + 1) % len(crashing_enemy_frames)
+
+            if crashing_enemy.x > player_x:
+                # Enemy is coming from the left side of the screen, flip the sprite
+                crashing_enemy_image = pygame.transform.flip(crashing_enemy_frames[crashing_enemy.frame], True, False)
+            else:
+                # Enemy is coming from the right side of the screen, use the original sprite
+                crashing_enemy_image = crashing_enemy_frames[crashing_enemy.frame]
+
+            # Scale the image to the size defined by corrupty.height and corrupty.width
+            crashing_enemy_image = pygame.transform.scale(crashing_enemy_image, (crashing_enemy.width, crashing_enemy.height))
+
+            screen.blit(crashing_enemy_image, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y))
+
+        for corrupty in corrupties:
+            corrupty.frame_count += 1
+            if corrupty.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
+                corrupty.frame = (corrupty.frame + 1) % len(corrupty_frames)
+
+            if corrupty.x > player_x:
+                # Enemy is coming from the left side of the screen, flip the sprite
+                corrupty_image = pygame.transform.flip(corrupty_frames[corrupty.frame], True, False)
+            else:
+                # Enemy is coming from the right side of the screen, use the original sprite
+                corrupty_image = corrupty_frames[corrupty.frame]
+
+            # Scale the image to the size defined by corrupty.height and corrupty.width
+            corrupty_image = pygame.transform.scale(corrupty_image, (corrupty.width, corrupty.height))
+
+            screen.blit(corrupty_image, (corrupty.x + camera_offset_x, corrupty.y + camera_offset_y))
+
+        for bullet in bullets:
+            # Calculate angle of rotation based on bullet's velocity
+            angle = math.atan2(-bullet['dy'], bullet['dx'])  # Use negative y-velocity to account for inverted y-axis
+
+            # Rotate the bullet image
+            rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
+
+            # Draw the rotated bullet image at the bullet's position
+            screen.blit(rotated_bullet_image, (
+                bullet['x'] - rotated_bullet_image.get_width() / 2 + camera_offset_x, bullet['y'] - rotated_bullet_image.get_height() / 2 + camera_offset_y))
+        if explosion:
+            if explosion_frame_index < len(explosion_frames):
+                screen.blit(explosion_frames[explosion_frame_index],
+                            (explosion_x - 50 + camera_offset_x, explosion_y - 50 + camera_offset_y))
+                explosion_frame_duration -= 1
+                if explosion_frame_duration <= 0:
+                    explosion_frame_index += 1
+                    explosion_frame_duration = 4  # Reset frame duration
+                # Check for collisions with the explosion
+                check_explosion_collisions(explosion_x, explosion_y)
+            else:
+                explosion = False  # End explosion animation
+
+        if explosion_cooldown > 0 and not paused and not show_upgrade_menu:
+            explosion_cooldown -= 1
+
+        draw_hp_bar()  # Draw the player's HP bar
+        draw_exp_bar()  # Draw the experience bar
+        draw_kill_counter(kills)
+        draw_coordinates(player_x, player_y)
+        draw_explosion_cooldown(explosion_cooldown)
+        if rendering == "right":
+            screen.blit(frames_right[current_frame], (player_pos_on_screen))  # Draw the current frame of player sprite
+        if rendering == "up":
+            screen.blit(frames_up[current_frame], (player_pos_on_screen))
+        if rendering == "left":
+            screen.blit(frames_left[current_frame], (player_pos_on_screen))
+        if rendering == "down":
+            screen.blit(frames_down[current_frame], (player_pos_on_screen))
+        if i_frames_counter < i_frames:
+            i_frames_counter += 1
+        if exp >= current_max_exp:
+            level_up()
+        # If upgrade menu is shown, display upgrade options
+        if show_upgrade_menu:
+            if upgrades == 0:  # If player doesn't have any upgrades yet and receives the first one, say "Fireball shoots in opposite direction" on-screen
+                upgrade_text1 = menu_font.render("1. Fireball shoots in opposite direction", True, WHITE)  # Declare what to say
+                text_width, text_height = menu_font.size("1. Fireball shoots in opposite direction")  # Declare how big the text is
+                text_x = (width - text_width) // 2  # Declare x position
+                text_y = (height - text_height) // 2 + 50  # Declare y position
+                screen.blit(upgrade_text1, (text_x, text_y))  # Put it on-screen
+            elif upgrades == 1:  # If player has 1 upgrade and is going to the second one, say "Fireball shoots in the right direction" on-screen
+                upgrade_text2 = menu_font.render("2. Fireball shoots in the right direction", True, WHITE)
+                text_width, text_height = menu_font.size("2. Fireball shoots in the right direction")
+                text_x = (width - text_width) // 2
+                text_y = (height - text_height) // 2 + 50
+                screen.blit(upgrade_text2, (text_x, text_y))
+            elif upgrades == 2:  # If player has 2 upgrades and is going to the third one, say "Fireball shoots in the left direction" on-screen
+                upgrade_text3 = menu_font.render("3. Fireball shoots in the left direction", True, WHITE)
+                text_width, text_height = menu_font.size("3. Fireball shoots in the left direction")
+                text_x = (width - text_width) // 2
+                text_y = (height - text_height) // 2 + 50
+                screen.blit(upgrade_text3, (text_x, text_y))
+            elif upgrades == 3:  #if player has 3 upgrades and is going to the fourth one, say "Fireball shoots in the top left and right direction" on-screen
+                upgrade_text4 = menu_font.render("4. Fireball shoots in the top left and right direction", True, WHITE)
+                text_width, text_height = menu_font.size("4. Fireball shoots in the top left and right direction")
+                text_x = (width - text_width) // 2
+                text_y = (height - text_height) // 2 + 50
+                screen.blit(upgrade_text4, (text_x, text_y))
+            elif upgrades == 4:  #if player has 4 upgrades and is going to the fifth one, say "Fireball shoots in the bottom left and right direction" on-screen
+                upgrade_text5 = menu_font.render("5. Fireball shoots in the bottom left and right direction", True, WHITE)
+                text_width, text_height = menu_font.size("5. Fireball shoots in the bottom left and right direction")
+                text_x = (width - text_width) // 2
+                text_y = (height - text_height) // 2 + 50
+                screen.blit(upgrade_text5, (text_x, text_y))
+            elif upgrades == 5:  # If player has 5 upgrades and goes to the 6th one, say "Fireball goes through enemies" on-screen
+                upgrade_text6 = menu_font.render("6. Fireball goes through enemies", True, WHITE)
+                text_width, text_height = menu_font.size("6. Fireball goes through enemies")
+                text_x = (width - text_width) // 2
+                text_y = (height - text_height) // 2 + 50
+                screen.blit(upgrade_text6, (text_x, text_y))
+            elif upgrades == 6: # If player has 6 upgrades and is going to the seventh, say "Automode" on-screen
+                upgrade_text7 = menu_font.render("7. Automode", True, WHITE)
+                text_width, text_height = menu_font.size("7. Automode")
+                text_x = (width - text_width) // 2
+                text_y = (height - text_height) // 2 + 50
+                screen.blit(upgrade_text7, (text_x, text_y))
+            elif upgrades >= 7:  # If player has more upgrades than 7 say "So um funny story, I'm out of upgrade ideas..."
+                out_of_upgrades_text = menu_font.render("So um funny story, I'm out of upgrade ideas...", True, WHITE)
+                text_width, text_height = menu_font.size("So um funny story, I'm out of upgrade ideas...")
+                text_x = (width - text_width) // 2
+                text_y = (height - text_height) // 2 + 50
+                screen.blit(out_of_upgrades_text, (text_x, text_y))
+        screen.blit(cursor_image, cursor_pos)
+        # Update the display
+        pygame.display.flip()
+        pygame.time.Clock().tick(FPS)
+
 def start_game():
     global main_menu  # Use global variable for main_menu
     main_menu = False  # Disable main menu
     gaming = True
+    game_loop()
     print("Starting Game...")  # Print starting game message
 
 
@@ -801,7 +1405,7 @@ def show_victory_screen():
         clock.tick(FPS)
 
 def show_death_screen():
-    global enemies, gaming, player_x, player_y, player_hp, bulkies, bullets, corrupties, crashing_enemies
+    global enemies, gaming, player_x, player_y, player_hp, bulkies, bullets, corrupties, crashing_enemies, music
     death_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 50)
     sub_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 20)
     if not corruption:
@@ -833,6 +1437,8 @@ def show_death_screen():
                     crashing_enemies = []
                     bullets = []
                     player_hp = 100
+                    music = pygame.mixer.Sound('sounds/background_music.mp3')
+                    music.set_volume(bg_music_vol)
                     gaming = False
                     open_main_menu()
                     running = False
@@ -910,6 +1516,14 @@ if os.path.exists(file_path):
         current_max_exp = int(lines[6].strip())
         beaten = lines[7].strip() == "True"
 
+# Set background music based on corruption state. These are unaffected by volume
+if not corruption:
+    music = pygame.mixer.Sound('sounds/background_music.mp3')
+    music.set_volume(bg_music_vol)
+else:
+    music = pygame.mixer.Sound('sounds/corrupted.mp3')
+    music.set_volume(bg_music_vol)
+
 music.play(-1)
 def open_main_menu():
     global cursor_pos, event, current_fireball_cooldown, angle, bullets, rotated_bullet_image, bullet_image, main_menu, right_mouse_button_pressed
@@ -964,610 +1578,4 @@ def open_main_menu():
         clock.tick(FPS)
 
 open_main_menu()
-show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
-gaming = True
-while gaming:
-    cursor_pos = pygame.mouse.get_pos()  # Get the current position of the mouse cursor
-    for event in pygame.event.get():  # Event loop to handle different events
-        if event.type == pygame.QUIT:  # If the event is a quit event
-            save()  # Save the game state
-            pygame.quit()  # Quit pygame
-            sys.exit()  # Exit the program
-
-        if event.type == pygame.KEYDOWN:  # If a key is pressed
-            if event.key == pygame.K_ESCAPE:  # If the key pressed is ESC
-                paused = not paused  # Toggle pause state
-                open_menu()  # Open the game menu
-
-            if event.key == pygame.K_g:  # If the key pressed is G
-                gambling_mode = True  # Enable gambling mode
-                print("You are now gambling!!")  # Print gambling mode message
-
-            if show_upgrade_menu:  # Handle upgrade selection
-                if event.key == pygame.K_RETURN and upgrades == 0:  # If Enter is pressed and no upgrades are applied
-                    upgrades = 1  # Apply the first fireball upgrade
-                    show_upgrade_menu = False  # Hide upgrade menu
-                    paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades == 1:  # If Enter is pressed and first upgrade is applied
-                    upgrades = 2  # Apply the second fireball upgrade
-                    show_upgrade_menu = False  # Hide upgrade menu
-                    paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades == 2:  # If Enter is pressed and second upgrade is applied
-                    upgrades = 3  # Apply the third fireball upgrade
-                    show_upgrade_menu = False  # Hide upgrade menu
-                    paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades == 3:  # If Enter is pressed and third upgrade is applied
-                    upgrades = 4  # Apply the fourth fireball upgrade
-                    show_upgrade_menu = False  # Hide upgrade menu
-                    paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades == 4:  # If Enter is pressed and fourth upgrade is applied
-                    upgrades = 5  # Apply the fifth fireball upgrade
-                    show_upgrade_menu = False  # Hide upgrade menu
-                    paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades == 5:  # If Enter is pressed and fifth upgrade is applied
-                    upgrades = 6  # Apply the sixth fireball upgrade
-                    show_upgrade_menu = False  # Hide upgrade menu
-                    paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN and upgrades == 6:  # If Enter is pressed and sixth upgrade is applied
-                    upgrades = 7  # Apply the seventh fireball upgrade
-                    show_upgrade_menu = False  # Hide upgrade menu
-                    paused = False  # Unpause the game after selecting the upgrade
-                elif event.key == pygame.K_RETURN:  # If Enter is pressed but no specific upgrade is targeted
-                    show_upgrade_menu = False  # Hide upgrade menu
-                    paused = False  # Unpause the game
-
-    if not paused and not show_upgrade_menu:  # Only update game state if not paused and upgrade menu is not shown
-        player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)  # Define player rectangle
-        keys = pygame.key.get_pressed()  # Get the state of all keyboard keys
-
-        move_x, move_y = 0, 0  # Initialize movement vector
-        if keys[pygame.K_a]:  # If A key is pressed
-            move_x -= player_speed  # Move player left
-            rendering = "left"  # Set rendering direction to left
-        if keys[pygame.K_d]:  # If D key is pressed
-            move_x += player_speed  # Move player right
-            rendering = "right"  # Set rendering direction to right
-        if keys[pygame.K_w]:  # If W key is pressed
-            move_y -= player_speed  # Move player up
-            rendering = "up"  # Set rendering direction to up
-        if keys[pygame.K_s]:  # If S key is pressed
-            move_y += player_speed  # Move player down
-            rendering = "down"  # Set rendering direction to down
-
-        if move_x != 0 and move_y != 0:  # Normalize the movement vector to prevent faster diagonal movement
-            move_x *= math.sqrt(0.5)
-            move_y *= math.sqrt(0.5)
-
-        player_x += move_x  # Update player x position
-        player_y += move_y  # Update player y position
-        center_x = player_x + player_width / 2  # Calculate player center x position
-        center_y = player_y + player_height / 4  # Calculate player center y position
-
-        camera_offset_x = width // 2 - player_x  # Calculate camera offset x
-        camera_offset_y = height // 2 - player_y  # Calculate camera offset y
-
-        if pygame.mouse.get_pressed()[2] and not paused and not show_upgrade_menu and explosion_cooldown <= 0:  # Check for right mouse button press
-            if not right_mouse_button_pressed:
-                right_mouse_button_pressed = True
-                cursor_x, cursor_y = pygame.mouse.get_pos()
-                spawn_explosion(cursor_x, cursor_y, camera_offset_x, camera_offset_y)  # Spawn an explosion at the cursor position
-
-        if current_fireball_cooldown > 0:  # Decrease the current fireball cooldown
-            current_fireball_cooldown -= 1
-
-        if upgrades == 7 and current_fireball_cooldown == 0:  # Automatically shoot fireballs if the 7th upgrade is active
-            shoot_base_fireball(player_x, player_y, bullets, bullet_speed)
-
-        if move_x != 0 or move_y != 0:  # Update frame count and current frame if the player is moving
-            frame_count += 1
-            if frame_count % 2 == 0:  # Adjust frame rate of animation here
-                current_frame = (current_frame + 1) % 3  # Assuming each direction has 3 frames
-
-        if pygame.mouse.get_pressed()[0] and paused is False and not show_upgrade_menu and upgrades != 7 and current_fireball_cooldown == 0:  # Check for left mouse button press
-            shoot_base_fireball(player_x, player_y, bullets, bullet_speed)  # Shoot a fireball
-
-        for bullet in bullets:  # Update bullet positions and animate
-            bullet['x'] += bullet['dx']
-            bullet['y'] += bullet['dy']
-            bullet_image = animate_bullet(bullet)  # Animate bullet
-            angle = math.atan2(-bullet['dy'], bullet['dx'])  # Calculate angle for rotation
-            rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))  # Rotate bullet image
-            screen.blit(rotated_bullet_image, (bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))  # Draw bullet
-
-        bullets = [bullet for bullet in bullets if  # Filter bullets that go off-screen
-                   player_x - width // 2 < bullet['x'] < player_x + width // 2 and player_y - height // 2 < bullet[
-                       'y'] < player_y + height // 2]
-
-        if random.randint(0, 100) < 3:  # Spawn new enemies randomly
-            spawn_enemy(player_x, player_y)
-        if kills > 100 and not corruption and random.randint(1, 100) == 69:  # Spawn crashing enemy under certain conditions
-            spawn_crashing_enemy(player_x, player_y)
-        if kills >= 50 and not bulky_spawned and not corruption:  # Spawn bulky enemy under certain conditions
-            spawn_bulky(player_x, player_y)
-        if kills >= 50 and corruption and not corrupty_spawned and beaten == False:  # Spawn corrupty enemy under certain conditions
-            spawn_corrupty(player_x, player_y)
-
-        for crashing_enemy in crashing_enemies:  # Update enemy positions and check for collisions with the player
-            fak_x, fak_y = player_pos_on_screen
-            distance_y, distance_x = fak_y - crashing_enemy.y, fak_x - crashing_enemy.x  # Calculate the vertical and horizontal distance between player and enemy
-
-            angle = math.atan2(distance_y, distance_x)  # Calculate the angle between the player and the enemy
-
-            move_x = ENEMY_SPEED * math.cos(angle)  # Calculate the movement components based on the angle and enemy speed
-            move_y = ENEMY_SPEED * math.sin(angle)
-
-            crashing_enemy.x += move_x  # Update enemy position
-            crashing_enemy.y += move_y
-
-            if (player_x - 25 < crashing_enemy.x + crashing_enemy.width and player_x - 25 + player_width > crashing_enemy.x and
-                    player_y < crashing_enemy.y + crashing_enemy.height and player_y + player_height > crashing_enemy.y):  # Check for collisions with the player
-                if i_frames_counter == i_frames:  # Check for invincibility frames
-                    player_hp -= 5
-                    i_frames_counter = 0
-            # Check for collisions with bullets
-            for bullet in bullets:
-                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)
-                enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width,
-                                         crashing_enemy.height)  # Create a rectangle for the crashing enemy
-
-                if bullet_rect.colliderect(enemy_rect):  # Check if bullet collides with crashing enemy
-                    crashing_enemy.hp -= BULLET_DAMAGE  # Reduce enemy's HP by bullet damage
-                    bullets.remove(bullet)  # Remove the bullet from the bullets list
-
-                    if crashing_enemy.hp <= 0:  # Check if the enemy's HP is 0 or less
-                        crashing_enemies.remove(crashing_enemy)  # Remove the crashing enemy from the list
-                        corruption = True  # Set corruption flag to True
-                        kills = 0  # Reset kills counter
-                        save()  # Save the game state
-                        sys.exit("The corruption is spreading...")  # Exit the game with a message
-        for enemy in enemies:
-            # Calculate the center coordinates of the player
-            player_x_center = player_x + player_width / 2
-            player_y_center = player_y + player_height / 2
-
-            # Calculate the vertical and horizontal distance between the enemy and the player's center
-            distance_y = player_y_center - enemy.y
-            distance_x = player_x_center - enemy.x
-
-            # Calculate the angle between the player and the enemy
-            angle = math.atan2(distance_y, distance_x)
-            move_x = scaled_speed * math.cos(angle)
-            move_y = scaled_speed * math.sin(angle)
-
-            # Update enemy position if death animation is not playing
-            if not enemy.death_animation_playing:
-                enemy.x += move_x
-                enemy.y += move_y
-
-            # Check for collisions with the player
-            Amogux, Amoguy = player_pos_on_screen
-            if (player_x-25 < enemy.x + enemy.width and player_x-25 + player_width > enemy.x and
-                    player_y < enemy.y + enemy.height and player_y + player_height > enemy.y):
-                if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
-                    player_hp -= 5  # Reduce player's HP by 5
-                    i_frames_counter = 0  # Reset invincibility frames counter
-
-            # Check for collisions with bullets
-            for bullet in bullets:
-                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)  # Create a rectangle for the bullet
-                enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)  # Create a rectangle for the enemy
-
-                if bullet_rect.colliderect(enemy_rect):  # Check if bullet collides with the enemy
-                    enemy.hp -= BULLET_DAMAGE  # Reduce enemy's HP by bullet damage
-
-                    if enemy.hp <= 0:  # Check if the enemy's HP is 0 or less
-                        enemy.death_animation_playing = True  # Trigger death animation
-                        if upgrades <= 5:  # Check if upgrades are less than or equal to 5
-                            bullets.remove(bullet)  # Remove the bullet from the bullets list
-                        break
-                    elif enemy.hp > 0:  # Check if enemy is still alive
-                        enemy.hit_animation_playing = True  # Trigger hit animation
-                        bullets.remove(bullet)  # Remove the bullet from the bullets list
-
-        for bulky in bulkies:
-            # Calculate the center coordinates of the player
-            player_x_center = player_x + player_width / 2
-            player_y_center = player_y + player_height / 2
-
-            # Calculate the vertical and horizontal distance between the enemy and the player's center
-            distance_y = player_y_center - bulky.y
-            distance_x = player_x_center - bulky.x
-
-            # Calculate the angle between the player and the enemy
-            angle = math.atan2(distance_y, distance_x)
-            move_x = bulky.speed * math.cos(angle)
-            move_y = bulky.speed * math.sin(angle)
-
-            # Update bulky enemy position if death animation is not playing
-            if not bulky.death_animation_playing:
-                bulky.x += move_x
-                bulky.y += move_y
-
-            # Check for collisions with the player
-            if (player_x-25 < bulky.x + bulky.width and player_x-25 + player_width > bulky.x and
-                    player_y < bulky.y + bulky.height and player_y + player_height > bulky.y):
-                if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
-                    player_hp -= 5  # Reduce player's HP by 5
-                    i_frames_counter = 0  # Reset invincibility frames counter
-
-            # Check for collisions with bullets
-            for bullet in bullets:
-                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)  # Create a rectangle for the bullet
-                bulky_rect = pygame.Rect(bulky.x, bulky.y, bulky.width, bulky.height)  # Create a rectangle for the bulky enemy
-
-                if bullet_rect.colliderect(bulky_rect):  # Check if bullet collides with the bulky enemy
-                    bulky.hp -= BULLET_DAMAGE  # Reduce bulky enemy's HP by bullet damage
-
-                    if bulky.hp <= 0:  # Check if the bulky enemy's HP is 0 or less
-                        kills += 1  # Increase kills count
-                        bulky.death_animation_playing = True  # Trigger death animation
-                        value = random.randint(10, 50)  # Generate a random value for exp orb
-                        active_big_exp_orbs.append(
-                            {'size': value * 2, 'x': bulky.x, 'y': bulky.y, 'value': value})  # Add exp orb to active list
-                        bulkies.remove(bulky) # Remove the bulky enemy from the list
-                        if upgrades <= 5:  # Check if upgrades are less than or equal to 5
-                            bullets.remove(bullet)  # Remove the bullet from the bullets list
-                        break
-                    elif bulky.hp > 0:  # Check if bulky enemy is still alive
-                        bullets.remove(bullet)  # Remove the bullet from the bullets list
-        for corrupty in corrupties:
-            # Calculate the center coordinates of the player
-            player_x_center = player_x + player_width / 2
-            player_y_center = player_y + player_height / 2
-
-            # Calculate the vertical and horizontal distance between the enemy and the player's center
-            distance_y = player_y_center - corrupty.y
-            distance_x = player_x_center - corrupty.x
-
-            # Calculate the angle between the player and the enemy
-            angle = math.atan2(distance_y, distance_x)
-            move_x = corrupty.speed * math.cos(angle)
-            move_y = corrupty.speed * math.sin(angle)
-
-            # Update enemy position
-            corrupty.x += move_x
-            corrupty.y += move_y
-
-            # Check for collisions with the player
-            if (player_x-25 < corrupty.x + corrupty.width and player_x-25 + player_width > corrupty.x and
-                    player_y < corrupty.y + corrupty.height and player_y + player_height > corrupty.y):
-                if i_frames_counter == i_frames:  # Check if invincibility frames counter has reached the limit
-                    player_hp -= 5  # Reduce player's HP by 5
-                    i_frames_counter = 0  # Reset invincibility frames counter
-
-            # Check for collisions with bullets
-            for bullet in bullets:
-                bullet_rect = pygame.Rect(bullet['x'] - 5, bullet['y'] - 5, 10, 10)  # Create a rectangle for the bullet
-                corrupty_rect = pygame.Rect(corrupty.x, corrupty.y, corrupty.width, corrupty.height)  # Create a rectangle for the corrupty enemy
-
-                if bullet_rect.colliderect(corrupty_rect):  # Check if bullet collides with the corrupty enemy
-                    corrupty.hp -= BULLET_DAMAGE  # Reduce corrupty enemy's HP by bullet damage
-                    bullets.remove(bullet)  # Remove the bullet from the bullets list
-
-                    if corrupty.hp <= 0:
-                        corrupties.remove(corrupty)  # Remove the corrupty enemy from the list
-                        active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})  # Add exp orb to active list
-                        enemy_exp = random.randint(1, 5)  # Generate a random value for enemy exp
-                        beaten = True
-                        show_victory_screen()  # Show victory screen
-                        save()  # Save the game state
-                        break
-        if player_hp <= 0:
-            upgrades = 0
-            kills = 0
-            player_hp = 100
-            exp = 0
-            player_level = 1
-            corruption = False
-            current_max_exp = 30
-            save()
-            show_death_screen()
-            break
-
-        # Check for collisions between player and exp orbs
-        for exp_orb in active_exp_orbs:
-            orb_center_x = exp_orb['x']
-            orb_center_y = exp_orb['y']
-            orb_radius = exp_orb['size']
-            orb_exp = exp_orb['value']  # Extract the exp value associated with the orb
-
-            # Check for collisions with the player
-            if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
-                    player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
-                pickup_sound.play()
-                # Player gains exp equal to the amount associated with the exp orb
-                exp += orb_exp
-                # Remove the exp orb from the active list
-                active_exp_orbs.remove(exp_orb)
-        for big_exp_orb in active_big_exp_orbs:
-            orb_center_x = big_exp_orb['x']
-            orb_center_y = big_exp_orb['y']
-            orb_radius = big_exp_orb['size']
-            orb_exp = big_exp_orb['value']  # Extract the exp value associated with the orb
-
-            # Check for collisions with the player
-            if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
-                    player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
-                pickup_sound.play()
-                # Player gains exp equal to the amount associated with the exp orb
-                exp += orb_exp
-                # Remove the exp orb from the active list
-                active_big_exp_orbs.remove(big_exp_orb)
-
-        for regen_orb in active_regen_orbs:
-            orb_center_x = regen_orb['x']
-            orb_center_y = regen_orb['y']
-            orb_radius = regen_orb['size']
-            orb_value = regen_orb['value']  # Extract the exp value associated with the orb
-
-            # Check for collisions with the player
-            if (player_x < orb_center_x + orb_radius and player_x + player_width > orb_center_x - orb_radius and
-                    player_y < orb_center_y + orb_radius and player_y + player_height > orb_center_y - orb_radius):
-                pickup_sound_regen.play()
-                # Player gains exp equal to the amount associated with the exp orb
-                player_hp += orb_value
-                # Remove the exp orb from the active list
-                active_regen_orbs.remove(regen_orb)
-
-    # Draw elements
-    screen.fill(BLACK)  # Clear the screen
-    draw_tiles(camera_offset_x, camera_offset_y)
-
-    for exp_orb in active_exp_orbs:
-        # Resize the exp_image based on the orb's size
-        scaled_exp_image = pygame.transform.scale(exp_image, (exp_orb['size'], exp_orb['size']))
-
-        # Calculate the top-left corner of the image so it's centered on the orb's position
-        image_x = exp_orb['x'] - scaled_exp_image.get_width() // 2 + camera_offset_x
-        image_y = exp_orb['y'] - scaled_exp_image.get_height() // 2 + camera_offset_y
-
-        # Draw the scaled image
-        screen.blit(scaled_exp_image, (image_x, image_y))
-
-    for big_exp_orb in active_big_exp_orbs:
-        # Resize the exp_image based on the orb's size
-        scaled_exp_image = pygame.transform.scale(big_exp_image, (big_exp_orb['size'], big_exp_orb['size']))
-
-        # Calculate the top-left corner of the image so it's centered on the orb's position
-        image_x = big_exp_orb['x'] - scaled_exp_image.get_width() // 2 + camera_offset_x
-        image_y = big_exp_orb['y'] - scaled_exp_image.get_height() // 2 + camera_offset_y
-
-        # Draw the scaled image
-        screen.blit(scaled_exp_image, (image_x, image_y))
-
-    for regen_orb in active_regen_orbs:
-        # Resize the exp_image based on the orb's size
-        scaled_regen_image = pygame.transform.scale(regen_image, (regen_orb_size * 2, regen_orb_size * 2))
-
-        # Calculate the top-left corner of the image so it's centered on the orb's position
-        image_x = regen_orb['x'] - scaled_regen_image.get_width() // 2 + camera_offset_x
-        image_y = regen_orb['y'] - scaled_regen_image.get_height() // 2 + camera_offset_y
-
-        # Draw the scaled image
-        screen.blit(scaled_regen_image, (image_x, image_y))
-
-    enemies_to_remove = []
-    for enemy in enemies:
-        if enemy.hit_animation_playing and not enemy.death_animation_playing:
-            enemy.hit_frame_count += 1
-            if enemy.hit_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
-                enemy.hit_frame = enemy.hit_frame + 1
-
-            # Check if hit animation duration is over
-            if enemy.hit_frame >= len(hit_enemy_frames):
-                enemy.hit_animation_playing = False
-                enemy.hit_frame_count = 0
-
-        elif enemy.death_animation_playing:
-            enemy.death_frame_count += 1
-            if enemy.death_frame_count % 4 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of hit animation here
-                enemy.death_frame = enemy.death_frame + 1
-
-            # Check if death animation duration is over
-            if enemy.death_frame >= len(death_enemy_frames):  # Ensure the death animation has completed
-                enemies_to_remove.append(enemy)
-                active_exp_orbs.append({'size': enemy_exp * 5, 'x': enemy.x, 'y': enemy.y, 'value': enemy_exp})
-                enemy_exp = random.randint(1, 5)
-                kills += 1
-                if random.randint(1, 100) == 69:
-                    active_regen_orbs.append({'x': enemy.x, 'y': enemy.y, 'size': regen_orb_size, 'value': regen_amount})
-                    print("A wild regen orb spawned!!!!!")
-            else:
-                # Display the current frame of the death animation
-                enemy_image = death_enemy_frames[enemy.death_frame]
-                if enemy.x > player_x:
-                    enemy_image = pygame.transform.flip(enemy_image, True, False)
-                screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
-                continue  # Skip the rest of the loop to ensure no other animation is played
-
-        else:
-            enemy.frame_count += 1
-            if enemy.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
-                enemy.frame = (enemy.frame + 1) % len(enemy_frames)
-
-        # Choose the appropriate frame to display if not in death animation
-        if not enemy.death_animation_playing:
-            if enemy.hit_animation_playing:
-                if enemy.x > player_x:
-                    enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
-                else:
-                    enemy_image = hit_enemy_frames[enemy.hit_frame]
-            else:
-                if enemy.x > player_x:
-                    enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
-                else:
-                    enemy_image = enemy_frames[enemy.frame]
-
-            screen.blit(enemy_image, (enemy.x + camera_offset_x, enemy.y + camera_offset_y))
-    # Remove enemies marked for removal after the loop
-    for enemy in enemies_to_remove:
-        enemies.remove(enemy)
-    bulkies_to_remove = []
-    for bulky in bulkies:
-        if bulky.death_animation_playing:
-            bulky.death_frame_count += 1
-            if bulky.death_frame_count % 4 == 0 and not paused and not show_upgrade_menu:
-                bulky.death_frame = bulky.death_frame + 1
-
-            if bulky.death_frame >= len(bulky_death_frames) - 1:  # Ensure the death animation has completed
-                bulkies_to_remove.append(bulky)
-                active_exp_orbs.append({'size': enemy_exp * 2, 'x': bulky.x, 'y': bulky.y, 'value': enemy_exp})
-                enemy_exp = random.randint(30, 50)
-                kills += 1
-
-            else:
-                # Display the current frame of the death animation
-                bulky_image = bulky_death_frames[bulky.death_frame]
-                if bulky.x > player_x:
-                    bulky_image = pygame.transform.flip(bulky_image, True, False)
-                screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
-                continue  # Skip the rest of the loop to ensure no other animation is played
-        else:
-            # Animate and draw bulky enemy
-            bulky.frame_count += 1
-            if bulky.frame_count % 10 == 0 and not paused and not show_upgrade_menu:  # Adjust frame rate of animation here
-                bulky.frame = (bulky.frame + 1) % len(bulky_frames)
-
-            if bulky.x > player_x:
-                # Enemy is coming from the left side of the screen, flip the sprite
-                bulky_image = pygame.transform.flip(bulky_frames[bulky.frame], True, False)
-            else:
-                # Enemy is coming from the right side of the screen, use the original sprite
-                bulky_image = bulky_frames[bulky.frame]
-
-            screen.blit(bulky_image, (bulky.x + camera_offset_x, bulky.y + camera_offset_y))
-
-    for bulky in bulkies_to_remove:
-        bulkies.remove(bulky)
-
-    for crashing_enemy in crashing_enemies:
-        crashing_enemy.frame_count += 1
-        if crashing_enemy.frame_count % 5 == 0 and not paused and not show_upgrade_menu:
-            crashing_enemy.frame = (crashing_enemy.frame + 1) % len(crashing_enemy_frames)
-
-        if crashing_enemy.x > player_x:
-            # Enemy is coming from the left side of the screen, flip the sprite
-            crashing_enemy_image = pygame.transform.flip(crashing_enemy_frames[crashing_enemy.frame], True, False)
-        else:
-            # Enemy is coming from the right side of the screen, use the original sprite
-            crashing_enemy_image = crashing_enemy_frames[crashing_enemy.frame]
-
-        # Scale the image to the size defined by corrupty.height and corrupty.width
-        crashing_enemy_image = pygame.transform.scale(crashing_enemy_image, (crashing_enemy.width, crashing_enemy.height))
-
-        screen.blit(crashing_enemy_image, (crashing_enemy.x + camera_offset_x, crashing_enemy.y + camera_offset_y))
-
-    for corrupty in corrupties:
-        corrupty.frame_count += 1
-        if corrupty.frame_count % 6 == 0 and not paused and not show_upgrade_menu:
-            corrupty.frame = (corrupty.frame + 1) % len(corrupty_frames)
-
-        if corrupty.x > player_x:
-            # Enemy is coming from the left side of the screen, flip the sprite
-            corrupty_image = pygame.transform.flip(corrupty_frames[corrupty.frame], True, False)
-        else:
-            # Enemy is coming from the right side of the screen, use the original sprite
-            corrupty_image = corrupty_frames[corrupty.frame]
-
-        # Scale the image to the size defined by corrupty.height and corrupty.width
-        corrupty_image = pygame.transform.scale(corrupty_image, (corrupty.width, corrupty.height))
-
-        screen.blit(corrupty_image, (corrupty.x + camera_offset_x, corrupty.y + camera_offset_y))
-
-    for bullet in bullets:
-        # Calculate angle of rotation based on bullet's velocity
-        angle = math.atan2(-bullet['dy'], bullet['dx'])  # Use negative y-velocity to account for inverted y-axis
-
-        # Rotate the bullet image
-        rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
-
-        # Draw the rotated bullet image at the bullet's position
-        screen.blit(rotated_bullet_image, (
-            bullet['x'] - rotated_bullet_image.get_width() / 2 + camera_offset_x, bullet['y'] - rotated_bullet_image.get_height() / 2 + camera_offset_y))
-    if explosion:
-        if explosion_frame_index < len(explosion_frames):
-            screen.blit(explosion_frames[explosion_frame_index],
-                        (explosion_x - 50 + camera_offset_x, explosion_y - 50 + camera_offset_y))
-            explosion_frame_duration -= 1
-            if explosion_frame_duration <= 0:
-                explosion_frame_index += 1
-                explosion_frame_duration = 4  # Reset frame duration
-            # Check for collisions with the explosion
-            check_explosion_collisions(explosion_x, explosion_y)
-        else:
-            explosion = False  # End explosion animation
-
-    if explosion_cooldown > 0 and not paused and not show_upgrade_menu:
-        explosion_cooldown -= 1
-
-    draw_hp_bar()  # Draw the player's HP bar
-    draw_exp_bar()  # Draw the experience bar
-    draw_kill_counter(kills)
-    draw_coordinates(player_x, player_y)
-    draw_explosion_cooldown(explosion_cooldown)
-    if rendering == "right":
-        screen.blit(frames_right[current_frame], (player_pos_on_screen))  # Draw the current frame of player sprite
-    if rendering == "up":
-        screen.blit(frames_up[current_frame], (player_pos_on_screen))
-    if rendering == "left":
-        screen.blit(frames_left[current_frame], (player_pos_on_screen))
-    if rendering == "down":
-        screen.blit(frames_down[current_frame], (player_pos_on_screen))
-    if i_frames_counter < i_frames:
-        i_frames_counter += 1
-    if exp >= current_max_exp:
-        level_up()
-    # If upgrade menu is shown, display upgrade options
-    if show_upgrade_menu:
-        if upgrades == 0:  # If player doesn't have any upgrades yet and receives the first one, say "Fireball shoots in opposite direction" on-screen
-            upgrade_text1 = menu_font.render("1. Fireball shoots in opposite direction", True, WHITE)  # Declare what to say
-            text_width, text_height = menu_font.size("1. Fireball shoots in opposite direction")  # Declare how big the text is
-            text_x = (width - text_width) // 2  # Declare x position
-            text_y = (height - text_height) // 2 + 50  # Declare y position
-            screen.blit(upgrade_text1, (text_x, text_y))  # Put it on-screen
-        elif upgrades == 1:  # If player has 1 upgrade and is going to the second one, say "Fireball shoots in the right direction" on-screen
-            upgrade_text2 = menu_font.render("2. Fireball shoots in the right direction", True, WHITE)
-            text_width, text_height = menu_font.size("2. Fireball shoots in the right direction")
-            text_x = (width - text_width) // 2
-            text_y = (height - text_height) // 2 + 50
-            screen.blit(upgrade_text2, (text_x, text_y))
-        elif upgrades == 2:  # If player has 2 upgrades and is going to the third one, say "Fireball shoots in the left direction" on-screen
-            upgrade_text3 = menu_font.render("3. Fireball shoots in the left direction", True, WHITE)
-            text_width, text_height = menu_font.size("3. Fireball shoots in the left direction")
-            text_x = (width - text_width) // 2
-            text_y = (height - text_height) // 2 + 50
-            screen.blit(upgrade_text3, (text_x, text_y))
-        elif upgrades == 3:  #if player has 3 upgrades and is going to the fourth one, say "Fireball shoots in the top left and right direction" on-screen
-            upgrade_text4 = menu_font.render("4. Fireball shoots in the top left and right direction", True, WHITE)
-            text_width, text_height = menu_font.size("4. Fireball shoots in the top left and right direction")
-            text_x = (width - text_width) // 2
-            text_y = (height - text_height) // 2 + 50
-            screen.blit(upgrade_text4, (text_x, text_y))
-        elif upgrades == 4:  #if player has 4 upgrades and is going to the fifth one, say "Fireball shoots in the bottom left and right direction" on-screen
-            upgrade_text5 = menu_font.render("5. Fireball shoots in the bottom left and right direction", True, WHITE)
-            text_width, text_height = menu_font.size("5. Fireball shoots in the bottom left and right direction")
-            text_x = (width - text_width) // 2
-            text_y = (height - text_height) // 2 + 50
-            screen.blit(upgrade_text5, (text_x, text_y))
-        elif upgrades == 5:  # If player has 5 upgrades and goes to the 6th one, say "Fireball goes through enemies" on-screen
-            upgrade_text6 = menu_font.render("6. Fireball goes through enemies", True, WHITE)
-            text_width, text_height = menu_font.size("6. Fireball goes through enemies")
-            text_x = (width - text_width) // 2
-            text_y = (height - text_height) // 2 + 50
-            screen.blit(upgrade_text6, (text_x, text_y))
-        elif upgrades == 6: # If player has 6 upgrades and is going to the seventh, say "Automode" on-screen
-            upgrade_text7 = menu_font.render("7. Automode", True, WHITE)
-            text_width, text_height = menu_font.size("7. Automode")
-            text_x = (width - text_width) // 2
-            text_y = (height - text_height) // 2 + 50
-            screen.blit(upgrade_text7, (text_x, text_y))
-        elif upgrades >= 7:  # If player has more upgrades than 7 say "So um funny story, I'm out of upgrade ideas..."
-            out_of_upgrades_text = menu_font.render("So um funny story, I'm out of upgrade ideas...", True, WHITE)
-            text_width, text_height = menu_font.size("So um funny story, I'm out of upgrade ideas...")
-            text_x = (width - text_width) // 2
-            text_y = (height - text_height) // 2 + 50
-            screen.blit(out_of_upgrades_text, (text_x, text_y))
-    screen.blit(cursor_image, cursor_pos)
-    # Update the display
-    pygame.display.flip()
-    pygame.time.Clock().tick(FPS)
+game_loop()
