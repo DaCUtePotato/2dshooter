@@ -578,6 +578,7 @@ def handle_bullet_collisions(bullets, target_rect, action):
 def start_game():
     global main_menu  # Use global variable for main_menu
     main_menu = False  # Disable main menu
+    gaming = True
     print("Starting Game...")  # Print starting game message
 
 
@@ -762,6 +763,7 @@ def show_victory_screen():
     victory_text = victory_font.render("Victory!", True, YELLOW)
     sub_text = menu_font.render("Press ESC to Exit or Enter to start an Endless Run", True, WHITE)
     running = True
+    music.stop()
     victory_sound.play()
     while running:
         for event in pygame.event.get():
@@ -782,8 +784,10 @@ def show_victory_screen():
                     pygame.quit()
                     sys.exit()
                 if event.key == pygame.K_RETURN:
+                    music.play(-1)
                     victory_sound.stop()
                     running = False
+
 
         screen.fill(BLACK)
 
@@ -797,6 +801,7 @@ def show_victory_screen():
         clock.tick(FPS)
 
 def show_death_screen():
+    global enemies, gaming, player_x, player_y, player_hp, bulkies, bullets, corrupties, crashing_enemies
     death_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 50)
     sub_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 20)
     if not corruption:
@@ -804,6 +809,7 @@ def show_death_screen():
     else:
         death_text = death_font.render("You succumbed to the corruption. Press ESC to Exit or r to restart", True, RED)
     sub_text = sub_font.render("Press ESC to Exit or r to restart", True, WHITE)
+    music.stop()
     death_sound.play()
     running = True
     while running:
@@ -818,6 +824,17 @@ def show_death_screen():
                     sys.exit()
                 if event.key == pygame.K_r:
                     death_sound.stop()
+                    music.play(-1)
+                    player_x = width // 2  # Initial player x position
+                    player_y = height // 2  # Initial player y position
+                    enemies = []
+                    bulkies = []
+                    corrupties = []
+                    crashing_enemies = []
+                    bullets = []
+                    player_hp = 100
+                    gaming = False
+                    open_main_menu()
                     running = False
 
         screen.fill(BLACK)
@@ -894,58 +911,62 @@ if os.path.exists(file_path):
         beaten = lines[7].strip() == "True"
 
 music.play(-1)
+def open_main_menu():
+    global cursor_pos, event, current_fireball_cooldown, angle, bullets, rotated_bullet_image, bullet_image, main_menu, right_mouse_button_pressed
+    main_menu = True
+    while main_menu:
+        cursor_pos = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                save()
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 3:  # Right mouse button
+                    right_mouse_button_pressed = False
+        if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
+            bullets = []
+            centered_x, centered_y = player_x + player_width // 2-25, player_y + player_height // 4
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            angle = math.atan2(mouse_y - centered_y, mouse_x - centered_x)
+            shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
+            current_fireball_cooldown = base_fireball_cooldown  # Reset the cooldown
+            fireball_sound_1.play()
 
-while main_menu:
-    bg_music_vol = 0.1
-    cursor_pos = pygame.mouse.get_pos()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            save()
-            pygame.quit()
-            sys.exit()
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 3:  # Right mouse button
-                right_mouse_button_pressed = False
-    if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
-        centered_x, centered_y = player_x + player_width // 2-25, player_y + player_height // 4
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        angle = math.atan2(mouse_y - centered_y, mouse_x - centered_x)
-        shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
-        current_fireball_cooldown = base_fireball_cooldown  # Reset the cooldown
-        fireball_sound_1.play()
+        if current_fireball_cooldown > 0:
+            current_fireball_cooldown -= 1
 
-    if current_fireball_cooldown > 0:
-        current_fireball_cooldown -= 1
+        screen.fill(BLACK)
+        draw_tiles(0, 0)
+        screen.blit(scaled_title_image, title_rect)
+        screen.blit(play_button_image, play_button_rect)
+        screen.blit(settings_button_image, settings_button_rect)
+        screen.blit(quit_button_image, quit_button_rect)
 
-    screen.fill(BLACK)
-    draw_tiles(0, 0)
-    screen.blit(scaled_title_image, title_rect)
-    screen.blit(play_button_image, play_button_rect)
-    screen.blit(settings_button_image, settings_button_rect)
-    screen.blit(quit_button_image, quit_button_rect)
+        bullets = [bullet for bullet in bullets if 0 <= bullet['x'] <= width and 0 <= bullet['y'] <= height]
+        for bullet in bullets:
+            bullet['x'] += bullet['dx']
+            bullet['y'] += bullet['dy']
+            bullet_image = animate_bullet(bullet)
+            angle = math.atan2(-bullet['dy'], bullet['dx'])
+            rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
+            screen.blit(rotated_bullet_image, (
+            bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
 
-    bullets = [bullet for bullet in bullets if 0 <= bullet['x'] <= width and 0 <= bullet['y'] <= height]
-    for bullet in bullets:
-        bullet['x'] += bullet['dx']
-        bullet['y'] += bullet['dy']
-        bullet_image = animate_bullet(bullet)
-        angle = math.atan2(-bullet['dy'], bullet['dx'])
-        rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
-        screen.blit(rotated_bullet_image, (
-        bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
+        handle_bullet_collisions(bullets, play_button_rect, start_game)
+        handle_bullet_collisions(bullets, settings_button_rect, open_settings)
+        handle_bullet_collisions(bullets, quit_button_rect, quit_game)
 
-    handle_bullet_collisions(bullets, play_button_rect, start_game)
-    handle_bullet_collisions(bullets, settings_button_rect, open_settings)
-    handle_bullet_collisions(bullets, quit_button_rect, quit_game)
+        screen.blit(frames_down[current_frame], player_pos_on_screen)  # Always render the player looking down
 
-    screen.blit(frames_down[current_frame], player_pos_on_screen)  # Always render the player looking down
+        screen.blit(cursor_image, cursor_pos)
+        pygame.display.flip()
+        clock.tick(FPS)
 
-    screen.blit(cursor_image, cursor_pos)
-    pygame.display.flip()
-    clock.tick(FPS)
-
+open_main_menu()
 show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
-while True:
+gaming = True
+while gaming:
     cursor_pos = pygame.mouse.get_pos()  # Get the current position of the mouse cursor
     for event in pygame.event.get():  # Event loop to handle different events
         if event.type == pygame.QUIT:  # If the event is a quit event
@@ -1241,6 +1262,7 @@ while True:
             current_max_exp = 30
             save()
             show_death_screen()
+            break
 
         # Check for collisions between player and exp orbs
         for exp_orb in active_exp_orbs:
@@ -1368,10 +1390,8 @@ while True:
             if enemy.hit_animation_playing:
                 if enemy.x > player_x:
                     enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
-                    print("playing animation")
                 else:
                     enemy_image = hit_enemy_frames[enemy.hit_frame]
-                    print("playing animation")
             else:
                 if enemy.x > player_x:
                     enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
