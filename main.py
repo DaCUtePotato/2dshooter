@@ -1254,7 +1254,10 @@ def open_settings():
 
         for i, setting in enumerate(settings):
             color = YELLOW if i == selected_index else WHITE
-            if setting["name"] == "Difficulty":
+            if setting["name"] == "Fullscreen [BETA]":
+                value_text = "On" if setting["value"] == 1.0 else "Off"
+                setting_text = menu_font.render(f"{setting['name']}: {value_text}", True, color)
+            elif setting["name"] == "Difficulty":
                 setting_text = menu_font.render(f"{setting['name']}: {difficulty_levels[int(setting['value'])]['name']}", True, color)
             else:
                 setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
