@@ -1260,7 +1260,7 @@ def open_settings():
             elif setting["name"] == "Difficulty":
                 setting_text = menu_font.render(f"{setting['name']}: {difficulty_levels[int(setting['value'])]['name']}", True, color)
             else:
-                setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
+                setting_text = menu_font.render(f"{setting['name']}: {int(round(setting['value'] * 10)* 10)}%", True, color)
             screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
 
         pygame.display.flip()
