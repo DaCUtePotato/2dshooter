@@ -149,8 +149,17 @@ for i in range(1, 6):  # There are five fireball images named fireball1.png thro
 
 ENEMY_SPEED = 0.75  # Base enemy speed
 ENEMY_HP = 10  # Base enemy health points
+
+# Difficulty settings mapping
+difficulty_levels = [
+    {"name": "Easy", "scaling_factor": 0.01},
+    {"name": "Medium", "scaling_factor": 0.05},
+    {"name": "Hard", "scaling_factor": 0.1},
+    {"name": "Ultra Hard", "scaling_factor": 1}
+]
 SPEED_SCALING_FACTOR = 0.005  # Increase in speed per kill
-HP_SCALING_FACTOR = 0.01     # Increase in HP per kill
+HP_SCALING_FACTOR = 0.1     # Increase in HP per kill
+current_difficulty_index = 0  # Default to easy mode
 
 # Some flags for checking things
 gambling_mode = False  # Gambling mode flag (false by default)
@@ -568,12 +577,15 @@ def start_game():
 
 
 def open_main_settings():
-    global volume, bg_music_vol, fullscreen, settings_open  # Use global variables for volume, bg_music_vol, fullscreen and settings_open
+    global volume, bg_music_vol, fullscreen, settings_open, current_difficulty_index
+    global SPEED_SCALING_FACTOR, HP_SCALING_FACTOR
     bullets.remove(bullet)
+    # Initialize settings
     settings = [
         {"name": "SFX", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
         {"name": "Background Music", "value": bg_music_vol, "min": 0.0, "max": 1.0, "step": 0.1},
         {"name": "Fullscreen [BETA]", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
+        {"name": "Difficulty", "value": current_difficulty_index, "min": 0, "max": len(difficulty_levels) - 1, "step": 1}  # Difficulty setting
     ]
     selected_index = 0
     settings_open = True
@@ -601,6 +613,12 @@ def open_main_settings():
         volume = settings[0]["value"]
         bg_music_vol = settings[1]["value"]
         fullscreen = settings[2]["value"] == 1.0
+        current_difficulty_index = int(settings[3]["value"])
+        scaling_factor = difficulty_levels[current_difficulty_index]["scaling_factor"]
+
+        # Update speed and HP scaling factors based on difficulty
+        SPEED_SCALING_FACTOR = scaling_factor * 0.005
+        HP_SCALING_FACTOR = scaling_factor * 0.1
 
         # Update display mode only if fullscreen setting changed
         if fullscreen != initial_fullscreen:
@@ -626,7 +644,10 @@ def open_main_settings():
 
         for i, setting in enumerate(settings):
             color = YELLOW if i == selected_index else WHITE
-            setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
+            if setting["name"] == "Difficulty":
+                setting_text = menu_font.render(f"{setting['name']}: {difficulty_levels[int(setting['value'])]['name']}", True, color)
+            else:
+                setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
             screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
 
         pygame.display.flip()
@@ -728,11 +749,14 @@ def check_explosion_collisions(explosion_x, explosion_y):
 
 # Main settings handling function
 def open_settings():
-    global volume, bg_music_vol, fullscreen, settings_open
+    global volume, bg_music_vol, fullscreen, settings_open, current_difficulty_index
+    global SPEED_SCALING_FACTOR, HP_SCALING_FACTOR
+    # Initialize settings
     settings = [
-        {"name": "Sfx", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
+        {"name": "SFX", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
         {"name": "Background Music", "value": bg_music_vol, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Fullscreen", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
+        {"name": "Fullscreen [BETA]", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
+        {"name": "Difficulty", "value": current_difficulty_index, "min": 0, "max": len(difficulty_levels) - 1, "step": 1}  # Difficulty setting
     ]
     selected_index = 0
     settings_open = True
@@ -760,6 +784,12 @@ def open_settings():
         volume = settings[0]["value"]
         bg_music_vol = settings[1]["value"]
         fullscreen = settings[2]["value"] == 1.0
+        current_difficulty_index = int(settings[3]["value"])
+        scaling_factor = difficulty_levels[current_difficulty_index]["scaling_factor"]
+
+        # Update speed and HP scaling factors based on difficulty
+        SPEED_SCALING_FACTOR = scaling_factor * 0.005
+        HP_SCALING_FACTOR = scaling_factor * 0.1
 
         # Update display mode only if fullscreen setting changed
         if fullscreen != initial_fullscreen:
@@ -785,7 +815,10 @@ def open_settings():
 
         for i, setting in enumerate(settings):
             color = YELLOW if i == selected_index else WHITE
-            setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
+            if setting["name"] == "Difficulty":
+                setting_text = menu_font.render(f"{setting['name']}: {difficulty_levels[int(setting['value'])]['name']}", True, color)
+            else:
+                setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
             screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
 
         pygame.display.flip()
@@ -1404,8 +1437,10 @@ while True:
             if enemy.hit_animation_playing:
                 if enemy.x > player_x:
                     enemy_image = pygame.transform.flip(hit_enemy_frames[enemy.hit_frame], True, False)
+                    print("playing animation")
                 else:
                     enemy_image = hit_enemy_frames[enemy.hit_frame]
+                    print("playing animation")
             else:
                 if enemy.x > player_x:
                     enemy_image = pygame.transform.flip(enemy_frames[enemy.frame], True, False)
