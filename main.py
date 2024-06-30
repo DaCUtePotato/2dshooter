@@ -264,7 +264,7 @@ brightness = 0.5
 contrast = 0.5
 beaten = False
 # Fonts
-menu_font = pygame.font.SysFont('Avenir', 30)
+menu_font = pygame.font.SysFont('Avenir', 24)
 
 documents_path = os.path.expanduser("~/")  # Define the file path to home directory
 file_path = os.path.join(documents_path, "savefile.bulletheaven")  # Path to save file
