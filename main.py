@@ -126,6 +126,8 @@ level_up_sound = pygame.mixer.Sound("sounds/level_up_normal.wav")
 gambling_sound = pygame.mixer.Sound("sounds/gambling.wav")
 explosion_sound = pygame.mixer.Sound("sounds/explosion.wav")
 explooosion_sound = pygame.mixer.Sound("sounds/explooosion.wav")
+death_sound = pygame.mixer.Sound("sounds/death.mp3")
+victory_sound = pygame.mixer.Sound("sounds/ending.mp3")
 bg_music_vol = 0.5
 
 
@@ -564,11 +566,14 @@ def draw_hp_bar():
     screen.blit(hp_text, (220, height - 30))  # Draw health text
 
 def handle_bullet_collisions(bullets, target_rect, action):
+    global play_button_rect, settings_button_rect
     # Check for bullet collisions with a target and perform an action if collision occurs
     for bullet in bullets:
         bullet_rect = pygame.Rect(bullet['x'] - 10, bullet['y'] - 10, 20, 20)  # Create a rectangle for the bullet
         if bullet_rect.colliderect(target_rect):  # Check for collision with the target
             action()  # Perform the action if collision occurs
+            if target_rect == settings_button_rect:
+                bullets.remove(bullet)
 
 def start_game():
     global main_menu  # Use global variable for main_menu
@@ -576,10 +581,9 @@ def start_game():
     print("Starting Game...")  # Print starting game message
 
 
-def open_main_settings():
+def open_settings():
     global volume, bg_music_vol, fullscreen, settings_open, current_difficulty_index
     global SPEED_SCALING_FACTOR, HP_SCALING_FACTOR
-    bullets.remove(bullet)
     # Initialize settings
     settings = [
         {"name": "SFX", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
@@ -745,86 +749,6 @@ def check_explosion_collisions(explosion_x, explosion_y):
                 save()
                 sys.exit("The corruption is spreading...")
 
-
-
-# Main settings handling function
-def open_settings():
-    global volume, bg_music_vol, fullscreen, settings_open, current_difficulty_index
-    global SPEED_SCALING_FACTOR, HP_SCALING_FACTOR
-    # Initialize settings
-    settings = [
-        {"name": "SFX", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Background Music", "value": bg_music_vol, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Fullscreen [BETA]", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
-        {"name": "Difficulty", "value": current_difficulty_index, "min": 0, "max": len(difficulty_levels) - 1, "step": 1}  # Difficulty setting
-    ]
-    selected_index = 0
-    settings_open = True
-    initial_fullscreen = fullscreen  # Track the initial fullscreen value
-
-    while settings_open:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                save()
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    settings_open = False
-                if event.key == pygame.K_w:
-                    selected_index = (selected_index - 1) % len(settings)
-                if event.key == pygame.K_s:
-                    selected_index = (selected_index + 1) % len(settings)
-                if event.key == pygame.K_d:
-                    settings[selected_index]["value"] = min(settings[selected_index]["value"] + settings[selected_index]["step"], settings[selected_index]["max"])
-                if event.key == pygame.K_a:
-                    settings[selected_index]["value"] = max(settings[selected_index]["value"] - settings[selected_index]["step"], settings[selected_index]["min"])
-
-        # Update settings values
-        volume = settings[0]["value"]
-        bg_music_vol = settings[1]["value"]
-        fullscreen = settings[2]["value"] == 1.0
-        current_difficulty_index = int(settings[3]["value"])
-        scaling_factor = difficulty_levels[current_difficulty_index]["scaling_factor"]
-
-        # Update speed and HP scaling factors based on difficulty
-        SPEED_SCALING_FACTOR = scaling_factor * 0.005
-        HP_SCALING_FACTOR = scaling_factor * 0.1
-
-        # Update display mode only if fullscreen setting changed
-        if fullscreen != initial_fullscreen:
-            set_screen_mode(fullscreen)
-            initial_fullscreen = fullscreen  # Update the initial fullscreen value
-
-        # Update volume for all sounds
-        pickup_sound.set_volume(volume)
-        level_up_sound.set_volume(volume)
-        gambling_sound.set_volume(volume)
-        pickup_sound_regen.set_volume(volume)
-        fireball_sound_1.set_volume(volume)
-        fireball_sound_2.set_volume(volume)
-        fireball_sound_3.set_volume(volume)
-        fireball_sound_4.set_volume(volume)
-        fireball_sound_5.set_volume(volume)
-        fireball_sound_6.set_volume(volume)
-        fireball_sound_7.set_volume(volume)
-        music.set_volume(bg_music_vol)
-
-        screen.fill(BLACK)
-        draw_tiles(0, 0)  # Assuming draw_tiles is a function in your code
-
-        for i, setting in enumerate(settings):
-            color = YELLOW if i == selected_index else WHITE
-            if setting["name"] == "Difficulty":
-                setting_text = menu_font.render(f"{setting['name']}: {difficulty_levels[int(setting['value'])]['name']}", True, color)
-            else:
-                setting_text = menu_font.render(f"{setting['name']}: {int(setting['value'] * 100)}%", True, color)
-            screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
-
-        pygame.display.flip()
-        pygame.time.Clock().tick(FPS)
-
-
 def quit_game():
     print("Quitting game...")
     save()
@@ -838,6 +762,7 @@ def show_victory_screen():
     victory_text = victory_font.render("Victory!", True, YELLOW)
     sub_text = menu_font.render("Press ESC to Exit or Enter to start an Endless Run", True, WHITE)
     running = True
+    victory_sound.play()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -857,6 +782,7 @@ def show_victory_screen():
                     pygame.quit()
                     sys.exit()
                 if event.key == pygame.K_RETURN:
+                    victory_sound.stop()
                     running = False
 
         screen.fill(BLACK)
@@ -877,9 +803,11 @@ def show_death_screen():
     if not corruption:
         death_text = death_font.render("YOU DIED", True, RED)
     else:
-        death_text = death_font.render("You succumbed to the corruption", True, RED)
-    sub_text = sub_font.render("Press ESC to Exit", True, WHITE)
-    while True:
+        death_text = death_font.render("You succumbed to the corruption. Press ESC to Exit or r to restart", True, RED)
+    sub_text = sub_font.render("Press ESC to Exit or r to restart", True, WHITE)
+    death_sound.play()
+    running = True
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 save()
@@ -889,6 +817,10 @@ def show_death_screen():
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+                if event.key == pygame.K_r:
+                    death_sound.stop()
+                    running = False
+
         screen.fill(BLACK)
 
         text_rect = death_text.get_rect(center=(width // 2, height // 2))
@@ -1004,7 +936,7 @@ while main_menu:
         bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
 
     handle_bullet_collisions(bullets, play_button_rect, start_game)
-    handle_bullet_collisions(bullets, settings_button_rect, open_main_settings)
+    handle_bullet_collisions(bullets, settings_button_rect, open_settings)
     handle_bullet_collisions(bullets, quit_button_rect, quit_game)
 
     screen.blit(frames_down[current_frame], player_pos_on_screen)  # Always render the player looking down
