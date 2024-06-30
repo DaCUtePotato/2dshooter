@@ -249,26 +249,12 @@ volume = 0.5
 # Brightness and contrast don't actually have a function currently
 brightness = 0.5
 contrast = 0.5
-
+beaten = False
 # Fonts
 menu_font = pygame.font.SysFont('Avenir', 30)
 
 documents_path = os.path.expanduser("~/")  # Define the file path to home directory
 file_path = os.path.join(documents_path, "savefile.bulletheaven")  # Path to save file
-
-# Check if the file exists
-if os.path.exists(file_path):
-    # Read data from the file and assign to variables
-    with open(file_path, "r") as file:
-        lines = file.readlines()
-        upgrades = int(lines[0].strip())
-        kills = int(lines[1].strip())
-        player_hp = int(lines[2].strip())
-        exp = int(lines[3].strip())
-        player_level = int(lines[4].strip())
-        corruption = lines[5].strip() == "True"
-        current_max_exp = int(lines[6].strip())
-
 # Set background music based on corruption state. These are unaffected by volume
 if not corruption:
     music = pygame.mixer.Sound('sounds/background_music.mp3')
@@ -287,6 +273,7 @@ def save():
         file.write(f"{player_level}\n")
         file.write(f"{corruption}\n")
         file.write(f"{current_max_exp}\n")
+        file.write(f"{beaten}\n")
 
 
 def draw_tiles(camera_offset_x, camera_offset_y):
@@ -681,7 +668,7 @@ explosion_radius = 50  # Adjust this based on the size of your explosion
 
 # Check for collisions with the explosion
 def check_explosion_collisions(explosion_x, explosion_y):
-    global enemy_exp, corruption, kills, upgrades, player_hp, exp, player_level, current_max_exp
+    global enemy_exp, corruption, kills, upgrades, player_hp, exp, player_level, current_max_exp, beaten
     explosion_rect = pygame.Rect(explosion_x - explosion_radius, explosion_y - explosion_radius,
                                  explosion_radius * 2, explosion_radius * 2)
 
@@ -720,14 +707,7 @@ def check_explosion_collisions(explosion_x, explosion_y):
                 corrupties.remove(corrupty)
                 active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
                 enemy_exp = random.randint(1, 5)
-                print("You've freed us all!")
-                upgrades = 0
-                kills = 0
-                player_hp = 100
-                exp = 0
-                player_level = 1
-                corruption = False
-                current_max_exp = 30
+                beaten = True
                 save()
                 show_victory_screen()
 
@@ -820,19 +800,31 @@ def quit_game():
 
 
 def show_victory_screen():
-    victory_font = pygame.font.SysFont('Avenir', 50)
+    global upgrades, kills, player_hp, exp, player_level, corruption, current_max_exp
+    victory_font = pygame.font.Font('fonts/TrajanPro-Regular.ttf', 50)
     victory_text = victory_font.render("Victory!", True, YELLOW)
-    sub_text = menu_font.render("Press ESC to Exit", True, WHITE)
-
-    while True:
+    sub_text = menu_font.render("Press ESC to Exit or Enter to start an Endless Run", True, WHITE)
+    running = True
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    # Reset all of the values back to default
+                    upgrades = 0
+                    kills = 0
+                    player_hp = 100
+                    exp = 0
+                    player_level = 1
+                    corruption = False
+                    current_max_exp = 30
+                    save()
                     pygame.quit()
                     sys.exit()
+                if event.key == pygame.K_RETURN:
+                    running = False
 
         screen.fill(BLACK)
         draw_tiles(0, 0)
@@ -849,7 +841,10 @@ def show_victory_screen():
 def show_death_screen():
     death_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 50)
     sub_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 20)
-    death_text = death_font.render("YOU DIED", True, RED)
+    if not corruption:
+        death_text = death_font.render("YOU DIED", True, RED)
+    else:
+        death_text = death_font.render("You succumbed to the corruption", True, RED)
     sub_text = sub_font.render("Press ESC to Exit", True, WHITE)
     while True:
         for event in pygame.event.get():
@@ -920,9 +915,24 @@ def open_menu():
         pygame.display.flip()
         clock.tick(60)
 
+# Check if the file exists
+if os.path.exists(file_path):
+    # Read data from the file and assign to variables
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+        upgrades = int(lines[0].strip())
+        kills = int(lines[1].strip())
+        player_hp = int(lines[2].strip())
+        exp = int(lines[3].strip())
+        player_level = int(lines[4].strip())
+        corruption = lines[5].strip() == "True"
+        current_max_exp = int(lines[6].strip())
+        beaten = lines[7].strip() == "True"
+
 music.play(-1)
 
 while main_menu:
+    bg_music_vol = 0.1
     cursor_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -1089,7 +1099,7 @@ while True:
             spawn_crashing_enemy(player_x, player_y)
         if kills >= 50 and not bulky_spawned and not corruption:  # Spawn bulky enemy under certain conditions
             spawn_bulky(player_x, player_y)
-        if kills >= 50 and corruption and not corrupty_spawned:  # Spawn corrupty enemy under certain conditions
+        if kills >= 50 and corruption and not corrupty_spawned and beaten == False:  # Spawn corrupty enemy under certain conditions
             spawn_corrupty(player_x, player_y)
 
         for crashing_enemy in crashing_enemies:  # Update enemy positions and check for collisions with the player
@@ -1253,17 +1263,10 @@ while True:
                         corrupties.remove(corrupty)  # Remove the corrupty enemy from the list
                         active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})  # Add exp orb to active list
                         enemy_exp = random.randint(1, 5)  # Generate a random value for enemy exp
-                        print("You've freed us all!!")  # Print victory message
-                        # Reset all of the values back to default
-                        upgrades = 0
-                        kills = 0
-                        player_hp = 100
-                        exp = 0
-                        player_level = 1
-                        corruption = False
-                        current_max_exp = 30
-                        save()  # Save the game state
+                        beaten = True
                         show_victory_screen()  # Show victory screen
+                        save()  # Save the game state
+                        break
         if player_hp <= 0:
             upgrades = 0
             kills = 0
