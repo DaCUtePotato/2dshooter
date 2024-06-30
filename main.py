@@ -280,6 +280,8 @@ def save():
         file.write(f"{corruption}\n")
         file.write(f"{current_max_exp}\n")
         file.write(f"{beaten}\n")
+        file.write(f"{player_speed}\n")
+        file.write(f"{BULLET_DAMAGE}\n")
 
 
 def draw_tiles(camera_offset_x, camera_offset_y):
@@ -474,7 +476,7 @@ def draw_coordinates(player_x, player_y):
 
 # level up function
 def level_up():
-    global player_level, exp, current_max_exp, paused, show_upgrade_menu, player_speed, BULLET_DAMAGE, speed_scaling_factor, dmg_scaling_factor  # Declare global variables
+    global player_level, exp, current_max_exp, paused, show_upgrade_menu, player_speed, BULLET_DAMAGE, speed_scaling_factor, dmg_scaling_factor, BULLET_DAMAGE, player_speed  # Declare global variables
     player_level += 1  # Increase player level
     exp -= current_max_exp  # Subtract current max exp from player's exp
     current_max_exp = int(current_max_exp * 1.3)  # Increase current max exp exponentially for the next level
@@ -482,6 +484,7 @@ def level_up():
     if upgrades >= 7:
         player_speed = int(player_speed*speed_scaling_factor)
         BULLET_DAMAGE = int(BULLET_DAMAGE*dmg_scaling_factor)
+        print(f"To be more exact, your speed is now: {player_speed} and your fireball dmg is {BULLET_DAMAGE}")
     show_upgrade_menu = True  # Show the upgrade menu
     if gambling_mode:
         gambling_sound.play()  # Play gambling sound if gambling mode is active
@@ -574,7 +577,7 @@ def handle_bullet_collisions(bullets, target_rect, action):
                 bullets.remove(bullet)
 
 def game_loop():
-    global gaming, paused, cursor_pos, event, show_upgrade_menu, upgrades, player_x, player_y, explosion_x, explosion_y, explosion_image, explosion_frames, explosion_radius, explosion_cooldown, right_mouse_button_pressed, current_fireball_cooldown, current_frame, gambling_mode, gambling_sound, bullets, frame_count, corruption, rendering, kills, beaten, player_hp, i_frames_counter, enemy_exp, exp, player_level, current_max_exp, camera_offset_x, camera_offset_y, bullet_image, explosion, explosion_frame_duration, explosion_frame_index
+    global gaming, paused, cursor_pos, event, show_upgrade_menu, upgrades, player_x, player_y, explosion_x, explosion_y, explosion_image, explosion_frames, explosion_radius, explosion_cooldown, right_mouse_button_pressed, current_fireball_cooldown, current_frame, gambling_mode, gambling_sound, bullets, frame_count, corruption, rendering, kills, beaten, player_hp, i_frames_counter, enemy_exp, exp, player_level, current_max_exp, camera_offset_x, camera_offset_y, bullet_image, explosion, explosion_frame_duration, explosion_frame_index, player_speed, BULLET_DAMAGE
     show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
     gaming = True
     rendering = "down"
@@ -869,6 +872,8 @@ def game_loop():
                 player_level = 1
                 corruption = False
                 current_max_exp = 30
+                player_speed = 5
+                BULLET_DAMAGE = 10.5
                 save()
                 show_death_screen()
                 gaming = False
@@ -1375,7 +1380,7 @@ def quit_game():
 
 
 def show_victory_screen():
-    global upgrades, kills, player_hp, exp, player_level, corruption, current_max_exp
+    global upgrades, kills, player_hp, exp, player_level, corruption, current_max_exp, player_speed, BULLET_DAMAGE
     victory_font = pygame.font.Font('fonts/TrajanPro-Regular.ttf', 50)
     victory_text = victory_font.render("Victory!", True, YELLOW)
     sub_text = menu_font.render("Press ESC to Exit or Enter to start an Endless Run", True, WHITE)
@@ -1397,6 +1402,8 @@ def show_victory_screen():
                     player_level = 1
                     corruption = False
                     current_max_exp = 30
+                    player_speed = 5
+                    BULLET_DAMAGE = 10.5
                     save()
                     pygame.quit()
                     sys.exit()
@@ -1531,6 +1538,8 @@ if os.path.exists(file_path):
         corruption = lines[5].strip() == "True"
         current_max_exp = int(lines[6].strip())
         beaten = lines[7].strip() == "True"
+        player_speed = int(lines[8].strip())
+        BULLET_DAMAGE = int(lines[9].strip())
 
 # Set background music based on corruption state. These are unaffected by volume
 if not corruption:
