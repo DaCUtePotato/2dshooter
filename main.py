@@ -154,13 +154,13 @@ ENEMY_HP = 10  # Base enemy health points
 
 # Difficulty settings mapping
 difficulty_levels = [
-    {"name": "Easy", "scaling_factor": 0.01},
-    {"name": "Medium", "scaling_factor": 0.05},
-    {"name": "Hard", "scaling_factor": 0.1},
-    {"name": "Ultra Hard", "scaling_factor": 1}
+    {"name": "Easy", "hp_scaling_factor": 0.01, "speed_scaling_factor": 0.0025},
+    {"name": "Medium", "hp_scaling_factor": 0.0143, "speed_scaling_factor": 0.005},
+    {"name": "Hard", "hp_scaling_factor": 0.02, "speed_scaling_factor": 0.01},
+    {"name": "Ultra Hard", "hp_scaling_factor": 0.05, "speed_scaling_factor": 0.02}
 ]
 SPEED_SCALING_FACTOR = 0.005  # Increase in speed per kill
-HP_SCALING_FACTOR = 0.1     # Increase in HP per kill
+HP_SCALING_FACTOR = 0.01     # Increase in HP per kill
 current_difficulty_index = 0  # Default to easy mode
 
 # Some flags for checking things
@@ -572,6 +572,7 @@ def game_loop():
     global gaming, paused, cursor_pos, event, show_upgrade_menu, upgrades, player_x, player_y, explosion_x, explosion_y, explosion_image, explosion_frames, explosion_radius, explosion_cooldown, right_mouse_button_pressed, current_fireball_cooldown, current_frame, gambling_mode, gambling_sound, bullets, frame_count, corruption, rendering, kills, beaten, player_hp, i_frames_counter, enemy_exp, exp, player_level, current_max_exp, camera_offset_x, camera_offset_y, bullet_image, explosion, explosion_frame_duration, explosion_frame_index
     show_upgrade_menu = False  # Variable to track if the upgrade menu is shown
     gaming = True
+    rendering = "down"
     while gaming:
         cursor_pos = pygame.mouse.get_pos()  # Get the current position of the mouse cursor
         for event in pygame.event.get():  # Event loop to handle different events
@@ -623,7 +624,6 @@ def game_loop():
                         paused = False  # Unpause the game
 
         if not paused and not show_upgrade_menu:  # Only update game state if not paused and upgrade menu is not shown
-            player_rect = pygame.Rect(player_x, player_y, niko_scaling_width, niko_scaling_height)  # Define player rectangle
             keys = pygame.key.get_pressed()  # Get the state of all keyboard keys
 
             move_x, move_y = 0, 0  # Initialize movement vector
@@ -646,8 +646,6 @@ def game_loop():
 
             player_x += move_x  # Update player x position
             player_y += move_y  # Update player y position
-            center_x = player_x + player_width / 2  # Calculate player center x position
-            center_y = player_y + player_height / 4  # Calculate player center y position
 
             camera_offset_x = width // 2 - player_x  # Calculate camera offset x
             camera_offset_y = height // 2 - player_y  # Calculate camera offset y
@@ -962,6 +960,7 @@ def game_loop():
                 # Check if hit animation duration is over
                 if enemy.hit_frame >= len(hit_enemy_frames):
                     enemy.hit_animation_playing = False
+                    enemy.hit_frame = 0  # Reset hit frame for next time
                     enemy.hit_frame_count = 0
 
             elif enemy.death_animation_playing:
@@ -1179,21 +1178,27 @@ def game_loop():
         pygame.time.Clock().tick(FPS)
 
 def start_game():
-    global main_menu  # Use global variable for main_menu
+    global main_menu, gaming  # Use global variable for main_menu
     main_menu = False  # Disable main menu
     gaming = True
     game_loop()
     print("Starting Game...")  # Print starting game message
 
+# Update the set_difficulty function to adjust the scaling factors based on the selected difficulty level
+def set_difficulty(index):
+    global HP_SCALING_FACTOR, SPEED_SCALING_FACTOR
+    difficulty = difficulty_levels[index]
+    HP_SCALING_FACTOR = difficulty["hp_scaling_factor"]
+    SPEED_SCALING_FACTOR = difficulty["speed_scaling_factor"]
 
 def open_settings():
     global volume, bg_music_vol, fullscreen, settings_open, current_difficulty_index
     global SPEED_SCALING_FACTOR, HP_SCALING_FACTOR
     # Initialize settings
     settings = [
-        {"name": "SFX", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Background Music", "value": bg_music_vol, "min": 0.0, "max": 1.0, "step": 0.1},
-        {"name": "Fullscreen [BETA]", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},
+        {"name": "SFX", "value": volume, "min": 0.0, "max": 1.0, "step": 0.1},  # Sounds setting
+        {"name": "Background Music", "value": bg_music_vol, "min": 0.0, "max": 1.0, "step": 0.1},    # Background music setting
+        {"name": "Fullscreen [BETA]", "value": 1.0 if fullscreen else 0.0, "min": 0.0, "max": 1.0, "step": 1.0},  # Fullscreen setting
         {"name": "Difficulty", "value": current_difficulty_index, "min": 0, "max": len(difficulty_levels) - 1, "step": 1}  # Difficulty setting
     ]
     selected_index = 0
@@ -1206,7 +1211,7 @@ def open_settings():
                 save()
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:  # If certain key, do something
                 if event.key == pygame.K_ESCAPE:
                     settings_open = False
                 if event.key == pygame.K_w:
@@ -1223,11 +1228,7 @@ def open_settings():
         bg_music_vol = settings[1]["value"]
         fullscreen = settings[2]["value"] == 1.0
         current_difficulty_index = int(settings[3]["value"])
-        scaling_factor = difficulty_levels[current_difficulty_index]["scaling_factor"]
-
-        # Update speed and HP scaling factors based on difficulty
-        SPEED_SCALING_FACTOR = scaling_factor * 0.005
-        HP_SCALING_FACTOR = scaling_factor * 0.1
+        set_difficulty(current_difficulty_index)  # Set the difficulty using the selected index
 
         # Update display mode only if fullscreen setting changed
         if fullscreen != initial_fullscreen:
@@ -1249,7 +1250,7 @@ def open_settings():
         music.set_volume(bg_music_vol)
 
         screen.fill(BLACK)
-        draw_tiles(0, 0)  # Assuming draw_tiles is a function in your code
+        draw_tiles(0, 0) # Draw tiles as background
 
         for i, setting in enumerate(settings):
             color = YELLOW if i == selected_index else WHITE
@@ -1261,6 +1262,8 @@ def open_settings():
 
         pygame.display.flip()
         pygame.time.Clock().tick(FPS)
+
+
 
 # spawn explosion
 # Function to spawn explosion at given coordinates
