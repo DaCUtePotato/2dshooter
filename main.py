@@ -864,7 +864,7 @@ def game_loop():
                             show_victory_screen()  # Show victory screen
                             save()  # Save the game state
                             break
-            if player_hp <= 0:
+            if player_hp <= 0: # reset values when die
                 upgrades = 0
                 kills = 0
                 player_hp = 100
@@ -1261,21 +1261,21 @@ def open_settings():
         fireball_sound_7.set_volume(volume)
         music.set_volume(bg_music_vol)
 
-        screen.fill(BLACK)
+        screen.fill(BLACK) # reset screen
         draw_tiles(0, 0) # Draw tiles as background
 
         for i, setting in enumerate(settings):
             color = YELLOW if i == selected_index else WHITE
             if setting["name"] == "Fullscreen [BETA]":
-                value_text = "On" if setting["value"] == 1.0 else "Off"
+                value_text = "On" if setting["value"] == 1.0 else "Off" #say on/off with fullscreen in settings
                 setting_text = menu_font.render(f"{setting['name']}: {value_text}", True, color)
             elif setting["name"] == "Difficulty":
-                setting_text = menu_font.render(f"{setting['name']}: {difficulty_levels[int(setting['value'])]['name']}", True, color)
+                setting_text = menu_font.render(f"{setting['name']}: {difficulty_levels[int(setting['value'])]['name']}", True, color) # say Easy, Medium, Hard and Ultra Hard  with Difficulty in settings
             else:
-                setting_text = menu_font.render(f"{setting['name']}: {int(round(setting['value'] * 10)* 10)}%", True, color)
+                setting_text = menu_font.render(f"{setting['name']}: {int(round(setting['value'] * 10)* 10)}%", True, color) # show precentiles with sound
             screen.blit(setting_text, (width // 2 - setting_text.get_width() // 2, height // 2 - 50 + i * 40))
 
-        pygame.display.flip()
+        pygame.display.flip() # updated display
         pygame.time.Clock().tick(FPS)
 
 
@@ -1325,7 +1325,7 @@ def check_explosion_collisions(explosion_x, explosion_y):
         enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy.width, enemy.height)
         if explosion_rect.colliderect(enemy_rect):
             enemy.hp -= EXPLOSION_DAMAGE
-            if enemy.hp <= 0:
+            if enemy.hp <= 0: # die logic with enemies
                 enemies.remove(enemy)
                 kills += 1
                 active_exp_orbs.append(
@@ -1338,7 +1338,7 @@ def check_explosion_collisions(explosion_x, explosion_y):
         bulky_rect = pygame.Rect(bulky.x, bulky.y, bulky.width, bulky.height)
         if explosion_rect.colliderect(bulky_rect):
             bulky.hp -= EXPLOSION_DAMAGE
-            if bulky.hp <= 0:
+            if bulky.hp <= 0: # die logic with bulkies
                 kills += 1
                 bulky.death_animation_playing = True
                 value = random.randint(10, 50)
@@ -1351,7 +1351,7 @@ def check_explosion_collisions(explosion_x, explosion_y):
         corrupty_rect = pygame.Rect(corrupty.x, corrupty.y, corrupty.width, corrupty.height)
         if explosion_rect.colliderect(corrupty_rect):
             corrupty.hp -= EXPLOSION_DAMAGE
-            if corrupty.hp <= 0:
+            if corrupty.hp <= 0: # die logic for curropties
                 corrupties.remove(corrupty)
                 active_exp_orbs.append({'size': enemy_exp * 5, 'x': corrupty.x, 'y': corrupty.y, 'value': enemy_exp})
                 enemy_exp = random.randint(1, 5)
@@ -1364,7 +1364,7 @@ def check_explosion_collisions(explosion_x, explosion_y):
         crashing_enemy_rect = pygame.Rect(crashing_enemy.x, crashing_enemy.y, crashing_enemy.width, crashing_enemy.height)
         if explosion_rect.colliderect(crashing_enemy_rect):
             crashing_enemy.hp -= EXPLOSION_DAMAGE
-            if crashing_enemy.hp <= 0:
+            if crashing_enemy.hp <= 0: # die logic for crashing_enemies
                 kills += 1
                 crashing_enemies.remove(crashing_enemy)
                 corruption = True
@@ -1372,7 +1372,7 @@ def check_explosion_collisions(explosion_x, explosion_y):
                 save()
                 sys.exit("The corruption is spreading...")
 
-def quit_game():
+def quit_game(): # quitting game for menu
     print("Quitting game...")
     save()
     pygame.quit()
@@ -1381,12 +1381,12 @@ def quit_game():
 
 def show_victory_screen():
     global upgrades, kills, player_hp, exp, player_level, corruption, current_max_exp, player_speed, BULLET_DAMAGE
-    victory_font = pygame.font.Font('fonts/TrajanPro-Regular.ttf', 50)
-    victory_text = victory_font.render("Victory!", True, YELLOW)
-    sub_text = menu_font.render("Press ESC to Exit or Enter to start an Endless Run", True, WHITE)
+    victory_font = pygame.font.Font('fonts/TrajanPro-Regular.ttf', 50) # Trajan Pro is ADIIIIIDAS
+    victory_text = victory_font.render("Victory!", True, YELLOW) # Victory lmao
+    sub_text = menu_font.render("Press ESC to Exit or Enter to start an Endless Run", True, WHITE) # yes
     running = True
-    music.stop()
-    victory_sound.play()
+    music.stop() # yippieee
+    victory_sound.play() # yippieee
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1407,7 +1407,7 @@ def show_victory_screen():
                     save()
                     pygame.quit()
                     sys.exit()
-                if event.key == pygame.K_RETURN:
+                if event.key == pygame.K_RETURN: # restart
                     music.play(-1)
                     victory_sound.stop()
                     running = False
@@ -1415,26 +1415,26 @@ def show_victory_screen():
 
         screen.fill(BLACK)
 
-        text_rect = victory_text.get_rect(center=(width // 2, height // 2))
-        sub_text_rect = sub_text.get_rect(center=(width // 2, height // 2 + 60))
+        text_rect = victory_text.get_rect(center=(width // 2, height // 2)) # weil text_rect
+        sub_text_rect = sub_text.get_rect(center=(width // 2, height // 2 + 60)) # because sub_text_rect
 
-        screen.blit(victory_text, text_rect)
-        screen.blit(sub_text, sub_text_rect)
+        screen.blit(victory_text, text_rect) # render victory text
+        screen.blit(sub_text, sub_text_rect) # render subtext
 
-        pygame.display.flip()
-        clock.tick(FPS)
+        pygame.display.flip() # update screen
+        clock.tick(FPS) # FPS GOING THROUGH THE ROOOOOOOOOF
 
 def show_death_screen():
-    global enemies, gaming, player_x, player_y, player_hp, bulkies, bullets, corrupties, crashing_enemies, music
-    death_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 50)
-    sub_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 20)
+    global enemies, gaming, player_x, player_y, player_hp, bulkies, bullets, corrupties, crashing_enemies, music, active_regen_orbs, active_exp_orbs, active_big_exp_orbs
+    death_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 50) # Dark souls, aren't all our souls dark? (btw go play Nine Sols)
+    sub_font = pygame.font.Font("fonts/OptimusPrinceps.ttf", 20) # ""
     if not corruption:
         death_text = death_font.render("YOU DIED", True, RED)
     else:
-        death_text = death_font.render("You succumbed to the corruption. Press ESC to Exit or r to restart", True, RED)
+        death_text = death_font.render("You succumbed to the corruption. Press ESC to Exit or r to restart", True, RED) # Skillissue fr
     sub_text = sub_font.render("Press ESC to Exit or r to restart", True, WHITE)
-    music.stop()
-    death_sound.play()
+    music.stop() # Stop musik
+    death_sound.play() # Amogus
     running = True
     while running:
         for event in pygame.event.get():
@@ -1449,6 +1449,7 @@ def show_death_screen():
                 if event.key == pygame.K_r:
                     death_sound.stop()
                     music.play(-1)
+                    # kill everything on-screen for
                     player_x = width // 2  # Initial player x position
                     player_y = height // 2  # Initial player y position
                     enemies = []
@@ -1462,7 +1463,7 @@ def show_death_screen():
                     player_hp = 100
                     music = pygame.mixer.Sound('sounds/background_music.mp3')
                     music.set_volume(bg_music_vol)
-                    gaming = False
+                    gaming = False # not gaming :'(
                     open_main_menu()
                     running = False
 
@@ -1471,8 +1472,8 @@ def show_death_screen():
         text_rect = death_text.get_rect(center=(width // 2, height // 2))
         sub_text_rect = sub_text.get_rect(center=(width // 2, height // 2 + 45))
 
-        screen.blit(death_text, text_rect)
-        screen.blit(sub_text, sub_text_rect)
+        screen.blit(death_text, text_rect) # render text
+        screen.blit(sub_text, sub_text_rect) # render sub_text
 
         pygame.display.flip()
         clock.tick(FPS)
@@ -1550,57 +1551,93 @@ else:
     music.set_volume(bg_music_vol)
 
 music.play(-1)
+
+
 def open_main_menu():
+    # Declare global variables used within the function
     global cursor_pos, event, current_fireball_cooldown, angle, bullets, rotated_bullet_image, bullet_image, main_menu, right_mouse_button_pressed
+
+    # Set the main menu flag to True to indicate the menu is open
     main_menu = True
+
+    # Main loop for the main menu
     while main_menu:
+        # Get the current position of the mouse cursor
         cursor_pos = pygame.mouse.get_pos()
+
+        # Process events in the event queue
         for event in pygame.event.get():
+            # Check if the user is trying to quit the game
             if event.type == pygame.QUIT:
-                save()
-                pygame.quit()
-                sys.exit()
+                save()  # Save the game state
+                pygame.quit()  # Quit pygame
+                sys.exit()  # Exit the program
+
+            # Check if a mouse button is released
             elif event.type == pygame.MOUSEBUTTONUP:
+                # Check if the right mouse button was released
                 if event.button == 3:  # Right mouse button
                     right_mouse_button_pressed = False
+
+        # Check if the left mouse button is pressed and the fireball cooldown is zero
         if pygame.mouse.get_pressed()[0] and current_fireball_cooldown == 0:
+            # Initialize the bullets list
             bullets = []
-            centered_x, centered_y = player_x + player_width // 2-25, player_y + player_height // 4
+            # Calculate the center position of the player character
+            centered_x, centered_y = player_x + player_width // 2 - 25, player_y + player_height // 4
+            # Get the current position of the mouse cursor
             mouse_x, mouse_y = pygame.mouse.get_pos()
+            # Calculate the angle between the player and the mouse cursor
             angle = math.atan2(mouse_y - centered_y, mouse_x - centered_x)
+            # Shoot a bullet in the direction of the mouse cursor
             shoot_forwards(centered_x, centered_y, bullet_speed, angle, bullets)
-            current_fireball_cooldown = base_fireball_cooldown  # Reset the cooldown
+            # Reset the fireball cooldown
+            current_fireball_cooldown = base_fireball_cooldown
+            # Play the fireball sound effect
             fireball_sound_1.play()
 
+        # Decrease the fireball cooldown if it's greater than zero
         if current_fireball_cooldown > 0:
             current_fireball_cooldown -= 1
 
+        # Clear the screen by filling it with a black color
         screen.fill(BLACK)
+        # Draw the game tiles
         draw_tiles(0, 0)
+        # Draw the title, play button, settings button, and quit button
         screen.blit(scaled_title_image, title_rect)
         screen.blit(play_button_image, play_button_rect)
         screen.blit(settings_button_image, settings_button_rect)
         screen.blit(quit_button_image, quit_button_rect)
 
+        # Remove bullets that are out of the screen bounds
         bullets = [bullet for bullet in bullets if 0 <= bullet['x'] <= width and 0 <= bullet['y'] <= height]
+        # Update the position and angle of each bullet
         for bullet in bullets:
             bullet['x'] += bullet['dx']
             bullet['y'] += bullet['dy']
             bullet_image = animate_bullet(bullet)
             angle = math.atan2(-bullet['dy'], bullet['dx'])
             rotated_bullet_image = pygame.transform.rotate(bullet_image, math.degrees(angle))
+            # Draw the rotated bullet image at the bullet's position
             screen.blit(rotated_bullet_image, (
             bullet['x'] - rotated_bullet_image.get_width() / 2, bullet['y'] - rotated_bullet_image.get_height() / 2))
 
+        # Handle bullet collisions with menu buttons
         handle_bullet_collisions(bullets, play_button_rect, start_game)
         handle_bullet_collisions(bullets, settings_button_rect, open_settings)
         handle_bullet_collisions(bullets, quit_button_rect, quit_game)
 
-        screen.blit(frames_down[current_frame], player_pos_on_screen)  # Always render the player looking down
+        # Always render the player character looking down
+        screen.blit(frames_down[current_frame], player_pos_on_screen)
 
+        # Draw the cursor image at the current cursor position
         screen.blit(cursor_image, cursor_pos)
+        # Update the display to show the drawn elements
         pygame.display.flip()
+        # Control the frame rate of the game loop
         clock.tick(FPS)
+
 
 open_main_menu()
 game_loop()
