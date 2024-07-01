@@ -1540,7 +1540,7 @@ if os.path.exists(file_path):
         current_max_exp = int(lines[6].strip())
         beaten = lines[7].strip() == "True"
         player_speed = int(lines[8].strip())
-        BULLET_DAMAGE = int(lines[9].strip())
+        BULLET_DAMAGE = float(lines[9].strip())
 
 # Set background music based on corruption state. These are unaffected by volume
 if not corruption:
